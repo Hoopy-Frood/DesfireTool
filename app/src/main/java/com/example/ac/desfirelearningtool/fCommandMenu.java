@@ -2,8 +2,6 @@ package com.example.ac.desfirelearningtool;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -16,7 +14,6 @@ import android.widget.Button;
  */
 
 public class fCommandMenu extends Fragment{
-    private Toolbar toolbar;
     IMainActivityCallbacks mCallback;
 
     // Buttons - Informational
@@ -76,15 +73,6 @@ public class fCommandMenu extends Fragment{
                              Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.f_commandmenu, container, false);
-
-        Log.d("fCommandMenu Create", "Starting");
-        //toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-        Log.d("fCommandMenu Create", "1");
-        //((AppCompatActivity)getContext()).setSupportActionBar(toolbar);
-        Log.d("fCommandMenu Create", "2");
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("DESFire Tool");
-        Log.d("fCommandMenu Create", "3");
-        //((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Buttons - Informational
         buttonGetVersion = (Button) rootView.findViewById(R.id.button_GetVersion);

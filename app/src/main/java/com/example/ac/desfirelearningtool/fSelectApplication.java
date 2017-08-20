@@ -3,7 +3,6 @@ package com.example.ac.desfirelearningtool;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -40,15 +39,7 @@ public class fSelectApplication extends Fragment {
 
         rootView = inflater.inflate(R.layout.f_selectapplication, container, false);
 
-        Log.d("fCommandMenu Create", "Starting");
-        //toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-        Log.d("fCommandMenu Create", "1");
-        //((AppCompatActivity)getContext()).setSupportActionBar(toolbar);
-        Log.d("fCommandMenu Create", "2");
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("Select Application");
-        Log.d("fCommandMenu Create", "3");
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(true);
+
 
         try {
             mCallback = (IMainActivityCallbacks) getActivity();

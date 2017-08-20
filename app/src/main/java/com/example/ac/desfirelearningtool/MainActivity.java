@@ -1,7 +1,5 @@
 package com.example.ac.desfirelearningtool;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -12,10 +10,10 @@ import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -38,9 +36,6 @@ public class MainActivity extends AppCompatActivity
     fSelectApplication selectFragment;
 
 
-    FragmentTransaction transaction;
-    FragmentManager manager;
-
 
     protected PendingIntent pendingIntent;
     protected IntentFilter[] intentFiltersArray;
@@ -52,15 +47,21 @@ public class MainActivity extends AppCompatActivity
     private ScrollLog scrollLog;
 
     private byte[] applicationList;
+    Toolbar toolbar;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Remove title bar
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
         setContentView(R.layout.activity_main);
+
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("DESFire Tool");
+
+
 
         MobileAds.initialize(this, "ca-app-pub-3940256099942544~3347511713");
         mAdView = (AdView) findViewById(R.id.adView);
@@ -371,6 +372,9 @@ public class MainActivity extends AppCompatActivity
         Bundle bundle = new Bundle();
         bundle.putByteArray("applicationList", applicationList);
 
+        getSupportActionBar().setTitle("Select Application");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         selectFragment = new fSelectApplication();
 
 
@@ -386,6 +390,9 @@ public class MainActivity extends AppCompatActivity
     public void onSelectReturn(byte [] baAppId){
         scrollLog.appendTitle("Select Application Return");
 
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
 
@@ -396,14 +403,26 @@ public class MainActivity extends AppCompatActivity
     public void onBackPressed() {
 
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+
+            getSupportActionBar().setTitle("DESFire Tool");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowHomeEnabled(false);
             getSupportFragmentManager().popBackStack();
             Log.d("onBackPressed", "popBackStack");
         } else {
             super.onBackPressed();
+            getSupportActionBar().setTitle("DESFire Tool");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowHomeEnabled(false);
             Log.d("onBackPressed", "onBackPressed()");
         }
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
 
 
 
