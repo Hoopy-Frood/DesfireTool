@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/wholeframe"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"/>
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6"/>
+
+
+    <RelativeLayout
+        android:id="@+id/OutputArea"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight = "4"
+        android:layout_alignParentBottom="true"
+        android:background="#f0f0f0">
+
+        <Button
+            android:id="@+id/button_ClearScreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:text="Clear"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/button_CopyLog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/button_ClearScreen"
+            android:layout_alignBottom="@+id/button_ClearScreen"
+            android:layout_toLeftOf="@+id/button_ClearScreen"
+            android:text="Copy"
+            android:textAllCaps="false" />
+
+        <TextView
+            android:id="@+id/textView_scrollLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/button_ClearScreen"
+            android:layout_alignParentTop="true"
+            android:fontFamily="monospace"
+            android:gravity="bottom"
+            android:maxLines="2048"
+            android:scrollbars="vertical"
+            android:text="Scroll Log View"
+            android:textSize="12sp" />
+
+    </RelativeLayout>
+
+    <com.google.android.gms.ads.AdView
+        xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        ads:adSize="SMART_BANNER"
+        ads:adUnitId="ca-app-pub-3940256099942544/6300978111">
+    </com.google.android.gms.ads.AdView>
+
+</LinearLayout>

@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+  <!-- <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:layout_scrollFlags="enterAlways" />
+
+    </android.support.design.widget.AppBarLayout> -->
+
+
+    <ScrollView
+        android:id="@+id/verticalScrollArea"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6">
+
+
+        <RelativeLayout
+            android:id="@+id/scrollArea"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <!-- INFORMATIONAL -->
+            <TextView
+                android:id="@+id/divider_Informational"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_alignWithParentIfMissing="true"
+                android:layout_alignBottom="@+id/button_GetAppID"
+                android:layout_alignEnd="@+id/button_LimitedCredit"
+                android:layout_alignParentEnd="true"
+                android:background="#d0d0FF"
+                android:text="Informational"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/button_GetVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="14dp"
+                android:text="Get\nVersion"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetCardUID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_GetVersion"
+                android:layout_alignBottom="@+id/button_GetVersion"
+                android:text="Get\nCard UID"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetAppID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/button_GetVersion"
+                android:text="Get\nApp IDs"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetDFNames"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_GetAppID"
+                android:layout_alignBottom="@+id/button_GetAppID"
+                android:text="Get\nDF Names"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetFreeMem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_GetDFNames"
+                android:layout_alignBottom="@+id/button_GetAppID"
+                android:text="Get\nFree Mem"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+
+            <!-- Security Related -->
+            <TextView
+                android:id="@+id/divider_Security"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_Informational"
+                android:layout_alignEnd="@+id/divider_Informational"
+                android:layout_alignStart="@+id/divider_Informational"
+                android:layout_alignBottom="@+id/button_Authenticate"
+                android:background="#b0b0FF"
+                android:text="Security"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/button_Authenticate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_Informational"
+                android:layout_marginTop="14dp"
+                android:text="Authenticate"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetKeyVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/button_Authenticate"
+                android:layout_toEndOf="@+id/button_Authenticate"
+                android:text="Get\nKey Version"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetKeySettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/button_Authenticate"
+                android:layout_toEndOf="@+id/button_GetKeyVersion"
+                android:text="Get\nKey Settings"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+
+
+            <!-- Application Level Related -->
+            <TextView
+                android:id="@+id/divider_Application"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_Security"
+                android:layout_alignEnd="@+id/divider_Informational"
+                android:layout_alignStart="@+id/divider_Informational"
+                android:layout_alignBottom="@+id/button_GetFileIDs"
+                android:background="#a0a0FF"
+                android:text="Application"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/button_Select"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_Security"
+                android:layout_marginTop="14dp"
+                android:layout_alignParentStart="true"
+                android:text="Select"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetFileSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/button_Select"
+                android:layout_toEndOf="@+id/button_Select"
+                android:text="Get\nFile Settings"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetFileIDs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/button_Select"
+                android:layout_alignParentStart="true"
+                android:text="Get\nFile IDs"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetISOFileIDs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/button_GetFileIDs"
+                android:layout_toEndOf="@+id/button_GetFileIDs"
+                android:text="Get\nISO File IDs"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+
+
+
+            <!-- Data Manipulation Commands -->
+            <TextView
+                android:id="@+id/divider_Data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_Application"
+                android:layout_alignEnd="@+id/divider_Informational"
+                android:layout_alignStart="@+id/divider_Informational"
+                android:layout_alignBottom="@+id/button_CommitTransaction"
+                android:background="#8080FF"
+                android:text="Data Manipulation"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <!-- Data Handling -->
+            <Button
+                android:id="@+id/button_ReadData"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/divider_Application"
+                android:layout_marginTop="14dp"
+                android:text="Read\nData"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_WriteData"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_ReadData"
+                android:layout_alignBottom="@+id/button_ReadData"
+                android:text="Write\nData"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <!-- Record Handling -->
+            <Button
+                android:id="@+id/button_ReadRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/button_ReadData"
+                android:text="Read\nRecord"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_WriteRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_ReadRecord"
+                android:layout_alignBottom="@+id/button_ReadRecord"
+                android:text="Write\nRecord"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_ClearRecordFile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_WriteRecord"
+                android:layout_alignBottom="@+id/button_ReadRecord"
+                android:text="Clear\nRecord File"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <!-- Value Handling -->
+            <Button
+                android:id="@+id/button_GetValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/button_ReadRecord"
+                android:text="Get\nValue"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_Credit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_GetValue"
+                android:layout_alignBottom="@+id/button_GetValue"
+                android:text="Credit"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_Debit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_Credit"
+                android:layout_alignBottom="@+id/button_GetValue"
+                android:text="Debit"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_LimitedCredit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_Debit"
+                android:layout_alignBottom="@+id/button_GetValue"
+                android:text="Limited\nCredit"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <!-- Transaction Handling -->
+            <Button
+                android:id="@+id/button_CommitTransaction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/button_GetValue"
+                android:text="Commit\nTransaction"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_AbortTransaction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_CommitTransaction"
+                android:layout_alignBottom="@+id/button_CommitTransaction"
+                android:text="Abort\nTransaction"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+
+
+            <!-- Perso Commands -->
+            <TextView
+                android:id="@+id/divider_Perso"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_Data"
+                android:layout_alignEnd="@+id/divider_Informational"
+                android:layout_alignStart="@+id/divider_Informational"
+                android:layout_alignBottom="@+id/button_CreateApplication"
+                android:background="#FF8080"
+                android:text="Card Management"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/button_CreateApplication"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/divider_Data"
+                android:layout_marginTop="14dp"
+                android:text="Create\nApplication"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/button_DeleteApplication"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_CreateApplication"
+                android:layout_alignBottom="@+id/button_CreateApplication"
+                android:text="Delete\nApplication"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/button_FormatPICC"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_DeleteApplication"
+                android:layout_alignBottom="@+id/button_CreateApplication"
+                android:text="Format\nPICC"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <!-- Key Management Commands -->
+            <TextView
+                android:id="@+id/divider_KeyManagement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_Perso"
+                android:layout_alignEnd="@+id/divider_Informational"
+                android:layout_alignStart="@+id/divider_Informational"
+                android:layout_alignBottom="@+id/button_SetConfiguration"
+                android:background="#FFA0A0"
+                android:text="Key Management"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/button_SetConfiguration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/divider_Perso"
+                android:layout_marginTop="14dp"
+                android:text="Set\nConfiguration"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/button_ChangeKey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_SetConfiguration"
+                android:layout_alignBottom="@+id/button_SetConfiguration"
+                android:text="Change\nKey"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/button_ChangeKeySettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_ChangeKey"
+                android:layout_alignBottom="@+id/button_SetConfiguration"
+                android:text="Change\nKey Settings"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <!-- File Management Commands -->
+            <TextView
+                android:id="@+id/divider_FileManagement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_KeyManagement"
+                android:layout_alignEnd="@+id/divider_Informational"
+                android:layout_alignStart="@+id/divider_Informational"
+                android:layout_alignBottom="@+id/button_CreateFile"
+                android:background="#FFC0C0"
+                android:text="File Management"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/button_CreateFile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/divider_KeyManagement"
+                android:layout_marginTop="14dp"
+                android:text="Create\nFile"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/button_DeleteFile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_CreateFile"
+                android:layout_alignBottom="@+id/button_CreateFile"
+                android:text="Delete\nFile"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/button_ChangeFileSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_DeleteFile"
+                android:layout_alignBottom="@+id/button_CreateFile"
+                android:text="Change\nFile Settings"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+
+        </RelativeLayout>
+
+
+    </ScrollView>
+</LinearLayout>
