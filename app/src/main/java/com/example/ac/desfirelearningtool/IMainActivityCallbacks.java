@@ -14,10 +14,12 @@ public interface IMainActivityCallbacks {
     //public void onGetKeyVersion();
     public void onGetKeySettings();
     public void onSelectApplication();
-    public void onSelectReturn(byte [] appId);
-    //public void onCreateApplication();
+    public void onSelectApplicationReturn(byte [] appId);
+    public void onCreateApplication();
     //public void onDeleteApplication();
     //public void onFormatPICC ();
+
+    public void onCreateApplicationReturn(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] DFName);
 
 
 }

@@ -1,6 +1,8 @@
 package com.example.ac.desfirelearningtool;
 
 import android.app.PendingIntent;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -15,8 +17,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -28,12 +32,14 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+
 public class MainActivity extends AppCompatActivity
     implements IMainActivityCallbacks{
     private AdView mAdView;
 
     fCommandMenu commandFragment;
     fSelectApplication selectFragment;
+    fCreateApplication createApplicationFragment;
 
 
 
@@ -44,6 +50,9 @@ public class MainActivity extends AppCompatActivity
 
     private AndroidCommunicator communicator;
     private MifareDesfire desfireCard;
+
+    private Button buttonClearScreen;
+    private Button buttonCopyLog;
     private ScrollLog scrollLog;
 
     private byte[] applicationList;
@@ -102,7 +111,26 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        // Buttons - Log Management
+        buttonClearScreen = (Button) findViewById(R.id.button_ClearScreen);
+        buttonCopyLog = (Button) findViewById(R.id.button_CopyLog);
         scrollLog = new ScrollLog((TextView) findViewById(R.id.textView_scrollLog));
+
+
+        buttonClearScreen.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                scrollLog.clearScreen();
+            }
+        });
+        buttonCopyLog.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("DESFire Tool", scrollLog.getText());
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(MainActivity.this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
+
+            }
+        });
 
         // Initialize additional data for foreground dispatching of Nfc intents
         this.pendingIntent = PendingIntent.getActivity(
@@ -206,8 +234,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
-
 
     private void onCardDetection(Tag tag) {
         // You may want to use the basic IsoDep/Tag classes
@@ -369,15 +395,13 @@ public class MainActivity extends AppCompatActivity
     public void onSelectApplication (){
         scrollLog.appendTitle("Select Application");
 
-        Bundle bundle = new Bundle();
-        bundle.putByteArray("applicationList", applicationList);
-
         getSupportActionBar().setTitle("Select Application");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("applicationList", applicationList);
         selectFragment = new fSelectApplication();
-
-
         selectFragment.setArguments(bundle);
 
         //getSupportFragmentManager().addToBackStack(null);
@@ -386,14 +410,78 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public void onCreateApplication (){
+        scrollLog.appendTitle("Create Application");
 
-    public void onSelectReturn(byte [] baAppId){
-        scrollLog.appendTitle("Select Application Return");
+        getSupportActionBar().setTitle("Create Application");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        createApplicationFragment = new fCreateApplication();
+
+
+        createApplicationFragment.setArguments(getIntent().getExtras());
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,createApplicationFragment).addToBackStack("commandview").commit();
+
+    }
+
+    public void onSelectApplicationReturn(byte [] baAppId) {
+        scrollLog.appendTitle("SelectApplication Return");
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
+        if (baAppId.length != 3) {
+            scrollLog.appendError("Application ID too short");
+            return;
+        }
+
+        try {
+            MifareDesfire.MifareResultType retValue = desfireCard.selectApplication(baAppId);
+            if (retValue != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            else
+                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+
+    public void onCreateApplicationReturn(byte [] baAppId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] DFName){
+        scrollLog.appendTitle("Create Application Return");
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
+        if (baAppId.length != 3) {
+            scrollLog.appendError("Application ID too short");
+            return;
+        }
+
+        try {
+            MifareDesfire.MifareResultType retValue = desfireCard.createApplication(baAppId, bKeySetting1, bKeySetting2, baISOName, DFName);
+            if (retValue != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            else
+                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+
+
+
 
 
 

@@ -114,14 +114,10 @@ public class fCommandMenu extends Fragment{
         buttonDeleteFile = (Button) rootView.findViewById(R.id.button_DeleteFile);
         buttonChangeFileSettings = (Button) rootView.findViewById(R.id.button_ChangeFileSettings);
 
-
-        Log.d("fCommandMenu Create", "4");
-
-
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
-                Log.d("fuck", "screwed");
+                Log.d("onCreateView", "Cannot initialize callback interface");
             }
         } catch (ClassCastException e) {
             throw new ClassCastException(getActivity().toString()
@@ -170,6 +166,11 @@ public class fCommandMenu extends Fragment{
                 mCallback.onSelectApplication();
             }
         });
+        buttonCreateApplication.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onCreateApplication();
+            }
+        });
         /*buttonGetKeyVersion.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onGetKeyVersion();
@@ -177,11 +178,7 @@ public class fCommandMenu extends Fragment{
         });
 
 
-        buttonCreateApplication.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onCreateApplication();
-            }
-        });
+
         buttonDeleteApplication.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onDeleteApplication();

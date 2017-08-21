@@ -23,6 +23,10 @@ public class ScrollLog {
 
     }
 
+    public CharSequence getText(){
+        return scrollLog.getText();
+    }
+
     public void append(String appendText){
         scrollLog.append(appendText + "\n");
     }

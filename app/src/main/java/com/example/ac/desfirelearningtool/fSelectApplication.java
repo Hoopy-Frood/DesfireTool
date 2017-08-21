@@ -44,11 +44,11 @@ public class fSelectApplication extends Fragment {
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
-                Log.d("fuck", "screwed");
+                Log.d("onCreateView", "Cannot initialize callback interface");
             }
         } catch (ClassCastException e) {
             throw new ClassCastException(getActivity().toString()
-                    + " must implement commandInterfaceListener");
+                    + " must implement IMainActivityCallbacks");
         }
 
 
@@ -148,7 +148,7 @@ public class fSelectApplication extends Fragment {
 
         Log.d("onGoSelect", applicationID.getText().toString());
 
-        mCallback.onSelectReturn(ByteArray.hexStringToByteArray(applicationID.getText().toString()));
+        mCallback.onSelectApplicationReturn(ByteArray.hexStringToByteArray(applicationID.getText().toString()));
 
     }
 
