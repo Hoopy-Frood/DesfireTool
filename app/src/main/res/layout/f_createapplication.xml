@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusableInTouchMode="true"
+    android:background="#FFFFFF">
+
+
+    <ScrollView
+        android:id="@+id/verticalScrollArea"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <RelativeLayout
+            android:id="@+id/scrollArea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusableInTouchMode="true">
+
+            <TextView
+                android:id="@+id/ApplicationIDText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginStart="5dp"
+                android:text="App ID: "
+                android:textColor="#000000"
+                android:textSize="16sp"/>
+
+            <EditText
+                android:id="@+id/EditText_ApplicationID"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:digits="0123456789ABCDEF"
+                android:ems="10"
+                android:hint="3 Byte Hex"
+                android:inputType="textCapCharacters"
+                android:maxLength="6"
+                android:textAlignment="textStart"
+                android:layout_alignBaseline="@+id/ApplicationIDText"
+                android:layout_alignBottom="@+id/ApplicationIDText"
+                android:layout_toEndOf="@+id/TextView_ISOFileID" />
+
+            <TextView
+                android:id="@+id/TextView_ISOFileID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/EditText_ApplicationID"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:text="ISO FileName\n(Optional): "
+                android:textColor="#000000"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/EditText_ISOFileID"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/TextView_ISOFileID"
+                android:layout_below="@+id/EditText_ApplicationID"
+                android:layout_marginTop="10dp"
+                android:digits="0123456789ABCDEF"
+                android:ems="10"
+                android:hint="2 Byte Hex"
+                android:inputType="textCapCharacters"
+                android:maxLength="4"
+                android:textAlignment="textStart" />
+            <TextView
+                android:id="@+id/TextView_DFNameText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/EditText_ISOFileID"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:text="DF Name\n(Optional): "
+                android:textColor="#000000"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/EditText_DFName"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:digits="0123456789ABCDEF"
+                android:ems="10"
+                android:hint="0 - 16 Byte Hex"
+                android:inputType="textCapCharacters"
+                android:maxLength="32"
+                android:textAlignment="textStart"
+                android:layout_alignTop="@+id/TextView_DFNameText"
+                android:layout_alignStart="@+id/EditText_ISOFileID" />
+
+            <TextView
+                android:id="@+id/TextView_NumOfKeys"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/EditText_DFName"
+                android:layout_marginStart="5dp"
+                android:textColor="#000000"
+                android:textSize="16dp"
+                android:text="Number of keys   " />
+
+            <Spinner
+                android:id="@+id/spinner_NumOfKeys"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/TextView_NumOfKeys"
+                android:layout_alignBottom="@+id/TextView_NumOfKeys"
+                android:gravity="center"
+                android:dropDownWidth="wrap_content"/>
+
+
+            <!-- Crypto method of the application -->
+            <TextView
+                android:id="@+id/Block_CryptoMethod"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#C0C0C0"
+                android:text="Crypto method "
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp"
+                android:layout_below="@+id/spinner_NumOfKeys"
+                android:layout_marginTop="10dp"
+                android:layout_alignBottom="@+id/radioGroup_Crypto" />
+
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/radioGroup_Crypto"
+                android:layout_below="@+id/spinner_NumOfKeys"
+                android:layout_marginTop="30dp"
+                android:layout_alignParentStart="true">
+
+                <RadioButton
+                    android:id="@+id/radio_DES"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DES / 3DES" />
+                <RadioButton android:id="@+id/radio_3K3DES"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3K 3DES"/>
+                <RadioButton android:id="@+id/radio_AES"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AES"/>
+
+            </RadioGroup>
+
+            <CheckBox
+                android:id="@+id/CheckBox_AllowAMKChange"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Allow Application Master Key (AMK) change"
+                android:layout_below="@+id/Block_CryptoMethod"
+                android:layout_alignParentStart="true"/>
+            <CheckBox
+                android:id="@+id/CheckBox_FreeDirListAccess"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Free directory list access without AMK"
+                android:layout_below="@+id/CheckBox_AllowAMKChange"
+                android:layout_alignParentStart="true"/>
+            <CheckBox
+                android:id="@+id/CheckBox_FreeCreateDeleteFiles"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Free create/delete file without AMK"
+                android:layout_below="@+id/CheckBox_FreeDirListAccess"
+                android:layout_alignParentStart="true"/>
+            <CheckBox
+                android:id="@+id/CheckBox_AMKSettingChangeable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AMK settings changeable"
+                android:layout_below="@+id/CheckBox_FreeCreateDeleteFiles"
+                android:layout_alignParentStart="true"/>
+
+            <!-- Change Key Access Rights -->
+            <TextView
+                android:id="@+id/Block_ChangeKeyAccessRights"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#C0C0C0"
+                android:text="Change Key Access Rights "
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp"
+                android:layout_below="@+id/CheckBox_AMKSettingChangeable"
+                android:layout_alignBottom="@+id/radioGroup_KeyAccessRights" />
+
+            <RadioGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/radioGroup_KeyAccessRights"
+                android:layout_below="@+id/CheckBox_AMKSettingChangeable"
+                android:layout_marginTop="20dp"
+                android:layout_alignParentStart="true">
+
+                <RadioButton
+                    android:id="@+id/radio_ChangeKeyAfterAuthMasterKey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Application Master Key" />
+                <RadioButton android:id="@+id/radio_ChangeKeyAfterAuthSameKey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Authenticated with the key to be changed"/>
+                <RadioButton android:id="@+id/radio_ChangeKeyAfterAuthSpecificKey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Authenticated with a specific key"/>
+                <RadioButton android:id="@+id/radio_ChangeKeyFrozen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="All keys are frozen"/>
+            </RadioGroup>
+
+            <Spinner
+                android:id="@+id/spinner_ChangeUsingSpecificKey"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/CheckBox_AMKSettingChangeable"
+                android:layout_marginTop="89dp"
+                android:layout_toEndOf="@+id/CheckBox_FreeCreateDeleteFiles"
+                android:background="#FFFFFF"
+                android:layout_marginBottom="34dp" />
+
+            <CheckBox
+                android:id="@+id/CheckBox_Use2ByteFileID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Use ISO 7816 file identifiers in application"
+                android:layout_below="@+id/Block_ChangeKeyAccessRights"
+                android:layout_alignParentStart="true"/>
+
+
+
+            <Button
+                android:id="@+id/button_Go"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Go"
+                android:layout_below="@+id/CheckBox_Use2ByteFileID"
+                android:layout_alignParentRight="true"
+                android:textAllCaps="false"/>
+
+            <!--TextView
+                android:id="@+id/tv_NumberOfKeys"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/spinner_NumOfKeys"
+                android:layout_toEndOf="@+id/spinner_NumOfKeys"
+                android:text="Number Of Keys" /-->
+
+
+        </RelativeLayout>
+
+    </ScrollView>
+</RelativeLayout>
+
