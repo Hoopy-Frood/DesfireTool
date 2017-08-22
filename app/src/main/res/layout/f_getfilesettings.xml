@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+
+    <TextView
+        android:id="@+id/FileIDText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="28dp"
+        android:text="File ID: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/EditText_FileID"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/FileIDText"
+        android:layout_marginTop="16dp"
+        android:digits="0123456789ABCDEF"
+        android:ems="10"
+        android:hint="00-1F Hex"
+        android:inputType="textCapCharacters"
+        android:maxLength="2"
+        android:textAlignment="textStart" />
+
+    <Button
+        android:id="@+id/button_Go"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:text="Go"
+        android:textAllCaps="false"
+        android:layout_alignBottom="@+id/EditText_FileID"
+        android:layout_toEndOf="@+id/EditText_FileID"/>
+
+    <ListView
+        android:id="@+id/lv_ApplicationList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/EditText_FileID"/>
+</RelativeLayout>

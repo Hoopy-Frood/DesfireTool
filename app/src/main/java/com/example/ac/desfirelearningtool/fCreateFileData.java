@@ -25,6 +25,7 @@ import static java.lang.Integer.parseInt;
  */
 
 public class fCreateFileData extends Fragment {
+    IMainActivityCallbacks mCallback;
     Button buttonGo;
     EditText FileID, ISOName, FileSize;
     Spinner spReadAccess, spWriteAccess, spReadWriteAccess, spChangeAccessRights;
@@ -46,6 +47,16 @@ public class fCreateFileData extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.f_createfiledata, container, false);
+
+        try {
+            mCallback = (IMainActivityCallbacks) getActivity();
+            if (mCallback == null){
+                Log.d("fCreateFileData", "Cannot initialize callback interface");
+            }
+        } catch (ClassCastException e) {
+            throw new ClassCastException(getActivity().toString()
+                    + " must implement IMainActivityCallbacks");
+        }
 
         buttonGo = (Button) rootView.findViewById(R.id.button_Go);
         spReadAccess = (Spinner) rootView.findViewById(R.id.spinner_ReadAccess);
@@ -201,23 +212,12 @@ public class fCreateFileData extends Fragment {
         Log.v("Access Rights", ByteArray.byteArrayToHexString(new byte[]{ACByte1, ACByte2 }));
         Log.v("iFileSize", "FileSize = " + iFileSize);
 
-
-        Intent resultIntent = new Intent();
-
-        Bundle extras = new Bundle();
-
-
-        extras.putByte("bFileType",bFileType);
-        extras.putByte("bFileID",ByteArray.hexStringToByteArray(FileID.getText().toString())[0]);
-        extras.putByteArray("baISOName",ByteArray.hexStringToByteArray(ISOName.getText().toString()));
-        extras.putByte("bCommSetting",bCommSetting);
-        extras.putByteArray("baAccessRights",new byte[]{(byte) ACByte1, (byte) ACByte2 });
-        extras.putInt("iFileSize",iFileSize);
-        resultIntent.putExtras(extras);
-
-        getActivity().setResult(Activity.RESULT_OK, resultIntent);
-
-        getActivity().finish();
+        mCallback.onCreateFileDataReturn(bFileType,
+                ByteArray.hexStringToByteArray(FileID.getText().toString())[0],
+                ByteArray.hexStringToByteArray(ISOName.getText().toString()),
+                bCommSetting,
+                new byte[]{(byte) ACByte1, (byte) ACByte2 },
+                iFileSize);
     }
 
 }

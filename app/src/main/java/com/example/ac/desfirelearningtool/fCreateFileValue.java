@@ -27,6 +27,7 @@ import static java.lang.Integer.parseInt;
  */
 
 public class fCreateFileValue extends Fragment {
+    IMainActivityCallbacks mCallback;
         Button buttonGo;
         EditText etFileID, etLowerLimit, etUpperLimit, etValue;
         Spinner spGVD, spGVDLC, spGVDLCC, spChangeAccessRights;
@@ -49,6 +50,15 @@ public class fCreateFileValue extends Fragment {
                                  Bundle savedInstanceState) {
             // Inflate the layout for this fragment
             View rootView = inflater.inflate(R.layout.f_createfilevalue, container, false);
+            try {
+                mCallback = (IMainActivityCallbacks) getActivity();
+                if (mCallback == null){
+                    Log.d("fCreateFileValue", "Cannot initialize callback interface");
+                }
+            } catch (ClassCastException e) {
+                throw new ClassCastException(getActivity().toString()
+                        + " must implement IMainActivityCallbacks");
+            }
 
             buttonGo = (Button) rootView.findViewById(R.id.button_Go);
             spGVD = (Spinner) rootView.findViewById(R.id.spinner_GVD);
@@ -242,26 +252,15 @@ public class fCreateFileValue extends Fragment {
             Log.v("iValue", "iValue = " + iValue);
             Log.v("bOptionByte", ByteArray.byteArrayToHexString(new byte[]{ bOptionByte}));
 
-
-            Intent resultIntent = new Intent();
-
-            Bundle extras = new Bundle();
-
-
-            extras.putByte("bFileType",(byte) 0xCC);
-            extras.putByte("bFileID",ByteArray.hexStringToByteArray(etFileID.getText().toString())[0]);
-            extras.putByte("bCommSetting",bCommSetting);
-            extras.putByteArray("baAccessRights",new byte[]{(byte) ACByte1, (byte) ACByte2 });
-            extras.putInt("iLowerLimit",iLowerLimit);
-            extras.putInt("iUpperLimit",iUpperLimit);
-            extras.putInt("iValue",iValue);
-            extras.putInt("bOptionByte",bOptionByte);
-
-            resultIntent.putExtras(extras);
-
-            getActivity().setResult(Activity.RESULT_OK, resultIntent);
-
-            getActivity().finish();
+            mCallback.onCreateFileValueReturn(
+                    (byte) 0xCC,
+                    ByteArray.hexStringToByteArray(etFileID.getText().toString())[0],
+                    bCommSetting,
+                    new byte[]{(byte) ACByte1, (byte) ACByte2 },
+                    iLowerLimit,
+                    iUpperLimit,
+                    iValue,
+                    bOptionByte);
         }
 
     }

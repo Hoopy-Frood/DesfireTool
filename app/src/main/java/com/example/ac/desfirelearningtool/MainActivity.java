@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fGetKeyVersion getKeyVersionFragment;
     fDeleteApplication deleteApplicationFragment;
     fCreateFile createFileFragment;
+    fGetFileSettings getFileSettingsFragment;
 
 
 
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     private ScrollLog scrollLog;
 
     private byte[] applicationList;
+    private byte[] baFileIDList;
     Toolbar toolbar;
 
 
@@ -120,6 +122,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         buttonClearScreen = (Button) findViewById(R.id.button_ClearScreen);
         buttonCopyLog = (Button) findViewById(R.id.button_CopyLog);
         scrollLog = new ScrollLog((TextView) findViewById(R.id.textView_scrollLog));
+        applicationList = null;
+        baFileIDList = null;
 
         buttonClearScreen.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -419,6 +423,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
+        baFileIDList = null;
+
         scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
         if (baAppId.length != 3) {
             scrollLog.appendError("Application ID too short");
@@ -596,16 +602,185 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 .add(R.id.fragment_container,createFileFragment).addToBackStack("commandview").commit();
     }
 
+    public void onCreateFileDataReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize) {
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
 
 
+        Log.d("MainActivity", "bFileType " + ByteArray.byteArrayToHexString(new byte[] {bFileType}));
+        Log.d("MainActivity", "bFileID " + ByteArray.byteArrayToHexString(new byte[] {bFileId}));
+        Log.d("MainActivity", "baISOName " + ByteArray.byteArrayToHexString(baISOName));
+        Log.d("MainActivity", "bCommSetting " + ByteArray.byteArrayToHexString(new byte[] {bCommSetting}));
+        Log.d("MainActivity", "AccessRights " + ByteArray.byteArrayToHexString(baAccessBytes));
+        Log.d("MainActivity", "iFileSize = " + iFileSize);
+        try {
+            MifareDesfire.MifareResultType retValue = desfireCard.createDataFile(bFileType, bFileId, baISOName, bCommSetting, baAccessBytes, iFileSize);
+            if (retValue != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            else
+                scrollLog.appendTitle("Create Data File OK");
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+    public void onCreateFileRecordReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iRecordSize, int iNumOfRecords) {
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        Log.d("MainActivity", "bFileType " + ByteArray.byteArrayToHexString(new byte[]{bFileType}));
+        Log.d("MainActivity", "bFileID " + ByteArray.byteArrayToHexString(new byte[]{bFileId}));
+        Log.d("MainActivity", "ISOName " + ByteArray.byteArrayToHexString(baISOName));
+        Log.d("MainActivity", "bCommSetting " + ByteArray.byteArrayToHexString(new byte[]{bCommSetting}));
+        Log.d("MainActivity", "AccessRights " + ByteArray.byteArrayToHexString(baAccessBytes));
+        Log.d("MainActivity", "iRecordSize = " + iRecordSize);
+        Log.d("MainActivity", "iNumOfRecords = " + iNumOfRecords);
+        try {
+            MifareDesfire.MifareResultType retValue = desfireCard.createRecordFile(bFileType, bFileId, baISOName, bCommSetting, baAccessBytes, iRecordSize, iNumOfRecords);
+            if (retValue != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            else
+                scrollLog.appendTitle("Create Record File OK");
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+    public void onCreateFileValueReturn (byte bFileType, byte bFileId,byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) {
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        Log.d("MainActivity", "bFileType " + ByteArray.byteArrayToHexString(new byte[]{bFileType}));
+        Log.d("MainActivity", "bFileID " + ByteArray.byteArrayToHexString(new byte[]{bFileId}));
+        Log.d("MainActivity", "bCommSetting " + ByteArray.byteArrayToHexString(new byte[]{bCommSetting}));
+        Log.d("MainActivity", "AccessRights " + ByteArray.byteArrayToHexString(baAccessBytes));
+        Log.d("MainActivity", "iLowerLimit = " + iLowerLimit);
+        Log.d("MainActivity", "iUpperLimit = " + iUpperLimit);
+        Log.d("MainActivity", "iValue = " + iValue);
+        Log.d("MainActivity", "bOptionByte " + ByteArray.byteArrayToHexString(new byte[]{bOptionByte}));
+
+        try {
+            MifareDesfire.MifareResultType retValue = desfireCard.createValueFile(bFileType, bFileId, bCommSetting, baAccessBytes, iLowerLimit, iUpperLimit, iValue, bOptionByte);
+            if (retValue != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            else
+                scrollLog.appendTitle("Create Value File OK");
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+    public void onGetFileIDs() {
+        try {
+            scrollLog.appendTitle("Get File IDs");
+            MifareDesfire.MifareResult res = desfireCard.getFileIDs();
+            if (res.resultType != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
+
+            if (res.data.length > 0) {
+                scrollLog.appendTitle("FileIDs :" + ByteArray.byteArrayToHexString(res.data));
+                baFileIDList = res.data;
+            } else {
+                scrollLog.appendTitle("No file in directory.");
+                baFileIDList = null;
+            }
 
 
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onGetVersion", e.getMessage(), e);
+        }
 
 
+    }
+
+    public void onGetISOFileIDs(){
+        try {
+
+            ByteArray baISOFileIDs = new ByteArray();
+
+            scrollLog.appendTitle("Get ISO File IDs");
+            MifareDesfire.MifareResult res = desfireCard.getISOFileIDs();
+            if ((res.resultType == MifareDesfire.MifareResultType.SUCCESS) || (res.resultType == MifareDesfire.MifareResultType.ADDITONAL_FRAME)) {
+
+                baISOFileIDs.append(res.data);
+
+                while (res.resultType == MifareDesfire.MifareResultType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData();
+                    baISOFileIDs.append(res.data);
+                }
+            }
+            if (baISOFileIDs.toArray().length > 0)
+                scrollLog.appendTitle("ISO FileIDs :" + ByteArray.byteArrayToHexString(baISOFileIDs.toArray()));
+            else
+                scrollLog.appendTitle("No ISO FileIDs");
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onGetVersion", e.getMessage(), e);
+        }
+    }
+
+    public void onGetFileSettings() {
+        scrollLog.appendTitle("Get File Settings");
+
+        getSupportActionBar().setTitle("Get File Settings");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getFileSettingsFragment = new fGetFileSettings();
+
+        getFileSettingsFragment.setArguments(bundle);
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,getFileSettingsFragment).addToBackStack("commandview").commit();
+    }
 
 
+    public void onGetFileSettingsReturn(byte bFileID) {
+        scrollLog.appendTitle("SelectApplication Return");
 
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
 
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteArrayToHexString(new byte [] {bFileID}));
+
+        try {
+            MifareDesfire.MifareResult res = desfireCard.getFileSettings(bFileID);
+            if (res.resultType != MifareDesfire.MifareResultType.SUCCESS) {
+                scrollLog.appendError("Get File Settings Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
+                return;
+            }
+
+            scrollLog.appendTitle("File Settings of file " + ByteArray.byteArrayToHexString(new byte [] {bFileID}) + ": " + ByteArray.byteArrayToHexString(res.data));
+            // TODO: Parse out the File setting
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
 
 
 

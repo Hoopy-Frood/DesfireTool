@@ -37,20 +37,6 @@ public class fCreateFile extends Fragment {
 
 
 
-    private Button buttonGo;
-    private Spinner spinnerNumberOfKeys,spinnerChangeUsingSpecificKey;
-    private EditText appID;
-    private EditText ISOName;
-    private EditText DFName;
-    private byte KeySettingByte1;
-    private byte KeySettingByte2;
-    private RadioGroup cryptoMethodGroup;
-    private RadioGroup changeKeyAccessGroup;
-    private CheckBox cbAllowAMKChange;
-    private CheckBox cbFreeDirListAccess;
-    private CheckBox cbFreeCreateDeleteFiles;
-    private CheckBox cbAMKSettingChangeable;
-    private CheckBox cbUser2ByteFileID;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

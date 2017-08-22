@@ -68,6 +68,14 @@ public class MifareDesfire {
         return sendBytes(new byte[]{(byte)0x6D});
     }
 
+    public MifareResult getFileIDs() throws IOException {
+        return sendBytes(new byte[]{(byte)0x6F});
+    }
+
+    public MifareResult getISOFileIDs() throws IOException {
+        return sendBytes(new byte[]{(byte)0x61});
+    }
+
 
 
     /**
@@ -412,8 +420,8 @@ public class MifareDesfire {
             throw new IOException("Commit error: " + ByteArray.byteArrayToHexString(result));
     }
 
-    public byte[] getFileSettings(byte fid) throws IOException {
-        return sendBytes(new byte[]{(byte)0xf5, fid}).data;
+    public MifareResult getFileSettings(byte fid) throws IOException {
+        return sendBytes(new byte[]{(byte)0xf5, fid});
     }
 
 

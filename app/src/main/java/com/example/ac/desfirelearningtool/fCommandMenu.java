@@ -166,6 +166,21 @@ public class fCommandMenu extends Fragment{
                 mCallback.onSelectApplication();
             }
         });
+        buttonGetFileIDs.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onGetFileIDs();
+            }
+        });
+        buttonGetISOFileIDs.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onGetISOFileIDs();
+            }
+        });
+        buttonGetFileSettings.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onGetFileSettings();
+            }
+        });
         buttonCreateApplication.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onCreateApplication();
@@ -269,9 +284,9 @@ public class fCommandMenu extends Fragment{
         buttonGetKeySettings.setEnabled(true);
         // Buttons - Application
         buttonSelect.setEnabled(true);
-        buttonGetFileSettings.setEnabled(false);
-        buttonGetFileIDs.setEnabled(false);
-        buttonGetISOFileIDs.setEnabled(false);
+        buttonGetFileSettings.setEnabled(true);
+        buttonGetFileIDs.setEnabled(true);
+        buttonGetISOFileIDs.setEnabled(true);
         // Buttons - Data Manipulation
         buttonReadData.setEnabled(false);
         buttonWriteData.setEnabled(false);

@@ -25,6 +25,7 @@ import static java.lang.Integer.parseInt;
  */
 
 public class fCreateFileRecord extends Fragment {
+    IMainActivityCallbacks mCallback;
         Button buttonGo;
         EditText etFileID, etISOName, etRecordSize, etNumOfRecords;
         Spinner spReadAccess, spWriteAccess, spReadWriteAccess, spChangeAccessRights;
@@ -46,6 +47,16 @@ public class fCreateFileRecord extends Fragment {
                                  Bundle savedInstanceState) {
             // Inflate the layout for this fragment
             View rootView = inflater.inflate(R.layout.f_createfilerecord, container, false);
+
+            try {
+                mCallback = (IMainActivityCallbacks) getActivity();
+                if (mCallback == null){
+                    Log.d("fCreateFileRecord", "Cannot initialize callback interface");
+                }
+            } catch (ClassCastException e) {
+                throw new ClassCastException(getActivity().toString()
+                        + " must implement IMainActivityCallbacks");
+            }
 
             buttonGo = (Button) rootView.findViewById(R.id.button_Go);
             spReadAccess = (Spinner) rootView.findViewById(R.id.spinner_ReadAccess);
@@ -210,25 +221,14 @@ public class fCreateFileRecord extends Fragment {
             Log.v("bCommSetting", ByteArray.byteArrayToHexString(new byte[]{(byte) bCommSetting}));
             Log.v("Access Rights", ByteArray.byteArrayToHexString(new byte[]{(byte) ACByte1, (byte) ACByte2 }));
             Log.v("iRecordSize", "iRecordSize = " + iRecordSize);
+            mCallback.onCreateFileRecordReturn (bFileType,
+                    ByteArray.hexStringToByteArray(etFileID.getText().toString())[0],
+                    ByteArray.hexStringToByteArray(etISOName.getText().toString()),
+                    bCommSetting,
+                    new byte[]{(byte) ACByte1, (byte) ACByte2 },
+                    iRecordSize,
+                    iNumOfRecords);
 
-
-            Intent resultIntent = new Intent();
-
-            Bundle extras = new Bundle();
-
-
-            extras.putByte("bFileType",bFileType);
-            extras.putByte("bFileID",ByteArray.hexStringToByteArray(etFileID.getText().toString())[0]);
-            extras.putByteArray("baISOName",ByteArray.hexStringToByteArray(etISOName.getText().toString()));
-            extras.putByte("bCommSetting",bCommSetting);
-            extras.putByteArray("baAccessRights",new byte[]{(byte) ACByte1, (byte) ACByte2 });
-            extras.putInt("iRecordSize",iRecordSize);
-            extras.putInt("iNumOfRecords",iNumOfRecords);
-            resultIntent.putExtras(extras);
-
-            getActivity().setResult(Activity.RESULT_OK, resultIntent);
-
-            getActivity().finish();
         }
 
     }
