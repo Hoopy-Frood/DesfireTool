@@ -27,9 +27,11 @@ public interface IMainActivityCallbacks {
     public void onCreateFileDataReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize);
     public void onCreateFileRecordReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iRecordSize, int iNumOfRecords);
     public void onCreateFileValueReturn (byte bFileType, byte bFileId, byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte);
-
+    public void onDeleteFile();
+    public void onDeleteFileReturn(byte bFileID);
     public void onGetFileIDs();
     public void onGetISOFileIDs();
     public void onGetFileSettings();
     public void onGetFileSettingsReturn(byte bFileID);
+
 }

@@ -45,7 +45,6 @@ public class MifareDesfire {
         this.scrollLog = tv_scrollLog;
     }
 
-
     /**
      * Returns a byte array that represents the card version
      *
@@ -57,7 +56,6 @@ public class MifareDesfire {
         if (result.resultType != MifareResultType.ADDITONAL_FRAME)
             scrollLog.appendError("Error in card response: " + DesFireErrorMsg(result.resultType));
         return result;
-
     }
 
     public MifareResult getMoreData() throws IOException {
@@ -75,8 +73,6 @@ public class MifareDesfire {
     public MifareResult getISOFileIDs() throws IOException {
         return sendBytes(new byte[]{(byte)0x61});
     }
-
-
 
     /**
      * Returns a byte array of the card's Unique ID
@@ -109,12 +105,14 @@ public class MifareDesfire {
         return sendBytes(new byte[]{(byte)0x45});
     }
 
-
     public MifareResult getKeyVersion(byte selectedKey) throws IOException {
         byte[] params = ByteArray.from((byte) 0x64).append(selectedKey).toArray();
         return sendBytes(params);
     }
 
+    public MifareResult getFileSettings(byte fid) throws IOException {
+        return sendBytes(new byte[]{(byte)0xf5, fid});
+    }
 
     public byte[] getApplicationIDs() throws IOException {
         ByteArrayOutputStream appIDs = new ByteArrayOutputStream();
@@ -126,7 +124,6 @@ public class MifareDesfire {
             result = sendBytes(new byte[]{(byte)0xAF});
             appIDs.write(result.data);
         }
-
 
         return appIDs.toByteArray();
     }
@@ -165,13 +162,6 @@ public class MifareDesfire {
     protected MifareResultType deleteApplication(byte[] applicationId) throws IOException {
         byte[] params = ByteArray.from((byte) 0xDA).append(applicationId).toArray();
         MifareResult res = sendBytes(params);
-
-        return res.resultType;
-    }
-
-    public MifareResultType createFile(byte[] createAppByteArray) throws IOException {
-        // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        MifareResult res = sendBytes(createAppByteArray);
 
         return res.resultType;
     }
@@ -233,7 +223,6 @@ public class MifareDesfire {
      * @return
      * @throws IOException
      */
-
     public MifareResultType createRecordFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
         // TODO: Sanity Checks
 
@@ -271,6 +260,7 @@ public class MifareDesfire {
 
         return res.resultType;
     }
+
     public MifareResultType createValueFile(byte bFileType, byte bFileID, byte bCommSetting, byte [] baAccessRights, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) throws IOException {
         // TODO: Sanity Checks
 
@@ -312,18 +302,16 @@ public class MifareDesfire {
         return res.resultType;
     }
 
+    public MifareResult deleteFile(byte fid) throws IOException {
+        return sendBytes(new byte[]{(byte)0xDF, fid});
+    }
+
     public MifareResultType formatPICC() throws IOException {
         MifareResult result = sendBytes(new byte[]{(byte)0xFC});
 
         return result.resultType;
     }
 
-    /**
-     * Get a list of all the files in the current application ("directory")
-     */
-    public byte[] getFileIds() throws IOException {
-        return sendBytes(new byte[]{0x6f}).data;
-    }
 
     public byte[] readRecordFile(byte fid, int start, int count) throws IOException {
         byte[] cmd = new ByteArray().append((byte)0xBB).append(fid).append(start, 3).append(count, 3).toArray();
@@ -420,9 +408,6 @@ public class MifareDesfire {
             throw new IOException("Commit error: " + ByteArray.byteArrayToHexString(result));
     }
 
-    public MifareResult getFileSettings(byte fid) throws IOException {
-        return sendBytes(new byte[]{(byte)0xf5, fid});
-    }
 
 
 

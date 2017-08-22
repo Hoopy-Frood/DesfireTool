@@ -16,12 +16,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fDeleteApplication deleteApplicationFragment;
     fCreateFile createFileFragment;
     fGetFileSettings getFileSettingsFragment;
+    fDeleteFile getDeleteFileFragment;
 
 
 
@@ -757,8 +755,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onGetFileSettingsReturn(byte bFileID) {
-        scrollLog.appendTitle("SelectApplication Return");
-
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
@@ -783,6 +779,49 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
+    public void onDeleteFile() {
+        scrollLog.appendTitle("Delete File");
+
+        getSupportActionBar().setTitle("Delete File");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getDeleteFileFragment = new fDeleteFile();
+
+        getDeleteFileFragment.setArguments(bundle);
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,getDeleteFileFragment).addToBackStack("commandview").commit();
+    }
+
+
+    public void onDeleteFileReturn(byte bFileID) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteArrayToHexString(new byte [] {bFileID}));
+
+        try {
+            MifareDesfire.MifareResult res = desfireCard.deleteFile(bFileID);
+            if (res.resultType != MifareDesfire.MifareResultType.SUCCESS) {
+                scrollLog.appendError("Delete File Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
+                return;
+            }
+
+            scrollLog.appendTitle("Delete File " + ByteArray.byteArrayToHexString(new byte [] {bFileID}) + " Ok ");
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
 
 
 

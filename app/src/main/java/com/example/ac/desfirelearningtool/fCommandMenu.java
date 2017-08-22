@@ -125,20 +125,17 @@ public class fCommandMenu extends Fragment{
         }
 
         Log.d("fCommandMenu Create", "4");
-       buttonGetVersion.setOnClickListener(new View.OnClickListener() {
+        buttonGetVersion.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                mCallback.onGetVersion();
             }
         });
-
-       buttonGetCardUID.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onGetCardUID();
+        buttonGetCardUID.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onGetCardUID();
             }
         });
         buttonGetAppID.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onGetApplicationIDs();
+            public void onClick(View v) {mCallback.onGetApplicationIDs();
             }
         });
         buttonGetDFNames.setOnClickListener(new View.OnClickListener() {
@@ -152,18 +149,15 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonAuthenticate.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onAuthenticate();
+            public void onClick(View v) {mCallback.onAuthenticate();
             }
         });
         buttonGetKeySettings.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onGetKeySettings();
+            public void onClick(View v) {mCallback.onGetKeySettings();
             }
         });
         buttonSelect.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onSelectApplication();
+            public void onClick(View v) {mCallback.onSelectApplication();
             }
         });
         buttonGetFileIDs.setOnClickListener(new View.OnClickListener() {
@@ -172,23 +166,25 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonGetISOFileIDs.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onGetISOFileIDs();
+            public void onClick(View v) {mCallback.onGetISOFileIDs();
             }
         });
         buttonGetFileSettings.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onGetFileSettings();
+            public void onClick(View v) {mCallback.onGetFileSettings();
             }
         });
         buttonCreateApplication.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onCreateApplication();
+            public void onClick(View v) {mCallback.onCreateApplication();
             }
         });
         buttonCreateFile.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onCreateFile();
+            }
+        });
+        buttonDeleteFile.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onDeleteFile();
             }
         });
         buttonFormatPICC.setOnClickListener(new View.OnClickListener() {
@@ -197,21 +193,14 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonGetKeyVersion.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onGetKeyVersion();
+            public void onClick(View v) {mCallback.onGetKeyVersion();
             }
         });
         buttonDeleteApplication.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onDeleteApplication();
+            public void onClick(View v) {mCallback.onDeleteApplication();
             }
         });
-        /*
 
-
-
-
-        */
 
         disableAllButtons();
 
@@ -309,7 +298,7 @@ public class fCommandMenu extends Fragment{
         buttonChangeKeySettings.setEnabled(false);
         // Buttons - File Management
         buttonCreateFile.setEnabled(true);
-        buttonDeleteFile.setEnabled(false);
+        buttonDeleteFile.setEnabled(true);
         buttonChangeFileSettings.setEnabled(false);
     }
 

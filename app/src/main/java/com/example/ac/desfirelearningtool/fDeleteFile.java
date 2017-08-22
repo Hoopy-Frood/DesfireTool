@@ -21,10 +21,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by andrew on 2017/08/22.
+ * Created by Ac on 8/22/2017.
  */
 
-public class fGetFileSettings extends Fragment {
+public class fDeleteFile extends Fragment {
     private Button buttonGo;
     private EditText etFileID;
     private byte [] baFileIDList;
@@ -43,7 +43,7 @@ public class fGetFileSettings extends Fragment {
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
-                Log.d("fGetFileSettings", "Cannot initialize callback interface");
+                Log.d("fDeleteFile", "Cannot initialize callback interface");
             }
         } catch (ClassCastException e) {
             throw new ClassCastException(getActivity().toString()
@@ -55,7 +55,7 @@ public class fGetFileSettings extends Fragment {
 
         buttonGo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                onGoGetFileSettings();
+                onGoDeleteFile();
             }
         });
         buttonGo.setEnabled(false);
@@ -136,11 +136,11 @@ public class fGetFileSettings extends Fragment {
     }
 
 
-    private void onGoGetFileSettings(){
+    private void onGoDeleteFile(){
 
-        Log.d("onGoGetFileSettings", etFileID.getText().toString());
+        Log.d("onGoDeleteFile", etFileID.getText().toString());
 
-        mCallback.onGetFileSettingsReturn(ByteArray.hexStringToByteArray(etFileID.getText().toString())[0]);
+        mCallback.onDeleteFileReturn(ByteArray.hexStringToByteArray(etFileID.getText().toString())[0]);
 
     }
 }
