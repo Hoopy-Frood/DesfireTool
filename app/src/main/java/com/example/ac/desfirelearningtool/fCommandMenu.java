@@ -171,17 +171,9 @@ public class fCommandMenu extends Fragment{
                 mCallback.onCreateApplication();
             }
         });
-        /*buttonGetKeyVersion.setOnClickListener(new View.OnClickListener() {
+        buttonCreateFile.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mCallback.onGetKeyVersion();
-            }
-        });
-
-
-
-        buttonDeleteApplication.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onDeleteApplication();
+                mCallback.onCreateFile();
             }
         });
         buttonFormatPICC.setOnClickListener(new View.OnClickListener() {
@@ -189,6 +181,21 @@ public class fCommandMenu extends Fragment{
                 mCallback.onFormatPICC();
             }
         });
+        buttonGetKeyVersion.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onGetKeyVersion();
+            }
+        });
+        buttonDeleteApplication.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onDeleteApplication();
+            }
+        });
+        /*
+
+
+
+
         */
 
         disableAllButtons();

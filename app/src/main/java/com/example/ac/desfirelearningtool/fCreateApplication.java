@@ -108,12 +108,44 @@ public class fCreateApplication extends Fragment {
         cbAllowAMKChange.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
-                Log.d("cbEnableFreeGV:", "Check Box checked ");
+                Log.d("cbAllowAMKChange:", "Check Box checked ");
                 // checkedId is the RadioButton selected
                 onCheckBoxClicked(cb.getId(), IsChecked);
             }
         });
 
+        cbFreeDirListAccess.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
+                Log.d("cbFreeDirListAccess:", "Check Box checked ");
+                // checkedId is the RadioButton selected
+                onCheckBoxClicked(cb.getId(), IsChecked);
+            }
+        });
+        cbFreeCreateDeleteFiles.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
+                Log.d("cbFreeCreateDelFiles:", "Check Box checked ");
+                // checkedId is the RadioButton selected
+                onCheckBoxClicked(cb.getId(), IsChecked);
+            }
+        });
+        cbAMKSettingChangeable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
+                Log.d("cbAMKSettingChangeable:", "Check Box checked ");
+                // checkedId is the RadioButton selected
+                onCheckBoxClicked(cb.getId(), IsChecked);
+            }
+        });
+        cbUser2ByteFileID.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
+                Log.d("cbUser2ByteFileID:", "Check Box checked ");
+                // checkedId is the RadioButton selected
+                onCheckBoxClicked(cb.getId(), IsChecked);
+            }
+        });
 
         buttonGo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -219,46 +251,46 @@ public class fCreateApplication extends Fragment {
             case R.id.CheckBox_AllowAMKChange:
                 if (isChecked) {
                     KeySettingByte1 |= 0x01;
-                    //Toast.makeText(getActivity().getApplicationContext(), "Allow AMK Change " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "Allow AMK Change " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }else {
                     KeySettingByte1 &= 0xFE;
-                    //Toast.makeText(getActivity().getApplicationContext(), "Allow AMK Change " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "Allow AMK Change " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.CheckBox_FreeDirListAccess:
                 if (isChecked) {
                     KeySettingByte1 |= 0x02;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }else {
                     KeySettingByte1 &= 0xFD;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.CheckBox_FreeCreateDeleteFiles:
                 if (isChecked) {
                     KeySettingByte1 |= 0x04;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_FreeCreateDeleteFiles " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeCreateDeleteFiles " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }else {
                     KeySettingByte1 &= 0xFB;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_FreeCreateDeleteFiles " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeCreateDeleteFiles " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.CheckBox_AMKSettingChangeable:
                 if (isChecked) {
                     KeySettingByte1 |= 0x08;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_AMKSettingChangeable " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_AMKSettingChangeable " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }else {
                     KeySettingByte1 &= 0xF7;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_AMKSettingChangeable " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_AMKSettingChangeable " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}), Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.CheckBox_Use2ByteFileID:
                 if (isChecked) {
                     KeySettingByte2 |= 0x20;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_Use2ByteFileID " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte2}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_Use2ByteFileID " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte2}), Toast.LENGTH_SHORT).show();
                 }else {
                     KeySettingByte2 &= 0xDF;
-                    // Toast.makeText(getApplicationContext(), "CheckBox_Use2ByteFileID " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte2}), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "CheckBox_Use2ByteFileID " + ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte2}), Toast.LENGTH_SHORT).show();
                 }
                 break;
         }
@@ -309,35 +341,5 @@ public class fCreateApplication extends Fragment {
                 ByteArray.hexStringToByteArray(ISOName.getText().toString()),
                 ByteArray.hexStringToByteArray(DFName.getText().toString())
         );
-
-        /*
-        ByteArray returnCreateFileByteArray = new ByteArray();
-
-        returnCreateFileByteArray.append(ByteArray.hexStringToByteArray(appID.getText().toString()))
-                .append(KeySettingByte1)
-                .append(KeySettingByte1);
-
-        if (ISOName.getText().toString().length() == 4) {
-            returnCreateFileByteArray.append(ByteArray.hexStringToByteArray(ISOName.getText().toString()));
-        }
-        if (DFName.getText().toString().length() != 0) {
-            returnCreateFileByteArray.append(ByteArray.hexStringToByteArray(DFName.getText().toString()));
-        }
-        Log.v("appID", appID.getText().toString());
-        Log.v("KeySettingByte1", ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte1}));
-        Log.v("KeySettingByte2", ByteArray.byteArrayToHexString(new byte[]{(byte) KeySettingByte2}));
-
-        Log.v("onGoCreateApplication", ByteArray.byteArrayToHexString(returnCreateFileByteArray.toArray()));
-
-        Intent resultIntent = new Intent();
-
-
-        resultIntent.putExtra("CREATEAPPLICATIONSTRING",returnCreateFileByteArray.toArray() );
-        setResult(Activity.RESULT_OK, resultIntent);
-
-        finish();
-        */
-
     }
-
 }

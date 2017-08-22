@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.ac.desfire.FragmentCreateRecordFile">
+
+    <ScrollView
+        android:tag="tab1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
+
+        <RelativeLayout
+            android:id="@+id/scrollArea"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:focusableInTouchMode="true">
+
+
+            <!-- Standard or backup file selection -->
+            <TextView
+                android:id="@+id/Block_LinearOrCyclicFile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/radioGroup_RecordFileType"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:background="#C0C0C0"
+                android:gravity="top|end"
+                android:text="Linear or Cyclic Record file "
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <RadioGroup
+                android:id="@+id/radioGroup_RecordFileType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="20dp">
+
+                <RadioButton
+                    android:id="@+id/radio_LinearRecordFile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Linear record file" />
+
+                <RadioButton
+                    android:id="@+id/radio_CyclicRecordFile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cyclic record file" />
+
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/FileIDText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/Block_LinearOrCyclicFile"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:text="File ID: "
+                android:textColor="#000000"
+                android:textSize="16sp"/>
+
+            <EditText
+                android:id="@+id/EditText_FileID"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:digits="0123456789ABCDEF"
+                android:ems="10"
+                android:hint="1 Byte Hex"
+                android:inputType="textCapCharacters"
+                android:maxLength="2"
+                android:textAlignment="textStart"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/Block_LinearOrCyclicFile"
+                android:layout_toEndOf="@+id/TextView_ISOName" />
+
+
+
+            <TextView
+                android:id="@+id/TextView_ISOName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/EditText_FileID"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:text="ISO FileName\n(Optional): "
+                android:textColor="#000000"
+
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/EditText_ISOName"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/EditText_FileID"
+                android:layout_marginTop="10dp"
+                android:layout_toEndOf="@+id/TextView_ISOName"
+                android:digits="0123456789ABCDEF"
+                android:ems="10"
+                android:hint="2 Byte Hex"
+                android:layout_centerHorizontal="true"
+                android:inputType="textCapCharacters"
+                android:maxLength="4"
+                android:textAlignment="textStart" />
+
+            <!-- Communication Settings selection -->
+            <TextView
+                android:id="@+id/Block_CryptoMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/radioGroup_CryptoMode"
+                android:layout_below="@+id/EditText_ISOName"
+                android:background="#C0C0C0"
+                android:gravity="top|end"
+                android:text="Communication Settings "
+                android:textAllCaps="true"
+                android:textColor="#F0F0F0"
+                android:textSize="14sp" />
+
+            <RadioGroup
+                android:id="@+id/radioGroup_CryptoMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/EditText_ISOName"
+                android:layout_marginTop="20dp">
+
+                <RadioButton
+                    android:id="@+id/radio_PlainCommunication"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Plain communication" />
+                <RadioButton
+                    android:id="@+id/radio_MACCommunication"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MAC communication" />
+                <RadioButton
+                    android:id="@+id/radio_EncryptedCommunication"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Encrypted communication" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/TextView_ReadAccess"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:layout_below="@+id/Block_CryptoMode"
+                android:textColor="#000000"
+                android:textSize="16dp"
+                android:text="Read Access Key" />
+
+            <Spinner
+                android:id="@+id/spinner_ReadAccess"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="wrap_content"
+                android:layout_alignTop="@+id/TextView_ReadAccess"
+                android:layout_alignBottom="@+id/TextView_ReadAccess"
+                android:layout_alignParentEnd="true" />
+
+
+            <TextView
+                android:id="@+id/TextView_WriteAccess"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:layout_below="@+id/TextView_ReadAccess"
+                android:textColor="#000000"
+                android:textSize="16dp"
+                android:text="Write Access Key" />
+
+            <Spinner
+                android:id="@+id/spinner_WriteAccess"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="wrap_content"
+                android:textColor="#000000"
+                android:layout_alignTop="@+id/TextView_WriteAccess"
+                android:layout_alignBottom="@+id/TextView_WriteAccess"
+                android:layout_alignParentEnd="true" />
+
+            <TextView
+                android:id="@+id/TextView_ReadAndWriteAccess"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:layout_below="@+id/TextView_WriteAccess"
+                android:textColor="#000000"
+                android:textSize="16dp"
+                android:text="Read and Write Access Key" />
+
+            <Spinner
+                android:id="@+id/spinner_ReadAndWriteAccess"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="wrap_content"
+                android:layout_alignTop="@+id/TextView_ReadAndWriteAccess"
+                android:layout_alignBottom="@+id/TextView_ReadAndWriteAccess"
+                android:layout_alignParentEnd="true" />
+
+
+            <TextView
+                android:id="@+id/TextView_ChangeAccessRights"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:layout_below="@+id/TextView_ReadAndWriteAccess"
+                android:textColor="#000000"
+                android:textSize="16dp"
+                android:text="Change Access Rights Key" />
+
+            <Spinner
+                android:id="@+id/spinner_ChangeAccessRights"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="wrap_content"
+                android:layout_alignTop="@+id/TextView_ChangeAccessRights"
+                android:layout_alignBottom="@+id/TextView_ChangeAccessRights"
+                android:layout_alignParentEnd="true" />
+
+            <TextView
+                android:id="@+id/RecordSizeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/spinner_ChangeAccessRights"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:text="Record size:"
+                android:textColor="#000000"
+                android:textSize="16sp"/>
+
+            <EditText
+                android:id="@+id/EditText_RecordSize"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:digits="0123456789"
+                android:ems="10"
+                android:hint=""
+                android:inputType="number"
+                android:maxLength="4"
+                android:layout_alignBaseline="@+id/RecordSizeText"
+                android:layout_alignBottom="@+id/RecordSizeText"
+                android:layout_alignStart="@+id/EditText_MaxNumOfRecords"
+                android:layout_centerHorizontal="true" />
+
+            <TextView
+                android:id="@+id/MaxNumOfRecordsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/RecordSizeText"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="5dp"
+                android:text="Max Num\nOf Records:  "
+                android:textColor="#000000"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/EditText_MaxNumOfRecords"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:digits="0123456789"
+                android:ems="10"
+                android:hint=""
+                android:inputType="number"
+                android:maxLength="4"
+                android:layout_alignBottom="@+id/MaxNumOfRecordsText"
+                android:layout_centerHorizontal="true" />
+
+            <Button
+                android:id="@+id/button_Go"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Go"
+                android:layout_alignBottom="@+id/EditText_MaxNumOfRecords"
+                android:layout_alignParentRight="true"
+                android:textAllCaps="false"/>
+
+
+        </RelativeLayout>
+
+    </ScrollView>
+</RelativeLayout>

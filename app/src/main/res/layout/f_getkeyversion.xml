@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/popupGetKeyVersion"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+
+    <TextView
+        android:id="@+id/KeyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:text="Key to Inquire: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+
+    <Spinner
+        android:id="@+id/spinner_KeyToInquire"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/KeyText"
+        android:gravity="center"
+        android:layout_marginTop="28dp"
+        android:dropDownWidth="wrap_content"/>
+
+
+
+
+    <Button
+        android:id="@+id/button_Go"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:text="Go"
+        android:textAllCaps="false"
+        android:layout_alignBottom="@+id/spinner_KeyToInquire"
+        android:layout_toEndOf="@+id/spinner_KeyToInquire"/>
+</RelativeLayout>

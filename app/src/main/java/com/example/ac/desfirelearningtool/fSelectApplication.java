@@ -144,15 +144,10 @@ public class fSelectApplication extends Fragment {
 
 
     private void onGoSelect(){
-        Intent resultIntent = new Intent();
 
         Log.d("onGoSelect", applicationID.getText().toString());
 
         mCallback.onSelectApplicationReturn(ByteArray.hexStringToByteArray(applicationID.getText().toString()));
 
     }
-
-
-
-
 }

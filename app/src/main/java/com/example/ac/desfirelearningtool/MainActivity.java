@@ -16,9 +16,12 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,13 +36,15 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 
-public class MainActivity extends AppCompatActivity
-    implements IMainActivityCallbacks{
+public class MainActivity extends AppCompatActivity implements IMainActivityCallbacks{
     private AdView mAdView;
 
     fCommandMenu commandFragment;
     fSelectApplication selectFragment;
     fCreateApplication createApplicationFragment;
+    fGetKeyVersion getKeyVersionFragment;
+    fDeleteApplication deleteApplicationFragment;
+    fCreateFile createFileFragment;
 
 
 
@@ -116,7 +121,6 @@ public class MainActivity extends AppCompatActivity
         buttonCopyLog = (Button) findViewById(R.id.button_CopyLog);
         scrollLog = new ScrollLog((TextView) findViewById(R.id.textView_scrollLog));
 
-
         buttonClearScreen.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 scrollLog.clearScreen();
@@ -166,9 +170,6 @@ public class MainActivity extends AppCompatActivity
                     .add(R.id.fragment_container, commandFragment).commit();
 
         }
-
-
-
 
     }
 
@@ -410,22 +411,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    public void onCreateApplication (){
-        scrollLog.appendTitle("Create Application");
-
-        getSupportActionBar().setTitle("Create Application");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        createApplicationFragment = new fCreateApplication();
-
-
-        createApplicationFragment.setArguments(getIntent().getExtras());
-        //getSupportFragmentManager().addToBackStack(null);
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,createApplicationFragment).addToBackStack("commandview").commit();
-
-    }
-
     public void onSelectApplicationReturn(byte [] baAppId) {
         scrollLog.appendTitle("SelectApplication Return");
 
@@ -453,9 +438,68 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void onCreateApplication (){
+        scrollLog.appendTitle("Create Application");
+
+        getSupportActionBar().setTitle("Create Application");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        createApplicationFragment = new fCreateApplication();
+        createApplicationFragment.setArguments(getIntent().getExtras());
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,createApplicationFragment).addToBackStack("commandview").commit();
+
+    }
 
     public void onCreateApplicationReturn(byte [] baAppId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] DFName){
         scrollLog.appendTitle("Create Application Return");
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+
+        getSupportFragmentManager().popBackStack();
+        scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
+        if (baAppId.length != 3) {
+            scrollLog.appendError("Application ID too short");
+            return;
+        }
+
+        try {
+            MifareDesfire.MifareResultType mfResult = desfireCard.createApplication(baAppId, bKeySetting1, bKeySetting2, baISOName, DFName);
+            if (mfResult != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(mfResult));
+            else
+                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+    public void onDeleteApplication (){
+        scrollLog.appendTitle("Delete Application");
+
+        getSupportActionBar().setTitle("Delete Application");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("applicationList", applicationList);
+        deleteApplicationFragment = new fDeleteApplication();
+        deleteApplicationFragment.setArguments(bundle);
+
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container, deleteApplicationFragment).addToBackStack("commandview").commit();
+
+    }
+
+    public void onDeleteApplicationReturn(byte [] baAppId) {
+        scrollLog.appendTitle("Delete Application Return");
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -469,23 +513,108 @@ public class MainActivity extends AppCompatActivity
         }
 
         try {
-            MifareDesfire.MifareResultType retValue = desfireCard.createApplication(baAppId, bKeySetting1, bKeySetting2, baISOName, DFName);
+            MifareDesfire.MifareResultType retValue = desfireCard.deleteApplication(baAppId);
             if (retValue != MifareDesfire.MifareResultType.SUCCESS)
-                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                scrollLog.appendError("Delete Application Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
-                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendTitle("Delete Application OK: " + ByteArray.byteArrayToHexString(baAppId));
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
             Log.e("onActivityResult", e.getMessage(), e);
         }
+    }
+
+    public void onGetKeyVersion (){
+        scrollLog.appendTitle("Get Key Version");
+
+        getSupportActionBar().setTitle("Get Key Version");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getKeyVersionFragment = new fGetKeyVersion();
 
 
-
-
-
+        getKeyVersionFragment.setArguments(getIntent().getExtras());
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,getKeyVersionFragment).addToBackStack("commandview").commit();
 
     }
+
+    public void onGoGetKeyVersionReturn(byte iKeyToInquire) {
+        scrollLog.appendTitle("Get Key Version Return");
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("Key to inquire = " + iKeyToInquire);
+
+        try {
+            MifareDesfire.MifareResult retValue = desfireCard.getKeyVersion(iKeyToInquire);
+            if (retValue.resultType != MifareDesfire.MifareResultType.SUCCESS)
+                scrollLog.appendError("Get Key Version Failed: " + desfireCard.DesFireErrorMsg(retValue.resultType));
+            else
+                scrollLog.appendTitle("Key Version: " + ByteArray.byteArrayToHexString(retValue.data));
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+
+    public void onFormatPICC (){
+
+        try {
+            scrollLog.appendTitle("Format PICC");
+            MifareDesfire.MifareResultType res = desfireCard.formatPICC();
+
+            if (res  == MifareDesfire.MifareResultType.AUTHENTICATION_ERROR)
+                scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onGetVersion", e.getMessage(), e);
+        }
+    }
+
+    public void onCreateFile (){
+        scrollLog.appendTitle("Create File");
+
+        getSupportActionBar().setTitle("Create File");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        createFileFragment = new fCreateFile();
+
+        createFileFragment.setArguments(getIntent().getExtras());
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,createFileFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public void onBackPressed() {

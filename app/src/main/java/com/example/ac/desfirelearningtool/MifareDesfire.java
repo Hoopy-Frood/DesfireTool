@@ -307,8 +307,6 @@ public class MifareDesfire {
     public MifareResultType formatPICC() throws IOException {
         MifareResult result = sendBytes(new byte[]{(byte)0xFC});
 
-        if (result.resultType == MifareResultType.AUTHENTICATION_ERROR)
-            scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
         return result.resultType;
     }
 
