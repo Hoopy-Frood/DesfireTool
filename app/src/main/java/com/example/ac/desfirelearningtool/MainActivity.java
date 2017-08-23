@@ -411,7 +411,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Authentication");
-            boolean authenticated = desfireCard.authenticate((byte)0, zeroKey);
+            boolean authenticated = desfireCard.authenticate((byte) 0x0A,(byte)0, zeroKey);
             if (authenticated)
                 scrollLog.appendTitle("Authentication Successful");
             else
@@ -435,7 +435,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Authentication");
-            boolean authenticated = desfireCard.authenticateISO((byte)0, zeroKey);
+            boolean authenticated = desfireCard.authenticate((byte) 0x1A, (byte)0, zeroKey);
             if (authenticated)
                 scrollLog.appendTitle("Authentication Successful");
             else

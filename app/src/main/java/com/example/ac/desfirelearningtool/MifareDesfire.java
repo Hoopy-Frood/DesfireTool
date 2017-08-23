@@ -16,6 +16,7 @@ import java.util.Arrays;
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -605,97 +606,200 @@ public class MifareDesfire {
     // ENCRYPTION RELATED
 
     // Mifare Desfire specifications require DESede/ECB without padding
-    protected Cipher getCipher(byte[] diversifiedKey)
+    protected Cipher getDecipher3DES(byte[] origKey)
             throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        Cipher chiper = Cipher.getInstance("DESede/ECB/NoPadding");
+        Cipher cryptoAlgo = Cipher.getInstance("DESede/ECB/NoPadding");
 
         ByteArray tripleDesKey = new ByteArray();
-        if (diversifiedKey.length == 8) {
-            tripleDesKey.append(diversifiedKey).append(diversifiedKey).append(diversifiedKey);
-        } else if (diversifiedKey.length == 16) {
+        if (origKey.length == 8) {
+            tripleDesKey.append(origKey).append(origKey).append(origKey);
+        } else if (origKey.length == 16) {
             byte[] firstKey = new byte[8];
-            System.arraycopy(diversifiedKey, 0, firstKey, 0, 8);
-            tripleDesKey.append(diversifiedKey).append(firstKey);
-        } else if (diversifiedKey.length == 24) {
-            tripleDesKey.append(diversifiedKey);
+            System.arraycopy(origKey, 0, firstKey, 0, 8);
+            tripleDesKey.append(origKey).append(firstKey);
+        } else if (origKey.length == 24) {
+            tripleDesKey.append(origKey);
         } else
             throw new IllegalArgumentException("Wrong key length");
 
         // And we initialize it with our (diversified) read or write key
         final SecretKey key = new SecretKeySpec(tripleDesKey.toArray(), "DESede");
-        chiper.init(Cipher.DECRYPT_MODE, key);
+        cryptoAlgo.init(Cipher.DECRYPT_MODE, key);
 
-        return chiper;
+        return cryptoAlgo;
+    }
+
+    // Mifare Desfire specifications require DESede/ECB without padding
+    protected Cipher getEncipher3K3DES(byte[] origKey)
+            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+        Cipher cryptoAlgo = Cipher.getInstance("DESede/CBC/NoPadding");
+
+        ByteArray tripleDesKey = new ByteArray();
+        if (origKey.length == 8) {
+            tripleDesKey.append(origKey).append(origKey).append(origKey);
+        } else if (origKey.length == 16) {
+            byte[] firstKey = new byte[8];
+            System.arraycopy(origKey, 0, firstKey, 0, 8);
+            tripleDesKey.append(origKey).append(firstKey);
+        } else if (origKey.length == 24) {
+            tripleDesKey.append(origKey);
+        } else
+            throw new IllegalArgumentException("Wrong key length");
+
+        // And we initialize it with our (diversified) read or write key
+        final SecretKey keySpec = new SecretKeySpec(tripleDesKey.toArray(), "DESede");
+
+        byte[] zeroBytes = new byte[8];
+        Arrays.fill(zeroBytes, (byte)0);
+        try {
+            cryptoAlgo.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(zeroBytes));
+        } catch (Exception e) {
+            Log.e("getEncipher3K3DES", e.getMessage(), e);
+        }
+
+        return cryptoAlgo;
+    }
+
+    // Mifare Desfire AuthISO specifications require DESede/cbc without padding
+    protected Cipher getDecipher3K3DES(byte[] origKey)
+            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+        Cipher cryptoAlgo = Cipher.getInstance("DESede/CBC/NoPadding");
+
+        ByteArray tripleDesKey = new ByteArray();
+        if (origKey.length == 8) {
+            tripleDesKey.append(origKey).append(origKey).append(origKey);
+        } else if (origKey.length == 16) {
+            byte[] firstKey = new byte[8];
+            System.arraycopy(origKey, 0, firstKey, 0, 8);
+            tripleDesKey.append(origKey).append(firstKey);
+        } else if (origKey.length == 24) {
+            tripleDesKey.append(origKey);
+        } else
+            throw new IllegalArgumentException("Wrong key length");
+
+        // And we initialize it with our (diversified) read or write key
+        final SecretKey keySpec = new SecretKeySpec(tripleDesKey.toArray(), "DESede");
+        byte[] zeroBytes = new byte[8];
+        Arrays.fill(zeroBytes, (byte)0);
+        try {
+            cryptoAlgo.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(zeroBytes));
+        } catch (Exception e) {
+            Log.e("getDecipher3K3DES", e.getMessage(), e);
+        }
+
+        return cryptoAlgo;
     }
 
 
-    public Challenge cardChallengeToCouplerChallenge(byte[] rndB, byte[] key)
+    public byte MODE_3DES = (byte) 0x0A;
+    public byte MODE_3K3DES = (byte) 0x1A;
+    public byte MODE_AES = (byte) 0xAA;
+
+
+    public Challenge computeResponseAndDataToVerify(byte authType, byte[] encRndB, byte[] key)
             throws GeneralSecurityException {
 
-        Cipher decipher = this.getCipher(key);
+        byte[] decRndA, rndB, rndBPrime, decRndBPrime;
+        byte[] rndA = null;
+        byte[] challengeMessage = null;
+        Cipher encipher;
+        Cipher decipher;
 
-        if (rndB == null || rndB.length < 9) {
-            throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
+        if (authType == MODE_3DES){
+
+            decipher = this.getDecipher3DES(key);
+
+            if (encRndB == null || encRndB.length < 9) {
+                throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
+            }
+
+            encRndB = ByteArray.appendCut(null, encRndB);
+
+            // We decrypt the challenge, and rotate one byte to the left
+            rndB = decipher.doFinal(encRndB);
+            rndBPrime = ByteArray.shiftLT(rndB);
+
+
+            // Then we generate a random number as our challenge for the coupler
+            rndA = new byte[8];
+            randomGenerator.nextBytes(rndA);
+
+            decRndA = decipher.doFinal(rndA);
+            // XOR of rndA, rndB  // This is CBC done manually
+            decRndBPrime = ByteArray.xor(decRndA, rndBPrime);
+            // The result is encrypted again
+            decRndBPrime = decipher.doFinal(decRndBPrime);
+
+            challengeMessage = ByteArray.from((byte)0xAF).append(decRndA).append(decRndBPrime).toArray();
+
+        } else if (authType == MODE_3K3DES) {
+            encipher = this.getEncipher3K3DES(key);
+            decipher = this.getDecipher3K3DES(key);
+
+            if (encRndB == null || encRndB.length < 17) {
+                throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
+            }
+
+            encRndB = ByteArray.appendCut(null, encRndB);
+
+            // We decrypt the challenge, and rotate one byte to the left
+            rndB = decipher.doFinal(encRndB);
+            rndBPrime = ByteArray.shiftLT(rndB);
+
+
+            rndA = new byte[rndB.length];   // Length 8 byte for DES/3DES, 16 byte for 3k3des and AES
+            randomGenerator.nextBytes(rndA);
+
+            byte[] encInput = new byte[rndA.length + rndBPrime.length];
+            System.arraycopy(rndA, 0, encInput, 0, rndA.length);
+            System.arraycopy(rndBPrime, 0, encInput, rndA.length, rndBPrime.length);
+
+            challengeMessage = ByteArray.from((byte)0xAF).append(encipher.doFinal(encInput));
         }
-
-        rndB = ByteArray.appendCut(null, rndB);
-
-        // We decrypt the challenge, and rotate one byte to the left
-        rndB = decipher.doFinal(rndB);
-        rndB = ByteArray.shiftLT(rndB);
-
-        // Then we generate a random number as our challenge for the coupler
-        byte[] plainCouplerChallenge = new byte[8];
-        randomGenerator.nextBytes(plainCouplerChallenge);
-
-        byte[] rndA = decipher.doFinal(plainCouplerChallenge);
-        // XOR of rndA, rndB
-        rndB = ByteArray.xor(rndA, rndB);
-        // The result is encrypted again
-        rndB = decipher.doFinal(rndB);
 
         // And sent back to the card
-        byte[] challengeMessage = ByteArray.from((byte)0xAF).append(rndA).append(rndB).toArray();
-
-        return new Challenge(challengeMessage, plainCouplerChallenge);
+        return new Challenge(challengeMessage, rndA);
     }
 
-    public boolean verifyCardResponse(byte[] cardResponse, byte[] originalPlainChallenge, byte[] key)
+    public boolean verifyCardResponse(byte authType, byte[] cardResponse, byte[] origRndA, byte[] key)
             throws GeneralSecurityException {
-        Cipher decipher = this.getCipher(key);
+        Cipher decipher;
+        if (authType == MODE_3DES)
+            decipher = this.getDecipher3DES(key);
+        else
+            decipher = this.getDecipher3K3DES(key);
 
-        if (cardResponse == null)
+        if ((cardResponse == null) || (cardResponse.length == 1))
             return false;
 
-        if (cardResponse.length == 9)
+        if ((cardResponse.length == 9) || (cardResponse.length == 17))
             cardResponse = ByteArray.appendCut(null, cardResponse);
 
-        if (cardResponse.length == 8) {
-            // We decrypt the response and shift the rightmost byte "all around" (to the left)
-            cardResponse = ByteArray.shiftRT(decipher.doFinal(cardResponse));
-            if (Arrays.equals(cardResponse, originalPlainChallenge)) {
-                return true;
-            }
+        // We decrypt the response and shift the rightmost byte "all around" (to the left)
+        cardResponse = ByteArray.shiftRT(decipher.doFinal(cardResponse));
+        if (Arrays.equals(cardResponse, origRndA)) {
+            return true;
         }
+
         return false;
     }
 
-    public byte[] getCardChallenge(byte keyNumber) throws Exception {
-        // Issue command 0x0A with the key number we want to use
-        byte[] cmd = ByteArray.from((byte)0x0A).append(keyNumber).toArray();
+    public byte[] getCardChallenge(byte authType, byte keyNumber) throws Exception {
+        byte[] cmd = ByteArray.from(authType).append(keyNumber).toArray();
         // Send the command to the key, receive the challenge
         byte[] response = cardCommunicator.transceive(cmd);
 
         return response;
     }
 
-    public boolean authenticate(byte keyNumber, byte[] key) throws Exception {
+
+    public boolean authenticate(byte authType, byte keyNumber, byte[] key) throws Exception {
 
         // Send 0A
-        byte[] rndB = getCardChallenge(keyNumber);
+        byte[] encRndB = getCardChallenge(authType, keyNumber);
 
         // Compute next command and required response
-        Challenge challenge = cardChallengeToCouplerChallenge(rndB, key);
+        Challenge challenge = computeResponseAndDataToVerify(authType, encRndB, key);
 
         byte[] challengeMessage = challenge.getChallenge();
         byte[] plainCouplerChallenge = challenge.getChallengeResponse();
@@ -703,7 +807,7 @@ public class MifareDesfire {
         // send AF
         byte[] cardResponse = cardCommunicator.transceive(challengeMessage);
 
-        return verifyCardResponse(cardResponse, plainCouplerChallenge, key);
+        return verifyCardResponse(authType, cardResponse, plainCouplerChallenge, key);
     }
 
     /**
