@@ -1,6 +1,7 @@
 package com.example.ac.desfirelearningtool;
 
 
+import android.os.Bundle;
 
 /**
  * Created by Ac on 8/19/2017.
@@ -10,6 +11,7 @@ public interface IMainActivityCallbacks {
     public void onGetVersion ();
     public void onGetCardUID();
     public void onGetApplicationIDs();
+    public Bundle onFragmentGetApplicationIDs();
     public void onGetDFNames();
     public void onGetFreeMem();
     public void onAuthenticate();
@@ -30,8 +32,12 @@ public interface IMainActivityCallbacks {
     public void onDeleteFile();
     public void onDeleteFileReturn(byte bFileID);
     public void onGetFileIDs();
+    public Bundle onFragmentGetFileIDs();
     public void onGetISOFileIDs();
     public void onGetFileSettings();
     public void onGetFileSettingsReturn(byte bFileID);
+
+
+    public void onAuthISO();
 
 }

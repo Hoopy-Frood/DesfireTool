@@ -114,9 +114,13 @@ public class MifareDesfire {
         return sendBytes(new byte[]{(byte)0xf5, fid});
     }
 
-    public byte[] getApplicationIDs() throws IOException {
+    public MifareResult getApplicationIDs() throws IOException {
         ByteArrayOutputStream appIDs = new ByteArrayOutputStream();
         MifareResult result = sendBytes(new byte[]{(byte)0x6a});
+
+        if (result.resultType != MifareDesfire.MifareResultType.SUCCESS) {
+            return result;
+        }
 
         appIDs.write(result.data);
 
@@ -125,7 +129,8 @@ public class MifareDesfire {
             appIDs.write(result.data);
         }
 
-        return appIDs.toByteArray();
+        result.data = appIDs.toByteArray();
+        return result;
     }
 
     public MifareResultType selectApplication(byte[] applicationId) throws IOException {
@@ -407,8 +412,6 @@ public class MifareDesfire {
         if (!(result[0] == 0x00 || result[0] == 0x0C))
             throw new IOException("Commit error: " + ByteArray.byteArrayToHexString(result));
     }
-
-
 
 
 

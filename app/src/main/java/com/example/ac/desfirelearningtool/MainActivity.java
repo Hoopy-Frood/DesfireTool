@@ -60,7 +60,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     private ScrollLog scrollLog;
 
     private byte[] applicationList;
+    private boolean applicationListPopulated;
     private byte[] baFileIDList;
+    private boolean bFileIDListPopulated;
     Toolbar toolbar;
 
 
@@ -219,13 +221,15 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         @Override
         public void run() {
             // After 10 seconds, die anyway
-            for (int i = 0; i < 20; ++i) {  //250 orig
+            for (int i = 0; i < 2; ++i) {  //250 orig
                 try {
                     int result = INfcTag_connect(nfcTag, nativeHandle, 0);
                     boolean present = INfcTag_isPresent(nfcTag, nativeHandle);
                     if (!present) {
                         Log.d("CardWatchdogRearm", "INfcTag_connect: " + result);
                         break;
+                    } else {
+                        Log.d("CardWatchdogRearm", "PRESENT INfcTag_connect: " + result);
                     }
 
                     Thread.sleep(40);
@@ -245,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // ...
 
         try {
-            communicator = new AndroidCommunicator(IsoDep.get(tag), true,scrollLog);
+            communicator = new AndroidCommunicator(IsoDep.get(tag), false,scrollLog);
 
             desfireCard = communicator.get(tag); // we do not specify a key here!
             if (desfireCard == null) {
@@ -257,6 +261,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.d("onCardDetection:"," CONNECTED");
             //scrollLog.setTextColor(0xAAFF0000);
             scrollLog.appendTitle("DESFire Connected\n");
+            applicationListPopulated = false;
+
 
             commandFragment.enableAllButtons();
 
@@ -302,8 +308,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Get Application ID");
-            applicationList = desfireCard.getApplicationIDs();
+            MifareDesfire.MifareResult res = desfireCard.getApplicationIDs();
+            if (res.resultType != MifareDesfire.MifareResultType.SUCCESS) {
+                scrollLog.appendError("Get Application ID Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
+                return;
+            }
+            applicationList = res.data;
+            applicationListPopulated = true;
 
+            if (applicationList.length == 0) {
+                scrollLog.appendTitle ("No application on card " );
+                return;
+            }
             scrollLog.appendTitle ("getAppIDs : " + ByteArray.byteArrayToHexString(applicationList));
 
         }
@@ -313,6 +329,19 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+
+    public Bundle onFragmentGetApplicationIDs (){
+
+        onGetApplicationIDs();
+
+        Bundle appListInfo = new Bundle();
+        appListInfo.putByteArray("applicationList",applicationList);
+        appListInfo.putBoolean("applicationListPopulated", applicationListPopulated);
+
+        return appListInfo;
+
+    }
+
 
 
     public void onGetFreeMem (){
@@ -339,10 +368,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             scrollLog.appendTitle("Get Get Key Settings");
             MifareDesfire.MifareResult res = desfireCard.getKeySettings();
 
-            if (res.resultType != MifareDesfire.MifareResultType.SUCCESS)
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
-            else
-                scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
+            if (res.resultType != MifareDesfire.MifareResultType.SUCCESS) {
+                scrollLog.appendError("Get Key Settins Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
+                return;
+            }
+            scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
 
         }
         catch (Exception e) {
@@ -395,6 +425,30 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
+
+    public void onAuthISO (){
+
+        // Select preset app ISO DES 150DE5
+        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
+        byte[] zeroKey = new byte[8];
+        Arrays.fill(zeroKey, (byte)0);
+
+        try {
+            scrollLog.appendTitle("Authentication");
+            boolean authenticated = desfireCard.authenticateISO((byte)0, zeroKey);
+            if (authenticated)
+                scrollLog.appendTitle("Authentication Successful");
+            else
+                scrollLog.appendError("Authentication Failed");
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
+        }
+    }
+
     public void onSelectApplication (){
         scrollLog.appendTitle("Select Application");
 
@@ -404,6 +458,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("applicationList", applicationList);
+        bundle.putBoolean("applicationListPopulated", applicationListPopulated);
         selectFragment = new fSelectApplication();
         selectFragment.setArguments(bundle);
 
@@ -682,27 +737,35 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     public void onGetFileIDs() {
         try {
-            scrollLog.appendTitle("Get File IDs");
+            scrollLog.appendTitle("Get FileIDs");
             MifareDesfire.MifareResult res = desfireCard.getFileIDs();
             if (res.resultType != MifareDesfire.MifareResultType.SUCCESS)
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
+                scrollLog.appendError("Get FileIDs Failed: " + desfireCard.DesFireErrorMsg(res.resultType));
 
-            if (res.data.length > 0) {
+            if (res.data.length > 0 ) {
                 scrollLog.appendTitle("FileIDs :" + ByteArray.byteArrayToHexString(res.data));
                 baFileIDList = res.data;
             } else {
                 scrollLog.appendTitle("No file in directory.");
                 baFileIDList = null;
             }
-
-
+            bFileIDListPopulated = true;
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
             Log.e("onGetVersion", e.getMessage(), e);
         }
+    }
+    public Bundle onFragmentGetFileIDs (){
 
+        onGetFileIDs();
+
+        Bundle FileListInfo = new Bundle();
+        FileListInfo.putByteArray("baFileIDList",baFileIDList);
+        FileListInfo.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
+
+        return FileListInfo;
 
     }
 

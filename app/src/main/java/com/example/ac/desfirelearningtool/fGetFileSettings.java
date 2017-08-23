@@ -6,7 +6,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -14,7 +13,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +26,7 @@ public class fGetFileSettings extends Fragment {
     private Button buttonGo;
     private EditText etFileID;
     private byte [] baFileIDList;
+    private boolean bFileIDListPopulated;
     private ListView lvFileIDList;
     View rootView;
     IMainActivityCallbacks mCallback;
@@ -63,6 +62,7 @@ public class fGetFileSettings extends Fragment {
         etFileID.addTextChangedListener(watcher);
 
         baFileIDList = getArguments().getByteArray("baFileIDList");
+        bFileIDListPopulated = getArguments().getBoolean("bFileIDListPopulated");
 
         //Log.v("Select application List", ByteArray.byteArrayToHexString(baFileIDList));
         populateListView ();
@@ -73,26 +73,34 @@ public class fGetFileSettings extends Fragment {
 
             public void onItemClick(AdapterView<?> arg0,View arg1, int position, long arg3)
             {
-                Toast.makeText(getContext(), "Clicked Item " + position, Toast.LENGTH_SHORT).show();
-                etFileID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(baFileIDList,(position)*3,(position)*3+3)));
 
+                if (bFileIDListPopulated == true) {
+                    if (position == lvFileIDList.getAdapter().getCount() - 1) {
+                        Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+                        baFileIDList = fileListInfo.getByteArray("baFileIDList");
+                        bFileIDListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
+
+                        populateListView();
+
+                    } else {
+                        etFileID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(baFileIDList, (position) * 3, (position) * 3 + 3)));
+                    }
+                } else {
+                    Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+                    baFileIDList = fileListInfo.getByteArray("baFileIDList");
+                    bFileIDListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
+
+                    populateListView();
+
+                }
             }
         });
+
+
 
         return rootView;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                Log.d("onOptionsItemSelected", "Back pressed");
-                getActivity().onBackPressed();
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
 
     private final TextWatcher watcher = new TextWatcher() {
@@ -119,12 +127,15 @@ public class fGetFileSettings extends Fragment {
         // you already have yours).
         List<String> ListFileIDList = new ArrayList<String>();
 
-        if (baFileIDList != null) {
-            if  (baFileIDList.length > 0) {
+        if (bFileIDListPopulated == true) {
+            if  (baFileIDList != null) {
                 for (int i = 0; i < baFileIDList.length; i = i + 1) {
                     ListFileIDList.add(ByteArray.byteArrayToHexString(baFileIDList, i, 1));
                 }
             }
+            ListFileIDList.add("Update FileIDs");
+        } else {
+            ListFileIDList.add("Call Get FileIDs");
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                 getActivity(),

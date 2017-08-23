@@ -147,6 +147,17 @@
                 android:textAllCaps="false"
                 android:textSize="12sp" />
 
+            <Button
+                android:id="@+id/button_AuthISOTest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/button_Authenticate"
+                android:layout_toEndOf="@+id/button_GetKeySettings"
+                android:text="Auth ISO\nTest"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+
 
 
             <!-- Application Level Related -->

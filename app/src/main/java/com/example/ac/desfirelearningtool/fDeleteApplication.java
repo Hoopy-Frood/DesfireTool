@@ -1,13 +1,11 @@
 package com.example.ac.desfirelearningtool;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -15,7 +13,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +26,7 @@ public class fDeleteApplication extends Fragment {
         private Button buttonGo;
         private EditText applicationID;
         private byte [] applicationList;
+        private boolean applicationListPopulated;
         private ListView lvApplicationList;
         View rootView;
         IMainActivityCallbacks mCallback;
@@ -65,6 +63,7 @@ public class fDeleteApplication extends Fragment {
             applicationID.addTextChangedListener(watcher);
 
             applicationList = getArguments().getByteArray("applicationList");
+            applicationListPopulated = getArguments().getBoolean("applicationListPopulated");
 
             //Log.v("Select application List", ByteArray.byteArrayToHexString(applicationList));
             populateListView ();
@@ -75,8 +74,25 @@ public class fDeleteApplication extends Fragment {
 
                 public void onItemClick(AdapterView<?> arg0,View arg1, int position, long arg3)
                 {
-                    Toast.makeText(getContext(), "Clicked Item " + position, Toast.LENGTH_SHORT).show();
-                    applicationID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(applicationList,(position)*3,(position)*3+3)));
+                    if (applicationListPopulated == true) {
+                        if (position == lvApplicationList.getAdapter().getCount() - 1){
+                            Bundle appListInfo = mCallback.onFragmentGetApplicationIDs();
+                            applicationList = appListInfo.getByteArray("applicationList");
+                            applicationListPopulated = appListInfo.getBoolean("applicationListPopulated");
+
+                            populateListView();
+
+                        }else {
+                            applicationID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(applicationList, (position) * 3, (position) * 3 + 3)));
+                        }
+                    } else {
+                        Bundle appListInfo = mCallback.onFragmentGetApplicationIDs();
+                        applicationList = appListInfo.getByteArray("applicationList");
+                        applicationListPopulated = appListInfo.getBoolean("applicationListPopulated");
+
+                        populateListView();
+
+                    }
 
                 }
             });
@@ -108,12 +124,15 @@ public class fDeleteApplication extends Fragment {
             // you already have yours).
             List<String> ListApplicationList = new ArrayList<String>();
 
-            if (applicationList != null) {
+            if (applicationListPopulated == true) {
                 if  (applicationList.length %3 == 0) {
                     for (int i = 0; i < applicationList.length; i = i + 3) {
                         ListApplicationList.add(ByteArray.byteArrayToHexString(applicationList, i, 3));
                     }
                 }
+                ListApplicationList.add("Update Application List");
+            } else {
+                ListApplicationList.add("Call Get Application IDs");
             }
             ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                     getActivity(),

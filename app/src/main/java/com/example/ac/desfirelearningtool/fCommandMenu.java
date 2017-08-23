@@ -55,9 +55,8 @@ public class fCommandMenu extends Fragment{
     private Button buttonCreateFile;
     private Button buttonDeleteFile;
     private Button buttonChangeFileSettings;
-    // Log Management
-    private Button buttonClearScreen;
-    private Button buttonCopyLog;
+    // TEST
+    private Button buttonAuthISO;
 
 
     public fCommandMenu () {
@@ -113,6 +112,9 @@ public class fCommandMenu extends Fragment{
         buttonCreateFile = (Button) rootView.findViewById(R.id.button_CreateFile);
         buttonDeleteFile = (Button) rootView.findViewById(R.id.button_DeleteFile);
         buttonChangeFileSettings = (Button) rootView.findViewById(R.id.button_ChangeFileSettings);
+
+        //Button - Test
+        buttonAuthISO = (Button) rootView.findViewById(R.id.button_AuthISOTest);
 
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
@@ -200,7 +202,10 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {mCallback.onDeleteApplication();
             }
         });
-
+        buttonAuthISO.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onAuthISO();
+            }
+        });
 
         disableAllButtons();
 
@@ -301,6 +306,5 @@ public class fCommandMenu extends Fragment{
         buttonDeleteFile.setEnabled(true);
         buttonChangeFileSettings.setEnabled(false);
     }
-
 
 }
