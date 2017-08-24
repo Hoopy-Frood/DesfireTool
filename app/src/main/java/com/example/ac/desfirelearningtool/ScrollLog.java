@@ -1,7 +1,6 @@
 package com.example.ac.desfirelearningtool;
 
 import android.graphics.Color;
-import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
@@ -40,6 +39,18 @@ public class ScrollLog {
 
         SpannableString spanText= new SpannableString(appendText);
         spanText.setSpan(new ForegroundColorSpan(Color.BLUE), 0, appendText.length(), 0);
+        builder.append(spanText);
+
+        scrollLog.append(builder);
+        scrollLog.append("\n");
+
+    }
+
+    public void appendStatus(String appendText){
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+
+        SpannableString spanText= new SpannableString(appendText);
+        spanText.setSpan(new ForegroundColorSpan(Color.GREEN), 0, appendText.length(), 0);
         builder.append(spanText);
 
         scrollLog.append(builder);

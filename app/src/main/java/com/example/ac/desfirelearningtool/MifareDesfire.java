@@ -439,7 +439,8 @@ public class MifareDesfire {
         DUPLICATE_ERROR,
         EEPROM_ERROR,
         FILE_NOT_FOUND,
-        FILE_INTEGRITY_ERROR
+        FILE_INTEGRITY_ERROR,
+        PCD_AUTHENTICATION_ERROR
     }
 
     public class MifareResult {
@@ -598,6 +599,8 @@ public class MifareDesfire {
             case FILE_INTEGRITY_ERROR:
                 returnString = "File integrity error";
                 break;
+            case PCD_AUTHENTICATION_ERROR:
+                returnString = "PCD authentication verification failed";
             default:
                 returnString = "Unknown error";
         }
@@ -641,17 +644,7 @@ public class MifareDesfire {
     }
 
     // Mifare Desfire specifications require DESede/ECB without padding
-    protected Cipher getInitEncipher3K3DES(SecretKey keySpec)
-            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        Cipher cryptoAlgo = Cipher.getInstance("DESede/CBC/NoPadding");
 
-        byte[] zeroBytes = new byte[8];
-        Arrays.fill(zeroBytes, (byte)0);
-
-        cryptoAlgo.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(zeroBytes));
-
-        return cryptoAlgo;
-    }
     protected Cipher getInitDecipher3K3DES(SecretKey keySpec)
             throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         Cipher cryptoAlgo = Cipher.getInstance("DESede/CBC/NoPadding");
@@ -673,7 +666,7 @@ public class MifareDesfire {
     public byte MODE_AES = (byte) 0xAA;
 
 
-    Cipher encipher, decipher;
+    Cipher cipher;
     SecretKey keySpec;
     byte [] newIV = new byte[8];
 
@@ -687,58 +680,41 @@ public class MifareDesfire {
 
         if (authType == MODE_3DES){
 
-            decipher = getDecipher3DES(keySpec);
-
-            if (encRndB == null || encRndB.length < 9) {
-                throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
-            }
-
-            encRndB = ByteArray.appendCut(null, encRndB);
+            cipher = getDecipher3DES(keySpec);
 
             // We decrypt the challenge, and rotate one byte to the left
-            rndB = decipher.doFinal(encRndB);
+            rndB = cipher.doFinal(encRndB);
             rndBPrime = ByteArray.shiftLT(rndB);
-
 
             // Then we generate a random number as our challenge for the coupler
             rndA = new byte[8];
             randomGenerator.nextBytes(rndA);
 
 
-            decRndA = decipher.doFinal(rndA);
+            decRndA = cipher.doFinal(rndA);
             // XOR of rndA, rndB  // This is CBC done manually
             decRndBPrime = ByteArray.xor(decRndA, rndBPrime);
             // The result is encrypted again
-            decRndBPrime = decipher.doFinal(decRndBPrime);
+            decRndBPrime = cipher.doFinal(decRndBPrime);
 
             challengeMessage = ByteArray.from((byte)0xAF).append(decRndA).append(decRndBPrime).toArray();
 
         } else if (authType == MODE_3K3DES) {
-            encipher = getInitEncipher3K3DES(keySpec);
-            decipher = getInitDecipher3K3DES(keySpec);
-
-            if (encRndB == null) {
-                throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
-            }
-
-            if (encRndB[0] != (byte) 0xAF) {
-                throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
-            }
-
-            encRndB = ByteArray.appendCut(null, encRndB);
+            cipher = getInitDecipher3K3DES(keySpec);
 
             // We decrypt the challenge, and rotate one byte to the left
-            rndB = decipher.doFinal(encRndB);   // Decrypt
+            rndB = cipher.doFinal(encRndB);   // Decrypt
             Log.d("computeRAndDataToVerify", "rndB                = " + ByteArray.byteArrayToHexString(rndB));
-            //System.arraycopy(rndB, rndB.length-8, newIV, 0, 8);
-            Log.d("computeRAndDataToVerify", "newIV               = " + ByteArray.byteArrayToHexString(newIV));
+            // Write the first IV as the result from PICC's encryption
+            System.arraycopy(encRndB, encRndB.length-8, newIV, 0, 8);
+            Log.d("computeRAndDataToVerify", "newIV               = " + ByteArray.byteArrayToHexString(encRndB));
 
             rndBPrime = ByteArray.shiftLT(rndB);
             Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
 
             rndA = new byte[rndB.length];   // Length 8 byte for DES/3DES, 16 byte for 3k3des and AES
-            //randomGenerator.nextBytes(rndA);
-            Arrays.fill(rndA, (byte)0);
+            randomGenerator.nextBytes(rndA);
+            //Arrays.fill(rndA, (byte)0);
             Log.d("computeRAndDataToVerify", "rndA                = " + ByteArray.byteArrayToHexString(rndA));
 
             byte[] encInput = new byte[rndA.length + rndBPrime.length];
@@ -746,13 +722,13 @@ public class MifareDesfire {
             System.arraycopy(rndBPrime, 0, encInput, rndA.length, rndBPrime.length);
             Log.d("computeRAndDataToVerify", "encInput            = " + ByteArray.byteArrayToHexString(encInput));
 
-            //encipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(newIV));
-            challengeMessage = ByteArray.from((byte)0xAF).append(encipher.doFinal(encInput)).toArray();
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(newIV));
+            challengeMessage = ByteArray.from((byte)0xAF).append(cipher.doFinal(encInput)).toArray();
             System.arraycopy(challengeMessage, challengeMessage.length-8, newIV, 0, 8);
 
             Log.d("computeRAndDataToVerify", "challengeMessage    = " + ByteArray.byteArrayToHexString(challengeMessage));
             Log.d("computeRAndDataToVerify", "newIV               = " + ByteArray.byteArrayToHexString(newIV));
-            Log.d("computeRAndDataToVerify", "encipher.getIV()    = " + ByteArray.byteArrayToHexString(encipher.getIV()));
+            Log.d("computeRAndDataToVerify", "encipher.getIV()    = " + ByteArray.byteArrayToHexString(cipher.getIV()));
         }
 
         // And sent back to the card
@@ -761,26 +737,22 @@ public class MifareDesfire {
 
     public boolean verifyCardResponse(byte authType, byte[] cardResponse, byte[] origRndA, byte[] key)
             throws GeneralSecurityException {
-        /*if (authType == MODE_3DES)
-            decipher = this.getDecipher3DES(key);
-        else
-            decipher = this.getDecipher3K3DES(key);
-*/
+
+
         keySpec= getKeySpec(key);
-        if ((cardResponse == null) || (cardResponse.length == 1))
+        if ((cardResponse == null))
             return false;
 
         Log.d("verifyCardResponse", "cardResponse           = " + ByteArray.byteArrayToHexString(cardResponse));
-        if ((cardResponse.length == 9) || (cardResponse.length == 17))
-            cardResponse = ByteArray.appendCut(null, cardResponse);
-        Log.d("verifyCardResponse", "cardResponse after cut = " + ByteArray.byteArrayToHexString(cardResponse));
-        // We decrypt the response and shift the rightmost byte "all around" (to the left)
+
+
+         // We decrypt the response and shift the rightmost byte "all around" (to the left)
 
         if (authType == MODE_3K3DES) {
-            decipher.init(decipher.DECRYPT_MODE, keySpec, new IvParameterSpec(newIV));
-            Log.d("verifyCardResponse", "current IV             = " + ByteArray.byteArrayToHexString(decipher.getIV()));
+            cipher.init(cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(newIV));
+            Log.d("verifyCardResponse", "current IV             = " + ByteArray.byteArrayToHexString(cipher.getIV()));
         }
-        cardResponse = decipher.doFinal(cardResponse);
+        cardResponse = cipher.doFinal(cardResponse);
         Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
         cardResponse = ByteArray.shiftRT(cardResponse);
         Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
@@ -793,30 +765,41 @@ public class MifareDesfire {
         return false;
     }
 
-    public byte[] getCardChallenge(byte authType, byte keyNumber) throws Exception {
+    public MifareResult getCardChallenge(byte authType, byte keyNumber) throws Exception {
         byte[] cmd = ByteArray.from(authType).append(keyNumber).toArray();
         // Send the command to the key, receive the challenge
-        byte[] response = cardCommunicator.transceive(cmd);
+        MifareResult res = sendBytes(cmd);
 
-        return response;
+        return res;
     }
 
 
-    public boolean authenticate(byte authType, byte keyNumber, byte[] key) throws Exception {
+    public MifareResultType authenticate(byte authType, byte keyNumber, byte[] key) throws Exception {
 
         // Send 0A
-        byte[] encRndB = getCardChallenge(authType, keyNumber);
+        MifareResult CardChallenge = getCardChallenge(authType, keyNumber);
+        if (CardChallenge.resultType != MifareResultType.ADDITONAL_FRAME){
+            return CardChallenge.resultType;
+        }
 
         // Compute next command and required response
-        Challenge challenge = computeResponseAndDataToVerify(authType, encRndB, key);
+        Challenge challenge = computeResponseAndDataToVerify(authType, CardChallenge.data, key);
 
         byte[] challengeMessage = challenge.getChallenge();
         byte[] plainCouplerChallenge = challenge.getChallengeResponse();
 
         // send AF
-        byte[] cardResponse = cardCommunicator.transceive(challengeMessage);
+        MifareResult cardResponse = sendBytes(challengeMessage);
+        if (CardChallenge.resultType != MifareResultType.SUCCESS){
+            return CardChallenge.resultType;
+        }
 
-        return verifyCardResponse(authType, cardResponse, plainCouplerChallenge, key);
+
+        if (verifyCardResponse(authType, cardResponse.data, plainCouplerChallenge, key))
+            return MifareResultType.SUCCESS;
+
+        return MifareResultType.PCD_AUTHENTICATION_ERROR;
+
     }
 
     /**

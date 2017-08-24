@@ -411,11 +411,13 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Authentication");
-            boolean authenticated = desfireCard.authenticate((byte) 0x0A,(byte)0, zeroKey);
-            if (authenticated)
-                scrollLog.appendTitle("Authentication Successful");
-            else
-                scrollLog.appendError("Authentication Failed");
+            MifareDesfire.MifareResultType res = desfireCard.authenticate((byte) 0x0A, (byte) 0, zeroKey);
+            if (res != MifareDesfire.MifareResultType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else{
+
+                scrollLog.appendStatus("Authentication Successful");
+            }
 
         }
         catch (Exception e) {
@@ -435,11 +437,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Authentication");
-            boolean authenticated = desfireCard.authenticate((byte) 0x1A, (byte)0, zeroKey);
-            if (authenticated)
-                scrollLog.appendTitle("Authentication Successful");
-            else
-                scrollLog.appendError("Authentication Failed");
+            MifareDesfire.MifareResultType res = desfireCard.authenticate((byte) 0x1A, (byte) 0, zeroKey);
+            if (res != MifareDesfire.MifareResultType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
 
         }
         catch (Exception e) {
