@@ -672,8 +672,10 @@ public class MifareDesfire {
     public byte MODE_3K3DES = (byte) 0x1A;
     public byte MODE_AES = (byte) 0xAA;
 
-    Cipher crytoAlgo;
+
+    Cipher encipher, decipher;
     SecretKey keySpec;
+    byte [] newIV = new byte[8];
 
     public Challenge computeResponseAndDataToVerify(byte authType, byte[] encRndB, byte[] key)
             throws GeneralSecurityException {
@@ -685,7 +687,7 @@ public class MifareDesfire {
 
         if (authType == MODE_3DES){
 
-            crytoAlgo = getDecipher3DES(keySpec);
+            decipher = getDecipher3DES(keySpec);
 
             if (encRndB == null || encRndB.length < 9) {
                 throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
@@ -694,7 +696,7 @@ public class MifareDesfire {
             encRndB = ByteArray.appendCut(null, encRndB);
 
             // We decrypt the challenge, and rotate one byte to the left
-            rndB = crytoAlgo.doFinal(encRndB);
+            rndB = decipher.doFinal(encRndB);
             rndBPrime = ByteArray.shiftLT(rndB);
 
 
@@ -703,26 +705,34 @@ public class MifareDesfire {
             randomGenerator.nextBytes(rndA);
 
 
-            decRndA = crytoAlgo.doFinal(rndA);
+            decRndA = decipher.doFinal(rndA);
             // XOR of rndA, rndB  // This is CBC done manually
             decRndBPrime = ByteArray.xor(decRndA, rndBPrime);
             // The result is encrypted again
-            decRndBPrime = crytoAlgo.doFinal(decRndBPrime);
+            decRndBPrime = decipher.doFinal(decRndBPrime);
 
             challengeMessage = ByteArray.from((byte)0xAF).append(decRndA).append(decRndBPrime).toArray();
 
         } else if (authType == MODE_3K3DES) {
+            encipher = getInitEncipher3K3DES(keySpec);
+            decipher = getInitDecipher3K3DES(keySpec);
 
-            crytoAlgo = getInitDecipher3K3DES(keySpec);
+            if (encRndB == null) {
+                throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
+            }
 
-            if (encRndB == null || encRndB.length < 17) {
+            if (encRndB[0] != (byte) 0xAF) {
                 throw new IllegalArgumentException("Not a valid challenge (application not existing?)");
             }
 
             encRndB = ByteArray.appendCut(null, encRndB);
 
             // We decrypt the challenge, and rotate one byte to the left
-            rndB = crytoAlgo.doFinal(encRndB);   // Decrypt
+            rndB = decipher.doFinal(encRndB);   // Decrypt
+            Log.d("computeRAndDataToVerify", "rndB                = " + ByteArray.byteArrayToHexString(rndB));
+            //System.arraycopy(rndB, rndB.length-8, newIV, 0, 8);
+            Log.d("computeRAndDataToVerify", "newIV               = " + ByteArray.byteArrayToHexString(newIV));
+
             rndBPrime = ByteArray.shiftLT(rndB);
             Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
 
@@ -736,9 +746,13 @@ public class MifareDesfire {
             System.arraycopy(rndBPrime, 0, encInput, rndA.length, rndBPrime.length);
             Log.d("computeRAndDataToVerify", "encInput            = " + ByteArray.byteArrayToHexString(encInput));
 
-            crytoAlgo.init(Cipher.DECRYPT_MODE, keySpec);
-            challengeMessage = ByteArray.from((byte)0xAF).append(crytoAlgo.doFinal(encInput)).toArray();
+            //encipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(newIV));
+            challengeMessage = ByteArray.from((byte)0xAF).append(encipher.doFinal(encInput)).toArray();
+            System.arraycopy(challengeMessage, challengeMessage.length-8, newIV, 0, 8);
+
             Log.d("computeRAndDataToVerify", "challengeMessage    = " + ByteArray.byteArrayToHexString(challengeMessage));
+            Log.d("computeRAndDataToVerify", "newIV               = " + ByteArray.byteArrayToHexString(newIV));
+            Log.d("computeRAndDataToVerify", "encipher.getIV()    = " + ByteArray.byteArrayToHexString(encipher.getIV()));
         }
 
         // And sent back to the card
@@ -752,6 +766,7 @@ public class MifareDesfire {
         else
             decipher = this.getDecipher3K3DES(key);
 */
+        keySpec= getKeySpec(key);
         if ((cardResponse == null) || (cardResponse.length == 1))
             return false;
 
@@ -760,7 +775,12 @@ public class MifareDesfire {
             cardResponse = ByteArray.appendCut(null, cardResponse);
         Log.d("verifyCardResponse", "cardResponse after cut = " + ByteArray.byteArrayToHexString(cardResponse));
         // We decrypt the response and shift the rightmost byte "all around" (to the left)
-        cardResponse = crytoAlgo.doFinal(cardResponse);
+
+        if (authType == MODE_3K3DES) {
+            decipher.init(decipher.DECRYPT_MODE, keySpec, new IvParameterSpec(newIV));
+            Log.d("verifyCardResponse", "current IV             = " + ByteArray.byteArrayToHexString(decipher.getIV()));
+        }
+        cardResponse = decipher.doFinal(cardResponse);
         Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
         cardResponse = ByteArray.shiftRT(cardResponse);
         Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
