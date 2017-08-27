@@ -50,7 +50,19 @@ public class ScrollLog {
         SpannableStringBuilder builder = new SpannableStringBuilder();
 
         SpannableString spanText= new SpannableString(appendText);
-        spanText.setSpan(new ForegroundColorSpan(Color.GREEN), 0, appendText.length(), 0);
+        spanText.setSpan(new ForegroundColorSpan((int) 0xFF008000), 0, appendText.length(), 0);  // Dark Green
+        builder.append(spanText);
+
+        scrollLog.append(builder);
+        scrollLog.append("\n");
+
+    }
+
+    public void appendData(String appendText){
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+
+        SpannableString spanText= new SpannableString(appendText);
+        spanText.setSpan(new ForegroundColorSpan((int) 0xFF000080), 0, appendText.length(), 0);
         builder.append(spanText);
 
         scrollLog.append(builder);

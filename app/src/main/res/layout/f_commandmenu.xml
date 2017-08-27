@@ -157,6 +157,16 @@
                 android:textAllCaps="false"
                 android:textSize="12sp" />
 
+            <Button
+                android:id="@+id/button_AuthAESTest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Auth AES\nTest"
+                android:textAllCaps="false"
+                android:textSize="12sp"
+                android:layout_below="@+id/divider_Security"
+                android:layout_toEndOf="@+id/button_ChangeKeySettings" />
+
 
 
 

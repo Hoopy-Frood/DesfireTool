@@ -57,6 +57,8 @@ public class fCommandMenu extends Fragment{
     private Button buttonChangeFileSettings;
     // TEST
     private Button buttonAuthISO;
+    private Button buttonAuthAES;
+
 
 
     public fCommandMenu () {
@@ -115,6 +117,7 @@ public class fCommandMenu extends Fragment{
 
         //Button - Test
         buttonAuthISO = (Button) rootView.findViewById(R.id.button_AuthISOTest);
+        buttonAuthAES = (Button) rootView.findViewById(R.id.button_AuthAESTest);
 
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
@@ -204,6 +207,10 @@ public class fCommandMenu extends Fragment{
         });
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthISO();
+            }
+        });
+        buttonAuthAES.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onAuthAES();
             }
         });
 

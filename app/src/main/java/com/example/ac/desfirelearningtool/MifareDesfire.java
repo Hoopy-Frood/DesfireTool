@@ -7,18 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
-
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 
 /**
@@ -32,7 +21,7 @@ public class MifareDesfire {
     private final int maxDataSize = 52 - macSize;
 
     protected ICardCommunicator cardCommunicator;
-    protected SecureRandom randomGenerator;
+
     public byte[] uid;
     private ScrollLog scrollLog;
 
@@ -43,8 +32,9 @@ public class MifareDesfire {
     public MifareDesfire(ICardCommunicator cardCommunicator, byte[] uid, ScrollLog tv_scrollLog) throws NoSuchAlgorithmException {
         this.cardCommunicator = cardCommunicator;
         this.uid = uid;
-        this.randomGenerator = new SecureRandom();
+
         this.scrollLog = tv_scrollLog;
+        this.dfCrypto = new DesfireCrypto();
     }
 
     /**
@@ -52,27 +42,27 @@ public class MifareDesfire {
      *
      * @throws IOException
      */
-    public MifareResult getVersion() throws IOException {
-        MifareResult result = sendBytes(new byte[]{(byte)0x60});
+    public DesfireResponse getVersion() throws IOException {
+        DesfireResponse result = sendBytes(new byte[]{(byte)0x60});
 
-        if (result.resultType != MifareResultType.ADDITONAL_FRAME)
-            scrollLog.appendError("Error in card response: " + DesFireErrorMsg(result.resultType));
+        if (result.status != statusType.ADDITONAL_FRAME)
+            scrollLog.appendError("Error in card response: " + DesFireErrorMsg(result.status));
         return result;
     }
 
-    public MifareResult getMoreData() throws IOException {
+    public DesfireResponse getMoreData() throws IOException {
         return sendBytes(new byte[]{(byte)0xAF});
     }
 
-    public MifareResult getDFNames() throws IOException {
+    public DesfireResponse getDFNames() throws IOException {
         return sendBytes(new byte[]{(byte)0x6D});
     }
 
-    public MifareResult getFileIDs() throws IOException {
+    public DesfireResponse getFileIDs() throws IOException {
         return sendBytes(new byte[]{(byte)0x6F});
     }
 
-    public MifareResult getISOFileIDs() throws IOException {
+    public DesfireResponse getISOFileIDs() throws IOException {
         return sendBytes(new byte[]{(byte)0x61});
     }
 
@@ -81,12 +71,15 @@ public class MifareDesfire {
      *
      * @throws IOException
      */
-    public byte[] getCardUID() throws IOException {
-        MifareResult result = sendBytes(new byte[]{(byte)0x51});
+    public DesfireResponse getCardUID() throws Exception {
+        DesfireResponse res = sendBytes(new byte[]{(byte)0x51});
+        
+        if (res.status != statusType.SUCCESS ) {
+            return res;
+        }
 
-        if (result.resultType == MifareResultType.AUTHENTICATION_ERROR)
-            scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
-        return result.data;
+        res.data = dfCrypto.decrypt(res.data);
+        return res;
     }
 
     /**
@@ -94,7 +87,7 @@ public class MifareDesfire {
      *
      * @throws IOException
      */
-    public MifareResult getFreeMem() throws IOException {
+    public DesfireResponse getFreeMem() throws IOException {
         return sendBytes(new byte[]{(byte)0x6E});
     }
 
@@ -103,30 +96,30 @@ public class MifareDesfire {
      *
      * @throws IOException
      */
-    public MifareResult getKeySettings() throws IOException {
+    public DesfireResponse getKeySettings() throws IOException {
         return sendBytes(new byte[]{(byte)0x45});
     }
 
-    public MifareResult getKeyVersion(byte selectedKey) throws IOException {
+    public DesfireResponse getKeyVersion(byte selectedKey) throws IOException {
         byte[] params = ByteArray.from((byte) 0x64).append(selectedKey).toArray();
         return sendBytes(params);
     }
 
-    public MifareResult getFileSettings(byte fid) throws IOException {
+    public DesfireResponse getFileSettings(byte fid) throws IOException {
         return sendBytes(new byte[]{(byte)0xf5, fid});
     }
 
-    public MifareResult getApplicationIDs() throws IOException {
+    public DesfireResponse getApplicationIDs() throws IOException {
         ByteArrayOutputStream appIDs = new ByteArrayOutputStream();
-        MifareResult result = sendBytes(new byte[]{(byte)0x6a});
+        DesfireResponse result = sendBytes(new byte[]{(byte)0x6a});
 
-        if (result.resultType != MifareDesfire.MifareResultType.SUCCESS) {
+        if (result.status != MifareDesfire.statusType.SUCCESS) {
             return result;
         }
 
         appIDs.write(result.data);
 
-        if (result.resultType == MifareResultType.ADDITONAL_FRAME) {
+        if (result.status == statusType.ADDITONAL_FRAME) {
             result = sendBytes(new byte[]{(byte)0xAF});
             appIDs.write(result.data);
         }
@@ -135,14 +128,15 @@ public class MifareDesfire {
         return result;
     }
 
-    public MifareResultType selectApplication(byte[] applicationId) throws IOException {
+    public statusType selectApplication(byte[] applicationId) throws IOException {
         byte[] params = ByteArray.from((byte) 0x5a).append(applicationId).toArray();
-        MifareResult res = sendBytes(params);
+        DesfireResponse res = sendBytes(params);
+        dfCrypto.reset();
 
-        return res.resultType;
+        return res.status;
     }
 
-    public MifareResultType createApplication(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] baDFName) throws IOException {
+    public statusType createApplication(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] baDFName) throws IOException {
         // TODO: Sanity Checks
 
         ByteArray baCreateDataFileArray = new ByteArray();
@@ -161,16 +155,16 @@ public class MifareDesfire {
 
 
         // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        MifareResult res = sendBytes(baCreateDataFileArray.toArray());
+        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
 
-        return res.resultType;
+        return res.status;
     }
 
-    protected MifareResultType deleteApplication(byte[] applicationId) throws IOException {
+    protected statusType deleteApplication(byte[] applicationId) throws IOException {
         byte[] params = ByteArray.from((byte) 0xDA).append(applicationId).toArray();
-        MifareResult res = sendBytes(params);
+        DesfireResponse res = sendBytes(params);
 
-        return res.resultType;
+        return res.status;
     }
 
     /**
@@ -185,7 +179,7 @@ public class MifareDesfire {
      * @return
      * @throws IOException
      */
-    public MifareResultType createDataFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
+    public statusType createDataFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
         // TODO: Sanity Checks
 
         ByteArray baCreateDataFileArray = new ByteArray();
@@ -212,9 +206,9 @@ public class MifareDesfire {
 
 
         // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        MifareResult res = sendBytes(baCreateDataFileArray.toArray());
+        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
 
-        return res.resultType;
+        return res.status;
     }
 
     /**
@@ -230,7 +224,7 @@ public class MifareDesfire {
      * @return
      * @throws IOException
      */
-    public MifareResultType createRecordFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
+    public statusType createRecordFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
         // TODO: Sanity Checks
 
         ByteArray baCreateDataFileArray = new ByteArray();
@@ -263,12 +257,12 @@ public class MifareDesfire {
         Log.v("createRecordFile", "Command for Create Record File  : " + ByteArray.byteArrayToHexString(baCreateDataFileArray.toArray()));
 
         // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        MifareResult res = sendBytes(baCreateDataFileArray.toArray());
+        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
 
-        return res.resultType;
+        return res.status;
     }
 
-    public MifareResultType createValueFile(byte bFileType, byte bFileID, byte bCommSetting, byte [] baAccessRights, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) throws IOException {
+    public statusType createValueFile(byte bFileType, byte bFileID, byte bCommSetting, byte [] baAccessRights, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) throws IOException {
         // TODO: Sanity Checks
 
         ByteArray baCreateDataFileArray = new ByteArray();
@@ -304,25 +298,25 @@ public class MifareDesfire {
 
         Log.v("createRecordFile", "Command for Create Value File  : " + ByteArray.byteArrayToHexString(baCreateDataFileArray.toArray()));
 
-        MifareResult res = sendBytes(baCreateDataFileArray.toArray());
+        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
 
-        return res.resultType;
+        return res.status;
     }
 
-    public MifareResult deleteFile(byte fid) throws IOException {
+    public DesfireResponse deleteFile(byte fid) throws IOException {
         return sendBytes(new byte[]{(byte)0xDF, fid});
     }
 
-    public MifareResultType formatPICC() throws IOException {
-        MifareResult result = sendBytes(new byte[]{(byte)0xFC});
+    public statusType formatPICC() throws IOException {
+        DesfireResponse result = sendBytes(new byte[]{(byte)0xFC});
 
-        return result.resultType;
+        return result.status;
     }
 
 
     public byte[] readRecordFile(byte fid, int start, int count) throws IOException {
         byte[] cmd = new ByteArray().append((byte)0xBB).append(fid).append(start, 3).append(count, 3).toArray();
-        MifareResult result = sendBytes(cmd);
+        DesfireResponse result = sendBytes(cmd);
         return result.data;
     }
 
@@ -343,9 +337,9 @@ public class MifareDesfire {
             ByteArray array = new ByteArray();
             byte[] cmd = array.append((byte)0xBD).append(fid).append(start, 3).append(upTo, 3).toArray();
 
-            MifareResult result = sendBytes(cmd);
+            DesfireResponse result = sendBytes(cmd);
 
-            if (result.resultType == MifareResultType.BOUNDARY_ERROR) {
+            if (result.status == statusType.BOUNDARY_ERROR) {
                 // We reached the end of the file.
                 // Ensure we got anything that was left
                 array.clear();
@@ -417,7 +411,7 @@ public class MifareDesfire {
 
 
 
-    public enum MifareResultType {
+    public enum statusType {
         SUCCESS,
         NO_CHANGES,
         OUT_OF_EEPROM_ERROR,
@@ -443,83 +437,90 @@ public class MifareDesfire {
         PCD_AUTHENTICATION_ERROR
     }
 
-    public class MifareResult {
+    public class DesfireResponse {
         public byte[] data;
-        public MifareResultType resultType;
+        public statusType status;
     }
 
-    public MifareResult sendBytes(byte[] cmd) throws IOException {
+    public DesfireResponse sendBytes(byte[] cmd) throws IOException {
+
+        if (dfCrypto.trackCMAC)
+            dfCrypto.calcCMAC(cmd);
+
         byte[] response = cardCommunicator.transceive(cmd);
 
-        MifareResult result = new MifareResult();
+        if (dfCrypto.trackCMAC)
+            dfCrypto.verifyCMAC(response);
+
+        DesfireResponse result = new DesfireResponse();
         result.data = ByteArray.appendCut(null, response);
 
         switch (response[0]) {
             case (byte)0x00:
-                result.resultType = MifareResultType.SUCCESS;
+                result.status = statusType.SUCCESS;
                 break;
             case (byte)0x0C:
-                result.resultType = MifareResultType.NO_CHANGES;
+                result.status = statusType.NO_CHANGES;
                 break;
             case (byte)0x0E:
-                result.resultType = MifareResultType.OUT_OF_EEPROM_ERROR;
+                result.status = statusType.OUT_OF_EEPROM_ERROR;
                 break;
             case (byte)0x1C:
-                result.resultType = MifareResultType.ILLEGAL_COMMAND_CODE;
+                result.status = statusType.ILLEGAL_COMMAND_CODE;
                 break;
             case (byte)0x1E:
-                result.resultType = MifareResultType.INTEGRITY_ERROR;
+                result.status = statusType.INTEGRITY_ERROR;
                 break;
             case (byte)0x40:
-                result.resultType = MifareResultType.NO_SUCH_KEY;
+                result.status = statusType.NO_SUCH_KEY;
                 break;
             case (byte)0x7E:
-                result.resultType = MifareResultType.LENGTH_ERROR;
+                result.status = statusType.LENGTH_ERROR;
                 break;
             case (byte)0x9D:
-                result.resultType = MifareResultType.PERMISSION_DENIED;
+                result.status = statusType.PERMISSION_DENIED;
                 break;
             case (byte)0x9E:
-                result.resultType = MifareResultType.PARAMETER_ERROR;
+                result.status = statusType.PARAMETER_ERROR;
                 break;
             case (byte)0xA0:
-                result.resultType = MifareResultType.APPLICATION_NOT_FOUND;
+                result.status = statusType.APPLICATION_NOT_FOUND;
                 break;
             case (byte)0xA1:
-                result.resultType = MifareResultType.APPL_INTEGRITY_ERROR;
+                result.status = statusType.APPL_INTEGRITY_ERROR;
                 break;
             case (byte)0xAE:
-                result.resultType = MifareResultType.AUTHENTICATION_ERROR;
+                result.status = statusType.AUTHENTICATION_ERROR;
                 break;
             case (byte)0xAF:
-                result.resultType = MifareResultType.ADDITONAL_FRAME;
+                result.status = statusType.ADDITONAL_FRAME;
                 break;
             case (byte)0xBE:
-                result.resultType = MifareResultType.BOUNDARY_ERROR;
+                result.status = statusType.BOUNDARY_ERROR;
                 break;
             case (byte)0xC1:
-                result.resultType = MifareResultType.PICC_INTEGRITY_ERROR;
+                result.status = statusType.PICC_INTEGRITY_ERROR;
                 break;
             case (byte)0xCA:
-                result.resultType = MifareResultType.COMMAND_ABORTED;
+                result.status = statusType.COMMAND_ABORTED;
                 break;
             case (byte)0xCD:
-                result.resultType = MifareResultType.PICC_DISABLED_ERROR;
+                result.status = statusType.PICC_DISABLED_ERROR;
                 break;
             case (byte)0xCE:
-                result.resultType = MifareResultType.COUNT_ERROR;
+                result.status = statusType.COUNT_ERROR;
                 break;
             case (byte)0xDE:
-                result.resultType = MifareResultType.DUPLICATE_ERROR;
+                result.status = statusType.DUPLICATE_ERROR;
                 break;
             case (byte)0xEE:
-                result.resultType = MifareResultType.EEPROM_ERROR;
+                result.status = statusType.EEPROM_ERROR;
                 break;
             case (byte)0xF0:
-                result.resultType = MifareResultType.FILE_NOT_FOUND;
+                result.status = statusType.FILE_NOT_FOUND;
                 break;
             case (byte)0xF1:
-                result.resultType = MifareResultType.FILE_INTEGRITY_ERROR;
+                result.status = statusType.FILE_INTEGRITY_ERROR;
                 break;
 
             default:
@@ -529,10 +530,10 @@ public class MifareDesfire {
         return result;
     }
 
-    public String DesFireErrorMsg (MifareResultType resultType) {
+    public String DesFireErrorMsg (statusType status) {
         String returnString;
 
-        switch (resultType) {
+        switch (status) {
             case SUCCESS:
                 returnString = "Command OK";
                 break;
@@ -607,198 +608,42 @@ public class MifareDesfire {
         return returnString;
     }
 
-    // ENCRYPTION RELATED
-
-    // Mifare Desfire specifications require DESede/ECB without padding
-    protected SecretKey getKeySpec(byte[] origKey)
-            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        SecretKey key;
-
-        ByteArray tripleDesKey = new ByteArray();
-        if (origKey.length == 8) {
-            tripleDesKey.append(origKey).append(origKey).append(origKey);
-        } else if (origKey.length == 16) {
-            byte[] firstKey = new byte[8];
-            System.arraycopy(origKey, 0, firstKey, 0, 8);
-            tripleDesKey.append(origKey).append(firstKey);
-        } else if (origKey.length == 24) {
-            tripleDesKey.append(origKey);
-        } else
-            throw new IllegalArgumentException("Wrong key length");
-
-        // And we initialize it with our (diversified) read or write key
-        key = new SecretKeySpec(tripleDesKey.toArray(), "DESede");
-
-        return key;
-    }
+    DesfireCrypto dfCrypto;
 
 
-    // Mifare Desfire specifications require DESede/ECB without padding
-    protected Cipher getDecipher3DES(SecretKey key)
-            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        Cipher cryptoAlgo = Cipher.getInstance("DESede/ECB/NoPadding");
-
-        cryptoAlgo.init(Cipher.DECRYPT_MODE, key);
-
-        return cryptoAlgo;
-    }
-
-    // Mifare Desfire specifications require DESede/ECB without padding
-
-    protected Cipher getInitDecipher3K3DES(SecretKey keySpec)
-            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        Cipher cryptoAlgo = Cipher.getInstance("DESede/CBC/NoPadding");
-
-        byte[] zeroBytes = new byte[8];
-        Arrays.fill(zeroBytes, (byte)0);
-
-        cryptoAlgo.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(zeroBytes));
-
-        return cryptoAlgo;
-    }
+    public statusType authenticate(byte authType, byte keyNumber, byte[] key) throws Exception {
 
 
+        dfCrypto.initialize(authType, key);
+        // Send 0A
 
-
-
-    public byte MODE_3DES = (byte) 0x0A;
-    public byte MODE_3K3DES = (byte) 0x1A;
-    public byte MODE_AES = (byte) 0xAA;
-
-
-    Cipher cipher;
-    SecretKey keySpec;
-    byte [] newIV = new byte[8];
-
-    public Challenge computeResponseAndDataToVerify(byte authType, byte[] encRndB, byte[] key)
-            throws GeneralSecurityException {
-
-        byte[] decRndA, rndB, rndBPrime, decRndBPrime;
-        byte[] rndA = null;
-        byte[] challengeMessage = null;
-        keySpec= getKeySpec(key);
-
-        if (authType == MODE_3DES){
-
-            cipher = getDecipher3DES(keySpec);
-
-            // We decrypt the challenge, and rotate one byte to the left
-            rndB = cipher.doFinal(encRndB);
-            rndBPrime = ByteArray.shiftLT(rndB);
-
-            // Then we generate a random number as our challenge for the coupler
-            rndA = new byte[8];
-            randomGenerator.nextBytes(rndA);
-
-
-            decRndA = cipher.doFinal(rndA);
-            // XOR of rndA, rndB  // This is CBC done manually
-            decRndBPrime = ByteArray.xor(decRndA, rndBPrime);
-            // The result is encrypted again
-            decRndBPrime = cipher.doFinal(decRndBPrime);
-
-            challengeMessage = ByteArray.from((byte)0xAF).append(decRndA).append(decRndBPrime).toArray();
-
-        } else if (authType == MODE_3K3DES) {
-            cipher = getInitDecipher3K3DES(keySpec);
-
-            // We decrypt the challenge, and rotate one byte to the left
-            rndB = cipher.doFinal(encRndB);   // Decrypt
-            Log.d("computeRAndDataToVerify", "rndB                = " + ByteArray.byteArrayToHexString(rndB));
-            // Write the first IV as the result from PICC's encryption
-            System.arraycopy(encRndB, encRndB.length-8, newIV, 0, 8);
-            Log.d("computeRAndDataToVerify", "newIV               = " + ByteArray.byteArrayToHexString(encRndB));
-
-            rndBPrime = ByteArray.shiftLT(rndB);
-            Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
-
-            rndA = new byte[rndB.length];   // Length 8 byte for DES/3DES, 16 byte for 3k3des and AES
-            randomGenerator.nextBytes(rndA);
-            //Arrays.fill(rndA, (byte)0);
-            Log.d("computeRAndDataToVerify", "rndA                = " + ByteArray.byteArrayToHexString(rndA));
-
-            byte[] encInput = new byte[rndA.length + rndBPrime.length];
-            System.arraycopy(rndA, 0, encInput, 0, rndA.length);
-            System.arraycopy(rndBPrime, 0, encInput, rndA.length, rndBPrime.length);
-            Log.d("computeRAndDataToVerify", "encInput            = " + ByteArray.byteArrayToHexString(encInput));
-
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(newIV));
-            challengeMessage = ByteArray.from((byte)0xAF).append(cipher.doFinal(encInput)).toArray();
-            System.arraycopy(challengeMessage, challengeMessage.length-8, newIV, 0, 8);
-
-            Log.d("computeRAndDataToVerify", "challengeMessage    = " + ByteArray.byteArrayToHexString(challengeMessage));
-            Log.d("computeRAndDataToVerify", "newIV               = " + ByteArray.byteArrayToHexString(newIV));
-            Log.d("computeRAndDataToVerify", "encipher.getIV()    = " + ByteArray.byteArrayToHexString(cipher.getIV()));
-        }
-
-        // And sent back to the card
-        return new Challenge(challengeMessage, rndA);
-    }
-
-    public boolean verifyCardResponse(byte authType, byte[] cardResponse, byte[] origRndA, byte[] key)
-            throws GeneralSecurityException {
-
-
-        keySpec= getKeySpec(key);
-        if ((cardResponse == null))
-            return false;
-
-        Log.d("verifyCardResponse", "cardResponse           = " + ByteArray.byteArrayToHexString(cardResponse));
-
-
-         // We decrypt the response and shift the rightmost byte "all around" (to the left)
-
-        if (authType == MODE_3K3DES) {
-            cipher.init(cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(newIV));
-            Log.d("verifyCardResponse", "current IV             = " + ByteArray.byteArrayToHexString(cipher.getIV()));
-        }
-        cardResponse = cipher.doFinal(cardResponse);
-        Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
-        cardResponse = ByteArray.shiftRT(cardResponse);
-        Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
-        Log.d("verifyCardResponse", "                          origRndA = " + ByteArray.byteArrayToHexString(origRndA));
-        if (Arrays.equals(cardResponse, origRndA)) {
-
-            return true;
-        }
-
-        return false;
-    }
-
-    public MifareResult getCardChallenge(byte authType, byte keyNumber) throws Exception {
         byte[] cmd = ByteArray.from(authType).append(keyNumber).toArray();
         // Send the command to the key, receive the challenge
-        MifareResult res = sendBytes(cmd);
+        DesfireResponse CardChallenge = sendBytes(cmd);
 
-        return res;
-    }
-
-
-    public MifareResultType authenticate(byte authType, byte keyNumber, byte[] key) throws Exception {
-
-        // Send 0A
-        MifareResult CardChallenge = getCardChallenge(authType, keyNumber);
-        if (CardChallenge.resultType != MifareResultType.ADDITONAL_FRAME){
-            return CardChallenge.resultType;
+        if (CardChallenge.status != statusType.ADDITONAL_FRAME){
+            Log.d("authenicate", "Exitied after sending get card challenge");
+            return CardChallenge.status;
         }
+
+
 
         // Compute next command and required response
-        Challenge challenge = computeResponseAndDataToVerify(authType, CardChallenge.data, key);
 
-        byte[] challengeMessage = challenge.getChallenge();
-        byte[] plainCouplerChallenge = challenge.getChallengeResponse();
+
+        byte[] challengeMessage = ByteArray.from((byte)0xAF).append(dfCrypto.computeResponseAndDataToVerify(CardChallenge.data)).toArray();
 
         // send AF
-        MifareResult cardResponse = sendBytes(challengeMessage);
-        if (CardChallenge.resultType != MifareResultType.SUCCESS){
-            return CardChallenge.resultType;
+        DesfireResponse cardResponse = sendBytes(challengeMessage);
+        if (cardResponse.status != statusType.SUCCESS){
+            Log.d("authenicate", "Exitied after sending challengMessage");
+            return cardResponse.status;
         }
 
+        if (dfCrypto.verifyCardResponse(cardResponse.data))
+            return statusType.SUCCESS;
 
-        if (verifyCardResponse(authType, cardResponse.data, plainCouplerChallenge, key))
-            return MifareResultType.SUCCESS;
-
-        return MifareResultType.PCD_AUTHENTICATION_ERROR;
+        return statusType.PCD_AUTHENTICATION_ERROR;
 
     }
 

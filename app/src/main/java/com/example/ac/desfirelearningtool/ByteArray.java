@@ -143,7 +143,7 @@ public class ByteArray {
     }
 
 
-    public static byte[] shiftLT(byte[] bytes) {
+    public static byte[] rotateLT(byte[] bytes) {
         byte help = bytes[0];
         for (int i = 0; i < bytes.length - 1; i++)
             bytes[i] = bytes[i + 1];
@@ -151,7 +151,7 @@ public class ByteArray {
         return bytes;
     }
 
-    public static byte[] shiftRT(byte[] bytes) {
+    public static byte[] rotateRT(byte[] bytes) {
         byte help = bytes[bytes.length - 1];
         for (int i = bytes.length - 1; i > 0; i--)
             bytes[i] = bytes[i - 1];

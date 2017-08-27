@@ -39,5 +39,5 @@ public interface IMainActivityCallbacks {
 
 
     public void onAuthISO();
-
+    public void onAuthAES();
 }

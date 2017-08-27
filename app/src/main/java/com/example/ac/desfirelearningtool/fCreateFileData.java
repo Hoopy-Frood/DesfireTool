@@ -1,7 +1,5 @@
 package com.example.ac.desfirelearningtool;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -71,7 +69,7 @@ public class fCreateFileData extends Fragment {
         dataFileType =(RadioGroup) rootView.findViewById(R.id.radioGroup_DataFileType);
         populateSpinners ();
 
-
+        FileSize.setText("256");
 
         bFileType = (byte) 0x00;
         bCommSetting = (byte) 0xff;
