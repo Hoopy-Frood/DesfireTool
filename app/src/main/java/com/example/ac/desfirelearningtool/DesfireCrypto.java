@@ -452,7 +452,7 @@ public class DesfireCrypto {
         byte [] CMACToVerify = new byte[blockLength];
 
         System.arraycopy(recvData, 0, dataToVerify, 0, recvData.length - blockLength);
-        System.arraycopy(recvData, recvData.length - blockLength, dataToVerify, 0,blockLength );
+        System.arraycopy(recvData, recvData.length - blockLength, CMACToVerify, 0,blockLength );
         calcCMAC(dataToVerify);
         Log.d ("verifyCMAC", "CMAC to Verify = " + ByteArray.byteArrayToHexString(CMACToVerify) );
         Log.d ("verifyCMAC", "CMAC computed  = " + ByteArray.byteArrayToHexString(currentIV) );

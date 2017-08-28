@@ -444,13 +444,20 @@ public class MifareDesfire {
 
     public DesfireResponse sendBytes(byte[] cmd) throws IOException {
 
-        if (dfCrypto.trackCMAC)
+        if (dfCrypto.trackCMAC) {
+            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
             dfCrypto.calcCMAC(cmd);
+        }
+
 
         byte[] response = cardCommunicator.transceive(cmd);
 
-        if (dfCrypto.trackCMAC)
+        if (dfCrypto.trackCMAC) {
+            Log.d ("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response) );
             dfCrypto.verifyCMAC(response);
+        }
+
+
 
         DesfireResponse result = new DesfireResponse();
         result.data = ByteArray.appendCut(null, response);
