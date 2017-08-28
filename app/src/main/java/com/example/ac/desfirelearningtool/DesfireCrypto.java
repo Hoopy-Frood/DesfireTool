@@ -381,9 +381,9 @@ public class DesfireCrypto {
         byte Rb;  // According to SP800-38B
 
         if (blockLength == 8) {
-            Rb = (byte) 0x87;
-        } else {
             Rb = (byte) 0x1B;
+        } else {
+            Rb = (byte) 0x87;
         }
 
         // 1. Let L = CIPHK(0)).
@@ -413,14 +413,17 @@ public class DesfireCrypto {
         ByteArray baEncInput = new ByteArray();
 
         int extraLength = data.length % blockLength;
-        if (extraLength != 0) {
+        if (extraLength == 0) {
+            encInput = new byte[data.length];
+            System.arraycopy(data, 0, encInput, 0, data.length);
+
+        } else {
             encInput = new byte[data.length + blockLength - extraLength];
             baEncInput.append(data).append(ByteArray.hexStringToByteArray("80000000000000000000000000000000"));
             System.arraycopy(baEncInput.toArray(), 0, encInput, 0, data.length + blockLength - extraLength);
-        } else {
-            encInput = new byte[data.length];
-            System.arraycopy(data, 0, encInput, 0, data.length);
         }
+        Log.d ("calcCMAC  ", "extraLength  = " + extraLength + " data.length = " + data.length );
+
 
         int startIndex = encInput.length - blockLength;
         if (extraLength == 0) {
@@ -435,9 +438,11 @@ public class DesfireCrypto {
             }
         }
         try {
+            Arrays.fill(currentIV, (byte)0);
             encrypt(encInput);
         } catch (GeneralSecurityException e) {
             Log.e("calcCMAC", e.getMessage(), e);
+            return null;
         }
         Log.d ("calcCMAC  ", "CMAC computed  = " + ByteArray.byteArrayToHexString(currentIV) );
 
@@ -445,14 +450,15 @@ public class DesfireCrypto {
     }
 
     public byte [] verifyCMAC (byte [] recvData)  {
-        if (recvData.length < blockLength)
+        Log.d("verifyCMAC", "recvData        = " + ByteArray.byteArrayToHexString(recvData) );
+        if (recvData.length < 8)
             return null;
 
-        byte [] dataToVerify = new byte[recvData.length - blockLength];
-        byte [] CMACToVerify = new byte[blockLength];
+        byte [] dataToVerify = new byte[recvData.length - 8];
+        byte [] CMACToVerify = new byte[8];
 
-        System.arraycopy(recvData, 0, dataToVerify, 0, recvData.length - blockLength);
-        System.arraycopy(recvData, recvData.length - blockLength, CMACToVerify, 0,blockLength );
+        System.arraycopy(recvData, 0, dataToVerify, 0, recvData.length - 8);
+        System.arraycopy(recvData, recvData.length - 8, CMACToVerify, 0,8 );
         calcCMAC(dataToVerify);
         Log.d ("verifyCMAC", "CMAC to Verify = " + ByteArray.byteArrayToHexString(CMACToVerify) );
         Log.d ("verifyCMAC", "CMAC computed  = " + ByteArray.byteArrayToHexString(currentIV) );
