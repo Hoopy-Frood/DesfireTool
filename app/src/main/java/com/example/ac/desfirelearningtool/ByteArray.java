@@ -29,6 +29,17 @@ public class ByteArray {
         return ret;
     }
 
+    public static byte[] appendCutCMAC ( byte[] data) {
+        byte[] ret;
+        if (data == null || data.length < 9) {
+            return null;
+        }
+
+        ret = new byte[data.length - 9];
+        System.arraycopy(data, 1, ret, 0, data.length-9);
+        return ret;
+    }
+
 
     public static String byteArrayToHexString(byte[] array) {
         int i, j, in;
@@ -143,7 +154,9 @@ public class ByteArray {
     }
 
 
-    public static byte[] rotateLT(byte[] bytes) {
+    public static byte[] rotateLT(byte[] input) {
+        byte bytes[] = new byte[input.length];
+        System.arraycopy(input,0,bytes,0,input.length);
         byte help = bytes[0];
         for (int i = 0; i < bytes.length - 1; i++)
             bytes[i] = bytes[i + 1];
@@ -151,7 +164,9 @@ public class ByteArray {
         return bytes;
     }
 
-    public static byte[] rotateRT(byte[] bytes) {
+    public static byte[] rotateRT(byte[] input) {
+        byte bytes[] = new byte[input.length];
+        System.arraycopy(input,0,bytes,0,input.length);
         byte help = bytes[bytes.length - 1];
         for (int i = bytes.length - 1; i > 0; i--)
             bytes[i] = bytes[i - 1];

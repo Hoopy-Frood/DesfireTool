@@ -55,6 +55,7 @@ public class DesfireCrypto {
         cipher = null;
         authType = (byte) 0x00;
         trackCMAC = false;
+        storedCMACData = new ByteArray();
     }
 
     public boolean initialize (byte authToSet, byte [] key) throws Exception {
@@ -150,7 +151,7 @@ public class DesfireCrypto {
             initCipher();
         }
 
-        byte [] encOutput = null;
+        byte [] encOutput;
 
         switch (authType) {
             case MODE_3DES:
@@ -163,6 +164,10 @@ public class DesfireCrypto {
                 encOutput = cipher.doFinal(encInput);   // Decrypt
                 // Write the first IV as the result from PICC's encryption
                 System.arraycopy(encOutput, encOutput.length-blockLength, currentIV, 0, blockLength);
+                break;
+            default:
+                encOutput=null;
+                break;
         }
         return encOutput;
     }
@@ -231,13 +236,16 @@ public class DesfireCrypto {
 
             // We decrypt the challenge, and rotate one byte to the left
             rndB = decrypt(encRndB);
+
             Log.d("computeRAndDataToVerify", "currentIV           = " + ByteArray.byteArrayToHexString(currentIV));
 
             rndBPrime = ByteArray.rotateLT(rndB);
+            Log.d("computeRAndDataToVerify", "rndB                = " + ByteArray.byteArrayToHexString(rndB));
             Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
-
             rndA = new byte[rndB.length];   // Length 8 byte for DES/3DES, 16 byte for 3k3des and AES
             randomGenerator.nextBytes(rndA);
+            Log.d("computeRAndDataToVerify", "rndA                = " + ByteArray.byteArrayToHexString(rndA));
+            Log.d("computeRAndDataToVerify", "rndB                = " + ByteArray.byteArrayToHexString(rndB));
             //Arrays.fill(rndA, (byte)0);
 
 
@@ -262,17 +270,14 @@ public class DesfireCrypto {
         if ((cardResponse == null))
             return false;
 
-        Log.d("verifyCardResponse", "cardResponse                       = " + ByteArray.byteArrayToHexString(cardResponse));
-
-
-        // We decrypt the response and shift the rightmost byte "all around" (to the left)
-
+        // Log.d("verifyCardResponse", "cardResponse                       = " + ByteArray.byteArrayToHexString(cardResponse));
+      // We decrypt the response and shift the rightmost byte "all around" (to the left)
 
         cardResponse = decrypt(cardResponse);
-        Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
+        // Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
         cardResponse = ByteArray.rotateRT(cardResponse);
-        Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
-        Log.d("verifyCardResponse", "                          origRndA = " + ByteArray.byteArrayToHexString(rndA));
+        // Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
+        // Log.d("verifyCardResponse", "                          origRndA = " + ByteArray.byteArrayToHexString(rndA));
         if (Arrays.equals(cardResponse, rndA)) {
             genSessionKey ();
             // ComputeSession Key
@@ -318,31 +323,51 @@ public class DesfireCrypto {
                 blockLength = 8;
                 Arrays.fill(currentIV, (byte)0);
                 trackCMAC = true;
+                genSubKeys();
                 break;
             case KEYTYPE_AES:
+                // TEST
+                sessionKey = new byte [] { (byte)0x2b,(byte)0x7e,(byte)0x15,(byte)0x16,(byte)0x28,(byte)0xae,(byte)0xd2,(byte)0xa6,(byte)0xab,(byte)0xf7,(byte)0x15,(byte)0x88,(byte)0x09,(byte)0xcf,(byte)0x4f,(byte)0x3c};
+                Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
+                getKeySpecAES(sessionKey);
+                blockLength = 16;
+                genSubKeys();
+                Arrays.fill(currentIV, (byte)0x00);
+                Log.d("800-38B", "CalcMac Ex1  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte [] {})));
+                Arrays.fill(currentIV, (byte)0x00);
+                Log.d("800-38B", "CalcMac Ex2  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte [] {(byte)0x6b,(byte)0xc1,(byte)0xbe,(byte)0xe2,(byte)0x2e,(byte)0x40,(byte)0x9f,(byte)0x96,(byte)0xe9,(byte)0x3d,(byte)0x7e,(byte)0x11,(byte)0x73,(byte)0x93,(byte)0x17,(byte)0x2a})));
+                Arrays.fill(currentIV, (byte)0x00);
+                Log.d("800-38B", "CalcMac Ex3  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte [] {(byte)0x6b,(byte)0xc1,(byte)0xbe,(byte)0xe2,(byte)0x2e,(byte)0x40,(byte)0x9f,(byte)0x96,(byte)0xe9,(byte)0x3d,(byte)0x7e,(byte)0x11,(byte)0x73,(byte)0x93,(byte)0x17,(byte)0x2a,(byte)0xae,(byte)0x2d,(byte)0x8a,(byte)0x57,(byte)0x1e,(byte)0x03,(byte)0xac,(byte)0x9c,(byte)0x9e,(byte)0xb7,(byte)0x6f,(byte)0xac,(byte)0x45,(byte)0xaf,(byte)0x8e,(byte)0x51,(byte)0x30,(byte)0xc8,(byte)0x1c,(byte)0x46,(byte)0xa3,(byte)0x5c,(byte)0xe4,(byte)0x11  })));
+                Arrays.fill(currentIV, (byte)0x00);
+                Log.d("800-38B", "CalcMac Ex4  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte [] {(byte)0x6b,(byte)0xc1,(byte)0xbe,(byte)0xe2,(byte)0x2e,(byte)0x40,(byte)0x9f,(byte)0x96,(byte)0xe9,(byte)0x3d,(byte)0x7e,(byte)0x11,(byte)0x73,(byte)0x93,(byte)0x17,(byte)0x2a,(byte)0xae,(byte)0x2d,(byte)0x8a,(byte)0x57,(byte)0x1e,(byte)0x03,(byte)0xac,(byte)0x9c,(byte)0x9e,(byte)0xb7,(byte)0x6f,(byte)0xac,(byte)0x45,(byte)0xaf,(byte)0x8e,(byte)0x51,(byte)0x30,(byte)0xc8,(byte)0x1c,(byte)0x46,(byte)0xa3,(byte)0x5c,(byte)0xe4,(byte)0x11,(byte)0xe5,(byte)0xfb,(byte)0xc1,(byte)0x19,(byte)0x1a,(byte)0x0a,(byte)0x52,(byte)0xef,(byte)0xf6,(byte)0x9f,(byte)0x24,(byte)0x45,(byte)0xdf,(byte)0x4f,(byte)0x9b,(byte)0x17,(byte)0xad,(byte)0x2b,(byte)0x41,(byte)0x7b,(byte)0xe6,(byte)0x6c,(byte)0x37,(byte)0x10  })));
+
+
+                // Actual
                 sessionKey = new byte [16];
                 System.arraycopy(rndA, 0, sessionKey, 0, 4);
                 System.arraycopy(rndB, 0, sessionKey, 4, 4);
                 System.arraycopy(rndA, 12, sessionKey, 8, 4);
                 System.arraycopy(rndB, 12, sessionKey, 12, 4);
                 Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
-
                 getKeySpecAES(sessionKey);
                 blockLength = 16;
                 Arrays.fill(currentIV, (byte)0);
                 trackCMAC = true;
+                genSubKeys();
                 break;
         }
-        genSubKeys();
+
+        Arrays.fill(currentIV, (byte)0);
     }
 
-    private static byte[] shiftLeft(byte[] data, int len) {
+    private static byte[] shiftLeft(byte[] input, int len) {
         int word_size = (len / 8) + 1;
         int shift = len % 8;
         byte carry_mask = (byte) ((1 << shift) - 1);
         int offset = word_size - 1;
+        byte [] data = new byte[input.length];
+        System.arraycopy(input, 0, data, 0, data.length);
 
-        Log.d("shiftLeft", "        data = " + ByteArray.byteArrayToHexString(data));
 
         for (int i = 0; i < data.length; i++) {
             int src_index = i+offset;
@@ -357,7 +382,6 @@ public class DesfireCrypto {
                 data[i] = dst;
             }
         }
-        Log.d("shiftLeft", "shifted data = " + ByteArray.byteArrayToHexString(data));
         return data;
     }
 
@@ -366,7 +390,7 @@ public class DesfireCrypto {
     }
 
     private byte [] shiftLeft1Bit (byte [] data, byte Rb) {
-        byte [] output = new byte[data.length];
+        byte [] output;
         output = shiftLeft(data, 1);
         output[data.length-1] ^= Rb;
         return output;
@@ -387,11 +411,14 @@ public class DesfireCrypto {
         }
 
         // 1. Let L = CIPHK(0)).
+        Arrays.fill(currentIV, (byte)0x00);
         byte [] L = encrypt(encInput);
+
+        Log.d("800-38B", "CIPHk(0^128) = " + ByteArray.byteArrayToHexString(L));
 
         // 2. If MSB1(L) = 0, then K1 = L << 1;
         // Else K1 = (L << 1) XOR Rb; see Sec. 5.3 for the definition of Rb.
-        if ((L[0] & (byte)0x80) == (byte)0) {
+        if ((L[0] & (byte)0x80) == (byte)0x00) {
             K1 = shiftLeft1Bit (L);
         } else {
             K1 = shiftLeft1Bit (L, Rb);
@@ -399,46 +426,51 @@ public class DesfireCrypto {
 
         // 3. If MSB1(K1) = 0, then K2 = K1 << 1;
         // Else K2 = (K1 << 1) XOR Rb.
-        if ((K1[0] & (byte)0x80) == (byte)0) {
+        if ((K1[0] & (byte)0x80) == (byte)0x00) {
             K2 = shiftLeft1Bit (K1);
         } else {
             K2 = shiftLeft1Bit (K1, Rb);
         }
-
+        Log.d("800-38B", "K1           = " + ByteArray.byteArrayToHexString(K1));
+        Log.d("800-38B", "K2           = " + ByteArray.byteArrayToHexString(K2));
         // 4. Return K1, K2.
+
     }
 
     public byte [] calcCMAC (byte [] data)  {
         byte[] output, encInput;
         ByteArray baEncInput = new ByteArray();
 
+        //Log.d("calcCMAC", "Starting Init Vector  = " + ByteArray.byteArrayToHexString(currentIV));
         int extraLength = data.length % blockLength;
-        if (extraLength == 0) {
+        if ((extraLength == 0) && (data.length != 0)) {
             encInput = new byte[data.length];
             System.arraycopy(data, 0, encInput, 0, data.length);
+
+            int startIndex = encInput.length - blockLength;
+            //Log.d("calcCMAC", "startIndex  = " + startIndex + " Using K1 To Calc = " + ByteArray.byteArrayToHexString(encInput));
+            //Mn = K1 XOR Mn*
+            for (int i = 0; i < blockLength; i++){
+                encInput[startIndex + i] ^= K1[i];
+            }
 
         } else {
             encInput = new byte[data.length + blockLength - extraLength];
             baEncInput.append(data).append(ByteArray.hexStringToByteArray("80000000000000000000000000000000"));
             System.arraycopy(baEncInput.toArray(), 0, encInput, 0, data.length + blockLength - extraLength);
-        }
-        Log.d ("calcCMAC  ", "extraLength  = " + extraLength + " data.length = " + data.length );
 
-
-        int startIndex = encInput.length - blockLength;
-        if (extraLength == 0) {
-            //Mn = K1 XOR Mn*
-            for (int i = startIndex; i < encInput.length; i++){
-                encInput[i] ^= K1[i];
-            }
-        } else {
+            int startIndex = encInput.length - blockLength;
             //Mn = K2 XOR (Mn* with padding)
-            for (int i = startIndex; i < encInput.length; i++){
-                encInput[i] ^= K2[i];
+            //Log.d("calcCMAC", "startIndex  = " + startIndex + " Using K2 To Calc = " + ByteArray.byteArrayToHexString(encInput));
+            for (int i = 0; i < blockLength; i++){
+                encInput[startIndex + i] ^= K2[i];
             }
         }
+        //Log.d("calcCMAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length );
+        //Log.d("calcCMAC", "encInput = " + ByteArray.byteArrayToHexString(encInput));
+
+
         try {
-            Arrays.fill(currentIV, (byte)0);
             encrypt(encInput);
         } catch (GeneralSecurityException e) {
             Log.e("calcCMAC", e.getMessage(), e);
@@ -449,20 +481,33 @@ public class DesfireCrypto {
         return currentIV;
     }
 
-    public byte [] verifyCMAC (byte [] recvData)  {
-        Log.d("verifyCMAC", "recvData        = " + ByteArray.byteArrayToHexString(recvData) );
-        if (recvData.length < 8)
-            return null;
-
-        byte [] dataToVerify = new byte[recvData.length - 8];
+    public boolean verifyCMAC (byte [] recvData)  {
         byte [] CMACToVerify = new byte[8];
+        byte [] computedCMACToVerify = new byte[8];
+        if (recvData.length < 9)  // No CMAC
+            return false;
 
-        System.arraycopy(recvData, 0, dataToVerify, 0, recvData.length - 8);
-        System.arraycopy(recvData, recvData.length - 8, CMACToVerify, 0,8 );
-        calcCMAC(dataToVerify);
+
+        storedCMACData.append(recvData,1,recvData.length-8-1);
+        storedCMACData.append(recvData[0]);
+
+        System.arraycopy(recvData, recvData.length-8, CMACToVerify, 0,8 );
+
+        Log.d ("verifyCMAC", "Data to Verify = " + ByteArray.byteArrayToHexString(storedCMACData.toArray()) );
+        calcCMAC(storedCMACData.toArray());
         Log.d ("verifyCMAC", "CMAC to Verify = " + ByteArray.byteArrayToHexString(CMACToVerify) );
         Log.d ("verifyCMAC", "CMAC computed  = " + ByteArray.byteArrayToHexString(currentIV) );
 
-        return currentIV;
+        storedCMACData.clear();
+        System.arraycopy(currentIV,0,computedCMACToVerify,0,8);
+
+
+        return Arrays.equals(CMACToVerify, computedCMACToVerify);
+    }
+    ByteArray storedCMACData;
+
+    public void  storeAFCMAC (byte [] recvData)  {
+        storedCMACData.append(recvData,1,recvData.length-1);
+        return;
     }
 }

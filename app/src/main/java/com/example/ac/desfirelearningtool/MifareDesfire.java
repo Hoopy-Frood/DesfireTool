@@ -129,9 +129,10 @@ public class MifareDesfire {
     }
 
     public statusType selectApplication(byte[] applicationId) throws IOException {
+        dfCrypto.reset();
         byte[] params = ByteArray.from((byte) 0x5a).append(applicationId).toArray();
         DesfireResponse res = sendBytes(params);
-        dfCrypto.reset();
+
 
         return res.status;
     }
@@ -444,7 +445,7 @@ public class MifareDesfire {
 
     public DesfireResponse sendBytes(byte[] cmd) throws IOException {
 
-        if (dfCrypto.trackCMAC) {
+        if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
             Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
             dfCrypto.calcCMAC(cmd);
         }
@@ -452,19 +453,29 @@ public class MifareDesfire {
 
         byte[] response = cardCommunicator.transceive(cmd);
 
-        if (dfCrypto.trackCMAC) {
-            Log.d ("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response) );
-            dfCrypto.verifyCMAC(response);
-        }
-
-
 
         DesfireResponse result = new DesfireResponse();
-        result.data = ByteArray.appendCut(null, response);
+
+
+
+
+
 
         switch (response[0]) {
             case (byte)0x00:
                 result.status = statusType.SUCCESS;
+                if (dfCrypto.trackCMAC) {
+                    Log.d ("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response) );
+                    if (dfCrypto.verifyCMAC(response)) {
+                        scrollLog.appendStatus("CMAC Verfied");
+                    } else {
+                        scrollLog.appendError("CMAC Incorrect");
+                    }
+                    result.data = ByteArray.appendCutCMAC(response);
+                } else {
+                    result.data = ByteArray.appendCut(null, response);
+                }
+
                 break;
             case (byte)0x0C:
                 result.status = statusType.NO_CHANGES;
@@ -501,6 +512,12 @@ public class MifareDesfire {
                 break;
             case (byte)0xAF:
                 result.status = statusType.ADDITONAL_FRAME;
+                if (dfCrypto.trackCMAC) {
+                    Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
+                    dfCrypto.storeAFCMAC(response);
+                }
+                result.data = ByteArray.appendCut(null, response);
+
                 break;
             case (byte)0xBE:
                 result.status = statusType.BOUNDARY_ERROR;

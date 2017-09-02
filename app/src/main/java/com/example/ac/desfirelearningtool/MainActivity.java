@@ -397,7 +397,40 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Get Key Settins Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 return;
             }
-            scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
+            scrollLog.appendStatus("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
+
+            if ((res.data[0] & (byte) 0xF0) == (byte) 0x00) {
+                scrollLog.appendData("- Change key access: Master Key");
+            } else if ((res.data[0] & (byte) 0xF0) == (byte) 0xE0) {
+                scrollLog.appendData("- Change key access right: Same Key");
+            } else if ((res.data[0] & (byte) 0xF0) == (byte) 0xF0) {
+                scrollLog.appendData("- Change key access right: Frozen");
+            } else {
+                scrollLog.appendData("Change key access right: Key " + ByteArray.byteArrayToHexString(new byte[] { (byte) (res.data[0] >> 4)}));
+            }
+            if ((res.data[0] & (byte) 0x08) != (byte) 0x00) {
+                scrollLog.appendData("- Configuration changeable");
+            }
+            if ((res.data[0] & (byte) 0x04) != (byte) 0x00) {
+                scrollLog.appendData("- Master key not required for create/delete");
+            }
+            if ((res.data[0] & (byte) 0x02) != (byte) 0x00) {
+                scrollLog.appendData("- Free directory list access");
+            }
+            if ((res.data[0] & (byte) 0x01) != (byte) 0x00) {
+                scrollLog.appendData("- Allow change of master key");
+            }
+            if ((res.data[1] & (byte) 0xC0) == (byte) 0x00) {
+                scrollLog.appendData("- Crypto method = DES/3DES");
+            } else if ((res.data[1] & (byte) 0xC0) == (byte) 0x40) {
+                scrollLog.appendData("- Crypto method = 3K3DES");
+            } else if ((res.data[1] & (byte) 0xC0) == (byte) 0x80) {
+                scrollLog.appendData("- Crypto method = AES");
+            }
+            if ((res.data[1] & (byte) 0x20) != (byte) 0x00) {
+                scrollLog.appendData("- Support 2 byte file identifiers");
+            }
+            scrollLog.appendData("- No. of keys: " + ByteArray.byteArrayToHexString(new byte [] { (byte) (res.data[1] & (byte) 0x07)}));
 
         }
         catch (Exception e) {
