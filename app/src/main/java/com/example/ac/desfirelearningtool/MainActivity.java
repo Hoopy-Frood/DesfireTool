@@ -929,7 +929,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             }
 
             scrollLog.appendTitle("File Settings of file 0x" + ByteArray.byteToHexString(bFileID) + ": " + ByteArray.byteArrayToHexString(res.data));
-            // TODO: Parse out the File setting
             // File Type
             switch (res.data[0]) {
                 case (byte) 0x00:
@@ -1073,7 +1072,36 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
+    public void onReadData() {
+        try {
 
+            byte fileID = (byte) 0x10;
+            int offset = ;
+            int length;
+
+            scrollLog.appendTitle("Read Data");
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                baISOFileIDs.append(res.data);
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData();
+                    baISOFileIDs.append(res.data);
+                }
+            }
+            if (baISOFileIDs.toArray().length > 0)
+                scrollLog.appendTitle("ISO FileIDs :" + ByteArray.byteArrayToHexString(baISOFileIDs.toArray()));
+            else
+                scrollLog.appendTitle("No ISO FileIDs");
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onGetVersion", e.getMessage(), e);
+        }
+    }
 
 
 

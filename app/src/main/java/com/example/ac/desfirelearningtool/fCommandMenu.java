@@ -205,6 +205,12 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {mCallback.onDeleteApplication();
             }
         });
+        buttonReadData.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onReadData();
+            }
+        });
+
+
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthISO();
             }

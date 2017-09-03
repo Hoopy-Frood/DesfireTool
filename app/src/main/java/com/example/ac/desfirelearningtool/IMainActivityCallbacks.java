@@ -36,6 +36,8 @@ public interface IMainActivityCallbacks {
     public void onGetISOFileIDs();
     public void onGetFileSettings();
     public void onGetFileSettingsReturn(byte bFileID);
+    public void onReadData();
+
 
 
     public void onAuthISO();
