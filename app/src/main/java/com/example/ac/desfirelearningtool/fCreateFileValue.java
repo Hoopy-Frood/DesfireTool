@@ -1,7 +1,5 @@
 package com.example.ac.desfirelearningtool;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -197,10 +195,6 @@ public class fCreateFileValue extends Fragment {
         private void onGoCreateFile(){
             boolean isIncompleteForm = false;
 
-            if (recordFileType.getCheckedRadioButtonId() == -1) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please select a standard or backup file type", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
-            }
             if (etFileID.getText().toString().length()!=2) {
                 Toast.makeText(getActivity().getApplicationContext(), "Please ensure the File ID is 1 byte", Toast.LENGTH_SHORT).show();
                 isIncompleteForm = true;

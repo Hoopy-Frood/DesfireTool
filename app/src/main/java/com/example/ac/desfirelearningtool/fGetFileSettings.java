@@ -15,7 +15,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -83,7 +82,7 @@ public class fGetFileSettings extends Fragment {
                         populateListView();
 
                     } else {
-                        etFileID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(baFileIDList, (position) * 3, (position) * 3 + 3)));
+                        etFileID.setText(ByteArray.byteToHexString(baFileIDList[position]));
                     }
                 } else {
                     Bundle fileListInfo = mCallback.onFragmentGetFileIDs();

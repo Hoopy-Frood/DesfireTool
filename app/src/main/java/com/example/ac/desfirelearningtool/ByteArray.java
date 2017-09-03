@@ -56,6 +56,9 @@ public class ByteArray {
         }
         return out;
     }
+    public static String byteToHexString(byte data) {
+        return byteArrayToHexString(new byte[] {data});
+    }
 
     public static String byteArrayToHexStringNoSpace(byte[] array) {
         int i, j, in;

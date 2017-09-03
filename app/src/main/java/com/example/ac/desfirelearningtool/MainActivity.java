@@ -378,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             ByteBuffer bb = ByteBuffer.wrap(res.data);
             bb.order( ByteOrder.LITTLE_ENDIAN);
 
-            scrollLog.appendTitle("Free Memory: " + bb.getShort());
+            scrollLog.appendTitle("Free Memory: " + bb.getShort() + "B");
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -397,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Get Key Settins Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 return;
             }
-            scrollLog.appendStatus("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
+            scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
 
             if ((res.data[0] & (byte) 0xF0) == (byte) 0x00) {
                 scrollLog.appendData("- Change key access: Master Key");
@@ -406,7 +406,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else if ((res.data[0] & (byte) 0xF0) == (byte) 0xF0) {
                 scrollLog.appendData("- Change key access right: Frozen");
             } else {
-                scrollLog.appendData("Change key access right: Key " + ByteArray.byteArrayToHexString(new byte[] { (byte) (res.data[0] >> 4)}));
+                scrollLog.appendData("Change key access right: Key " + ByteArray.byteToHexString((byte) (res.data[0] >> 4)));
             }
             if ((res.data[0] & (byte) 0x08) != (byte) 0x00) {
                 scrollLog.appendData("- Configuration changeable");
@@ -430,7 +430,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if ((res.data[1] & (byte) 0x20) != (byte) 0x00) {
                 scrollLog.appendData("- Support 2 byte file identifiers");
             }
-            scrollLog.appendData("- No. of keys: " + ByteArray.byteArrayToHexString(new byte [] { (byte) (res.data[1] & (byte) 0x07)}));
+            scrollLog.appendData("- No. of keys: " + ByteArray.byteToHexString( (byte) (res.data[1] & (byte) 0x07)));
 
         }
         catch (Exception e) {
@@ -901,14 +901,25 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 .add(R.id.fragment_container,getFileSettingsFragment).addToBackStack("commandview").commit();
     }
 
+    private void parseAccessRight(String sAccessType, Byte accesss) {
+        switch (accesss) {
+            case (byte) 0x0E:
+                scrollLog.appendData("- " + sAccessType + ": Free");
+                break;
+            case (byte) 0x0F:
+                scrollLog.appendData("- " + sAccessType + ": Locked");
+                break;
+            default:
+                scrollLog.appendData("- " + sAccessType + ": Key " + (int) accesss);
+                break;
+        }
+    }
 
     public void onGetFileSettingsReturn(byte bFileID) {
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
-
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteArrayToHexString(new byte [] {bFileID}));
 
         try {
             MifareDesfire.DesfireResponse res = desfireCard.getFileSettings(bFileID);
@@ -917,8 +928,99 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 return;
             }
 
-            scrollLog.appendTitle("File Settings of file " + ByteArray.byteArrayToHexString(new byte [] {bFileID}) + ": " + ByteArray.byteArrayToHexString(res.data));
+            scrollLog.appendTitle("File Settings of file 0x" + ByteArray.byteToHexString(bFileID) + ": " + ByteArray.byteArrayToHexString(res.data));
             // TODO: Parse out the File setting
+            // File Type
+            switch (res.data[0]) {
+                case (byte) 0x00:
+                    scrollLog.appendData("- Standard data file");
+                    break;
+                case (byte) 0x01:
+                    scrollLog.appendData("- Backup data file");
+                    break;
+                case (byte) 0x02:
+                    scrollLog.appendData("- Value file with backup");
+                    break;
+                case (byte) 0x03:
+                    scrollLog.appendData("- Linear record file with backup");
+                    break;
+                case (byte) 0x04:
+                    scrollLog.appendData("- Cyclic record file with backup");
+                    break;
+                default:
+                    scrollLog.appendData("- Unknown File type: 0x" + ByteArray.byteToHexString(res.data[0]));
+                    break;
+            }
+            // Comm Setting
+            switch (res.data[1]) {
+                case (byte) 0x00:
+                    scrollLog.appendData("- Plain communication");
+                    break;
+                case (byte) 0x01:
+                    scrollLog.appendData("- Plain communication secured by MACing");
+                    break;
+                case (byte) 0x03:
+                    scrollLog.appendData("- Fully enciphered communication");
+                    break;
+                default:
+                    scrollLog.appendData("- Unknown communication setting: 0x" + ByteArray.byteToHexString(res.data[1]));
+                    break;
+            }
+
+            // Separate parsing of the three types of files
+            // Standard or backup file type
+            if ((res.data[0] == (byte) 0x00) || (res.data[0] == (byte) 0x01)) {
+                parseAccessRight("Read Access         ", (byte)((res.data[2] >> 4) & (byte) 0x0F));
+                parseAccessRight("Write Access        ", (byte)(res.data[2] & (byte) 0x0F));
+                parseAccessRight("Read & Write Access ", (byte)((res.data[3] >> 4) & (byte) 0x0F));
+                parseAccessRight("Change Access Rights", (byte)(res.data[3] & (byte) 0x0F));
+                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- File size           : " + bb.getShort() + " B");
+
+            } else if ((res.data[0] == (byte) 0x02) ) {
+                parseAccessRight("GetValue/Debit Access          ", (byte)((res.data[2] >> 4) & (byte) 0x0F));
+                parseAccessRight("GetValue/Debit/LtdCredit Access", (byte)(res.data[2] & (byte) 0x0F));
+                parseAccessRight("GetValue/Debit/LtdCredit/Credit", (byte)((res.data[3] >> 4) & (byte) 0x0F));
+                parseAccessRight("Change Access Rights           ", (byte)(res.data[3] & (byte) 0x0F));
+                ByteBuffer bb = ByteBuffer.wrap(res.data,4,4);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Lower Limit              : " + bb.getShort());
+                bb = ByteBuffer.wrap(res.data,8,4);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Upper Limit              : " + bb.getShort());
+                bb = ByteBuffer.wrap(res.data,12,4);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Limited Credit Value     : " + bb.getShort());
+                if ((res.data[16] & 0x01) == 1) {
+                    scrollLog.appendData("- Limited Credit enabled    ");
+                } else {
+                    scrollLog.appendData("- Limited Credit disabled   ");
+                }
+                if ((res.data[16] & 0x02) == 1) {
+                    scrollLog.appendData("- Free GetValue    ");
+                } else {
+                    scrollLog.appendData("- Free GetValue disabled   ");
+                }
+
+            } else if ((res.data[0] == (byte) 0x03) || (res.data[0] == (byte) 0x04)) {
+                parseAccessRight("Read Access          ", (byte)((res.data[2] >> 4) & (byte) 0x0F));
+                parseAccessRight("Write Access         ", (byte)(res.data[2] & (byte) 0x0F));
+                parseAccessRight("Read & Write Access  ", (byte)((res.data[3] >> 4) & (byte) 0x0F));
+                parseAccessRight("Change Access Rights ", (byte)(res.data[3] & (byte) 0x0F));
+                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Record size          : " + bb.getShort() );
+                bb = ByteBuffer.wrap(res.data,7,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Max no of records    : " + bb.getShort() );
+                bb = ByteBuffer.wrap(res.data,10,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Current no of records: " + bb.getShort() );
+            }
+
+
+
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
