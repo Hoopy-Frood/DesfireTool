@@ -1076,24 +1076,25 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             byte fileID = (byte) 0x10;
-            int offset = ;
-            int length;
+            int offset = 0;
+            int length = 10;
+            ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data");
             MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
-                baISOFileIDs.append(res.data);
+                baRecvData.append(res.data);
 
                 while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
                     res = desfireCard.getMoreData();
-                    baISOFileIDs.append(res.data);
+                    baRecvData.append(res.data);
                 }
             }
-            if (baISOFileIDs.toArray().length > 0)
-                scrollLog.appendTitle("ISO FileIDs :" + ByteArray.byteArrayToHexString(baISOFileIDs.toArray()));
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data :" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
             else
-                scrollLog.appendTitle("No ISO FileIDs");
+                scrollLog.appendData("No data returned");
 
         }
         catch (Exception e) {

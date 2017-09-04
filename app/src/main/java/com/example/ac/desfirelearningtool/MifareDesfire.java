@@ -321,44 +321,15 @@ public class MifareDesfire {
         return result.data;
     }
 
-    public byte[] readFile(byte fid, int start, int count) throws IOException {
-        ByteArray ret = new ByteArray();
+    public DesfireResponse  readData(byte fid, int start, int count) throws IOException {
+        ByteArray array = new ByteArray();
 
-        boolean done = false;
-        int bytesToGo = count;
+        byte[] cmd = array.append((byte)0xBD).append(fid).append(start, 3).append(count, 3).toArray();
 
-        while (!done) {
+        DesfireResponse result = sendBytes(cmd);
 
-            int upTo;
-            if (count == 0)
-                upTo = maxDataSize;
-            else
-                upTo = Math.min(maxDataSize, bytesToGo);
 
-            ByteArray array = new ByteArray();
-            byte[] cmd = array.append((byte)0xBD).append(fid).append(start, 3).append(upTo, 3).toArray();
-
-            DesfireResponse result = sendBytes(cmd);
-
-            if (result.status == statusType.BOUNDARY_ERROR) {
-                // We reached the end of the file.
-                // Ensure we got anything that was left
-                array.clear();
-                cmd = array.append((byte)0xBD).append(fid).append(start, 3).append(0, 3).toArray();
-                result = sendBytes(cmd);
-                done = true;
-            }
-
-            ret.append(result.data);
-
-            start += upTo;
-            if (count > 0) {
-                bytesToGo -= upTo;
-                if (bytesToGo == 0)
-                    done = true;
-            }
-        }
-        return ret.toArray();
+        return result;
     }
 
     private void writeInternal(byte cmd, byte[] data, int file, int offset, int size) throws IOException {

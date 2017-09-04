@@ -202,11 +202,13 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonDeleteApplication.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onDeleteApplication();
+            public void onClick(View v) {
+                mCallback.onDeleteApplication();
             }
         });
         buttonReadData.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onReadData();
+            public void onClick(View v) {
+                mCallback.onReadData();
             }
         });
 
@@ -219,7 +221,8 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {mCallback.onAuthAES();
             }
         });
-
+        Log.d("fCommandMenu Create", "5");
+        
         disableAllButtons();
 
         return rootView;
@@ -295,7 +298,7 @@ public class fCommandMenu extends Fragment{
         buttonGetFileIDs.setEnabled(true);
         buttonGetISOFileIDs.setEnabled(true);
         // Buttons - Data Manipulation
-        buttonReadData.setEnabled(false);
+        buttonReadData.setEnabled(true);
         buttonWriteData.setEnabled(false);
         buttonReadRecord.setEnabled(false);
         buttonWriteRecord.setEnabled(false);
