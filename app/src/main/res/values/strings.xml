@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">Desfire Learning Tool</string>
+    <string name="app_name">Desfire Tool</string>
+    <string name="lower_limit">-50</string>
+    <string name="upper_limit">1000</string>
+    <string name="value">100</string>
+
 </resources>

@@ -81,7 +81,7 @@ public class fDeleteFile extends Fragment {
                         populateListView();
 
                     } else {
-                        etFileID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(baFileIDList, (position) * 3, (position) * 3 + 3)));
+                        etFileID.setText(ByteArray.byteToHexString(baFileIDList[position]));
                     }
                 } else {
                     Bundle fileListInfo = mCallback.onFragmentGetFileIDs();

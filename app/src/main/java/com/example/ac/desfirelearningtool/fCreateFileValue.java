@@ -171,20 +171,20 @@ public class fCreateFileValue extends Fragment {
         public void onEnableLimitedCreditChecked(boolean isChecked) {
             if (isChecked) {
                 bOptionByte |= 0x01;
-                Toast.makeText(getActivity().getApplicationContext(), "Allow CheckBox_EnableLimitedCredit " + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Allow CheckBox_EnableLimitedCredit " + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
             } else {
                 bOptionByte &= 0xFE;
-                Toast.makeText(getActivity().getApplicationContext(), "Allow CheckBox_EnableLimitedCredit" + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Allow CheckBox_EnableLimitedCredit" + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
             }
         }
 
         public void onEnableFreeGVChecked(boolean isChecked) {
             if (isChecked) {
                 bOptionByte |= 0x02;
-                Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
             }else {
                 bOptionByte &= 0xFD;
-                Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "CheckBox_FreeDirListAccess " + ByteArray.byteArrayToHexString(new byte[]{(byte) bOptionByte}), Toast.LENGTH_SHORT).show();
             }
 
         }
@@ -200,16 +200,13 @@ public class fCreateFileValue extends Fragment {
                 isIncompleteForm = true;
             }
             if (etLowerLimit.getText().toString().length() == 0) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a Lower Limit Value is entered", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
+                etLowerLimit.setText(R.string.lower_limit); //getResources().getString(R.string.lower_limit));
             }
             if (etUpperLimit.getText().toString().length() == 0) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a Upper Limit Value is entered", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
+                etUpperLimit.setText(R.string.upper_limit); //getResources().getString(R.string.lower_limit));
             }
             if (etValue.getText().toString().length() == 0) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a current account value is entered", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
+                etValue.setText(R.string.value); //getResources().getString(R.string.lower_limit));
             }
 
             try {

@@ -427,11 +427,6 @@ public class MifareDesfire {
 
         DesfireResponse result = new DesfireResponse();
 
-
-
-
-
-
         switch (response[0]) {
             case (byte)0x00:
                 result.status = statusType.SUCCESS;

@@ -14,7 +14,6 @@ public interface IMainActivityCallbacks {
     public Bundle onFragmentGetApplicationIDs();
     public void onGetDFNames();
     public void onGetFreeMem();
-    public void onAuthenticate();
     public void onGetKeyVersion();
     public void onGoGetKeyVersionReturn(byte iKeyToInquire);
     public void onGetKeySettings();
@@ -36,10 +35,10 @@ public interface IMainActivityCallbacks {
     public void onGetISOFileIDs();
     public void onGetFileSettings();
     public void onGetFileSettingsReturn(byte bFileID);
-    public void onReadData();
 
 
-
-    public void onAuthISO();
-    public void onAuthAES();
+    public void onAuthenticateTest();
+    public void onReadDataTest(byte fileID);
+    public void onAuthISOTest();
+    public void onAuthAESTest();
 }

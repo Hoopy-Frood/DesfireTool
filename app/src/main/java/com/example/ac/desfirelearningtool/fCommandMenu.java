@@ -129,7 +129,7 @@ public class fCommandMenu extends Fragment{
                     + " must implement commandInterfaceListener");
         }
 
-        Log.d("fCommandMenu Create", "4");
+        //Log.d("fCommandMenu Create", "4");
         buttonGetVersion.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                mCallback.onGetVersion();
@@ -154,7 +154,7 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonAuthenticate.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onAuthenticate();
+            public void onClick(View v) {mCallback.onAuthenticateTest();
             }
         });
         buttonGetKeySettings.setOnClickListener(new View.OnClickListener() {
@@ -208,20 +208,29 @@ public class fCommandMenu extends Fragment{
         });
         buttonReadData.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mCallback.onReadData();
+
+                mCallback.onReadDataTest((byte) 0x01);  // Plain Free / Free
+                mCallback.onReadDataTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
+                mCallback.onReadDataTest((byte) 0x03);  // Enc   Free / Free
+                mCallback.onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
+                // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
+                mCallback.onReadDataTest((byte) 0x06);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+
+
             }
         });
 
 
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onAuthISO();
+            public void onClick(View v) {mCallback.onAuthISOTest();
             }
         });
         buttonAuthAES.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onAuthAES();
+            public void onClick(View v) {mCallback.onAuthAESTest();
             }
         });
-        Log.d("fCommandMenu Create", "5");
+        //Log.d("fCommandMenu Create", "5");
         
         disableAllButtons();
 

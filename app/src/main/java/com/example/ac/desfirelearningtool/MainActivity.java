@@ -463,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
-    public void onAuthenticate (){
+    public void onAuthenticateTest (){
         byte[] zeroKey = new byte[8];
         Arrays.fill(zeroKey, (byte)0);
 
@@ -486,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
-    public void onAuthISO (){
+    public void onAuthISOTest (){
 
         // Select preset app ISO DES 150DE5
         onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
@@ -510,7 +510,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
-    public void onAuthAES (){
+    public void onAuthAESTest (){
 
         // Select preset app ISO DES 150DE5
         onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0A, (byte) 0xE5});
@@ -1072,15 +1072,14 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
-    public void onReadData() {
+    public void onReadDataTest(byte fileID) {
         try {
 
-            byte fileID = (byte) 0x10;
             int offset = 0;
             int length = 10;
             ByteArray baRecvData = new ByteArray();
 
-            scrollLog.appendTitle("Read Data");
+            scrollLog.appendTitle("Read Data Test");
             MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
@@ -1092,7 +1091,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 }
             }
             if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data :" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
             else
                 scrollLog.appendData("No data returned");
 
@@ -1103,6 +1102,38 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1133,21 +1164,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onBackPressed();
         return true;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public static Object Tag_getTagService(Tag that) {
         try {
