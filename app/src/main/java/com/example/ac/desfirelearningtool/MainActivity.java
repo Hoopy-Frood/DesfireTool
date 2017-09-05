@@ -1092,8 +1092,15 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             }
             if (baRecvData.toArray().length > 0)
                 scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
                 scrollLog.appendData("No data returned");
+            }
+
 
         }
         catch (Exception e) {

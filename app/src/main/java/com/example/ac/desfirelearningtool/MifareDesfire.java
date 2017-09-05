@@ -517,6 +517,10 @@ public class MifareDesfire {
                 throw new IOException("Error in card response: " + ByteArray.byteArrayToHexString(response));
         }
 
+        if ((result.status != statusType.SUCCESS ) && (result.status != statusType.ADDITONAL_FRAME)) {
+            dfCrypto.trackCMAC = false;
+        }
+
         return result;
     }
 
