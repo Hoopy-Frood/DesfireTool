@@ -35,6 +35,7 @@ public class MifareDesfire {
 
         this.scrollLog = tv_scrollLog;
         this.dfCrypto = new DesfireCrypto();
+        curCommMode = commMode.PLAIN;
     }
 
     /**
@@ -414,6 +415,27 @@ public class MifareDesfire {
         public statusType status;
     }
 
+    private commMode curCommMode;
+    private enum commMode {
+        PLAIN,
+        MAC,
+        ENCIPHERED
+    }
+
+    public DesfireResponse sendBytes(byte[] cmd, byte [] cmdData, commMode passedCommMode) throws IOException {
+
+        if (passedCommMode == commMode.PLAIN) {
+
+        } else if (passedCommMode == commMode.MAC) {
+
+        } else {// enciphered
+            curCommMode = passedCommMode;
+
+        }
+        curCommMode = commMode.PLAIN;
+
+    }
+
     public DesfireResponse sendBytes(byte[] cmd) throws IOException {
 
         if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
@@ -430,6 +452,15 @@ public class MifareDesfire {
         switch (response[0]) {
             case (byte)0x00:
                 result.status = statusType.SUCCESS;
+                if (curCommMode == commMode.ENCIPHERED) {
+
+                    byte [] dataToDecrypt = ByteArray.appendCut(null, response);
+                    result.data = dfCrypto.decrypt(dataToDecrypt);
+                    curCommMode = commMode.PLAIN;
+                    Log.d ("sendBytes  ", "CommMode Encipered dataToDecrypt  = " + ByteArray.byteArrayToHexString(dataToDecrypt) );
+                    Log.d ("sendBytes  ", "CommMode Encipered decrypted data = " + ByteArray.byteArrayToHexString(result.data) );
+                }
+
                 if (dfCrypto.trackCMAC) {
                     Log.d ("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response) );
                     if (dfCrypto.verifyCMAC(response)) {

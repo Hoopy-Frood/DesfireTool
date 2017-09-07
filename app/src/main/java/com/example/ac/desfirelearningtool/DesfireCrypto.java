@@ -117,27 +117,31 @@ public class DesfireCrypto {
 
 
     // Mifare Desfire specifications require DESede/ECB without padding
-    protected void initCipher()
-            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException,InvalidAlgorithmParameterException {
-        switch (authType) {
-            case MODE_3DES:
-                cipher = Cipher.getInstance("DESede/ECB/NoPadding");
-                blockLength = 8;
-                break;
-            case MODE_3K3DES:
-                cipher = Cipher.getInstance("DESede/CBC/NoPadding");
-                blockLength = 8;
-                currentIV = new byte [blockLength];
-                Arrays.fill(currentIV, (byte)0);
-                break;
-            case MODE_AES:
-                cipher = Cipher.getInstance("AES/CBC/NoPadding");
-                blockLength = 16;
-                currentIV = new byte [blockLength];
-                Arrays.fill(currentIV, (byte)0);
-                break;
-            default:
-                throw new InvalidAlgorithmParameterException("No such AuthType");
+    protected void initCipher() {
+
+        try {
+            switch (authType) {
+                case MODE_3DES:
+                    cipher = Cipher.getInstance("DESede/ECB/NoPadding");
+                    blockLength = 8;
+                    break;
+                case MODE_3K3DES:
+                    cipher = Cipher.getInstance("DESede/CBC/NoPadding");
+                    blockLength = 8;
+                    currentIV = new byte[blockLength];
+                    Arrays.fill(currentIV, (byte) 0);
+                    break;
+                case MODE_AES:
+                    cipher = Cipher.getInstance("AES/CBC/NoPadding");
+                    blockLength = 16;
+                    currentIV = new byte[blockLength];
+                    Arrays.fill(currentIV, (byte) 0);
+                    break;
+                default:
+                    throw new InvalidAlgorithmParameterException("No such AuthType");
+            }
+        } catch (GeneralSecurityException e){
+            return;  //throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException,InvalidAlgorithmParameterException
         }
 
 
@@ -146,50 +150,58 @@ public class DesfireCrypto {
 
 
 
-    public byte [] encrypt(byte [] encInput) throws GeneralSecurityException {
+    public byte [] encrypt(byte [] encInput) {
         if (cipher == null) {
             initCipher();
         }
 
-        byte [] encOutput;
+        byte [] encOutput = null;
 
-        switch (authType) {
-            case MODE_3DES:
-                cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-                encOutput = cipher.doFinal(encInput);
-                break;
-            case MODE_3K3DES:
-            case MODE_AES:
-                cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
-                encOutput = cipher.doFinal(encInput);   // Decrypt
-                // Write the first IV as the result from PICC's encryption
-                System.arraycopy(encOutput, encOutput.length-blockLength, currentIV, 0, blockLength);
-                break;
-            default:
-                encOutput=null;
-                break;
+        try {
+            switch (authType) {
+                case MODE_3DES:
+                    cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+                    encOutput = cipher.doFinal(encInput);
+                    break;
+                case MODE_3K3DES:
+                case MODE_AES:
+                    cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
+                    encOutput = cipher.doFinal(encInput);   // Decrypt
+                    // Write the first IV as the result from PICC's encryption
+                    System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
+                    break;
+                default:
+                    encOutput = null;
+                    break;
+            }
+        } catch (GeneralSecurityException e) {
+            encOutput = null;
         }
         return encOutput;
     }
 
-    public byte [] decrypt(byte [] decInput) throws GeneralSecurityException {
+    public byte [] decrypt(byte [] decInput)  {
         if (cipher == null) {
             initCipher();
         }
-
         byte [] decOutput = null;
+        try {
 
-        switch (authType) {
-            case MODE_3DES:
-                cipher.init(Cipher.DECRYPT_MODE, keySpec);
-                decOutput = cipher.doFinal(decInput);
-                break;
-            case MODE_3K3DES:
-            case MODE_AES:
-                cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
-                decOutput = cipher.doFinal(decInput);   // Decrypt
-                // Write the first IV as the result from PICC's encryption
-                System.arraycopy(decInput, decInput.length-blockLength, currentIV, 0, blockLength);
+
+            switch (authType) {
+                case MODE_3DES:
+                    cipher.init(Cipher.DECRYPT_MODE, keySpec);
+                    decOutput = cipher.doFinal(decInput);
+                    break;
+                case MODE_3K3DES:
+                case MODE_AES:
+                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
+                    decOutput = cipher.doFinal(decInput);   // Decrypt
+                    // Write the first IV as the result from PICC's encryption
+                    System.arraycopy(decInput, decInput.length-blockLength, currentIV, 0, blockLength);
+            }
+        } catch (GeneralSecurityException e) {
+            decOutput = null;
         }
         return decOutput;
     }
@@ -470,12 +482,8 @@ public class DesfireCrypto {
         //Log.d("calcCMAC", "encInput = " + ByteArray.byteArrayToHexString(encInput));
 
 
-        try {
-            encrypt(encInput);
-        } catch (GeneralSecurityException e) {
-            Log.e("calcCMAC", e.getMessage(), e);
-            return null;
-        }
+        encrypt(encInput);
+
         Log.d ("calcCMAC  ", "CMAC computed  = " + ByteArray.byteArrayToHexString(currentIV) );
 
         return currentIV;
