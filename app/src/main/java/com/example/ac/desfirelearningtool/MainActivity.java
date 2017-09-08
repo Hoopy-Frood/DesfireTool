@@ -1080,7 +1080,45 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length);
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.PLAIN);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                baRecvData.append(res.data);
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData();
+                    baRecvData.append(res.data);
+                }
+            }
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
+                scrollLog.appendData("No data returned");
+            }
+
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onGetVersion", e.getMessage(), e);
+        }
+    }
+
+    public void onReadDataEncryptedTest(byte fileID) {
+        try {
+
+            int offset = 0;
+            int length = 10;
+            ByteArray baRecvData = new ByteArray();
+
+            scrollLog.appendTitle("Read Data Test");
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.ENCIPHERED);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
                 baRecvData.append(res.data);

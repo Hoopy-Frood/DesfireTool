@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.NoSuchAlgorithmException;
+import java.util.zip.CRC32;
 
 
 /**
@@ -35,7 +36,7 @@ public class MifareDesfire {
 
         this.scrollLog = tv_scrollLog;
         this.dfCrypto = new DesfireCrypto();
-        curCommMode = commMode.PLAIN;
+
     }
 
     /**
@@ -322,12 +323,17 @@ public class MifareDesfire {
         return result.data;
     }
 
-    public DesfireResponse  readData(byte fid, int start, int count) throws IOException {
+    public DesfireResponse  readData(byte fid, int start, int count, commMode curCommMode) throws IOException {
         ByteArray array = new ByteArray();
+        DesfireResponse result;
+        byte[] cmd = array.append((byte) 0xBD).append(fid).append(start, 3).append(count, 3).toArray();
 
-        byte[] cmd = array.append((byte)0xBD).append(fid).append(start, 3).append(count, 3).toArray();
+        if (curCommMode == commMode.ENCIPHERED) {
+            result = sendBytes(cmd, null, curCommMode);
 
-        DesfireResponse result = sendBytes(cmd);
+        } else {
+            result = sendBytes(cmd);
+        }
 
 
         return result;
@@ -407,7 +413,8 @@ public class MifareDesfire {
         EEPROM_ERROR,
         FILE_NOT_FOUND,
         FILE_INTEGRITY_ERROR,
-        PCD_AUTHENTICATION_ERROR
+        PCD_AUTHENTICATION_ERROR,
+        UNKNOWN_ERROR
     }
 
     public class DesfireResponse {
@@ -415,25 +422,58 @@ public class MifareDesfire {
         public statusType status;
     }
 
-    private commMode curCommMode;
-    private enum commMode {
+
+    public enum commMode {
         PLAIN,
         MAC,
         ENCIPHERED
     }
 
     public DesfireResponse sendBytes(byte[] cmd, byte [] cmdData, commMode passedCommMode) throws IOException {
-
-        if (passedCommMode == commMode.PLAIN) {
-
-        } else if (passedCommMode == commMode.MAC) {
-
-        } else {// enciphered
-            curCommMode = passedCommMode;
-
+        // TODO: Build this into read data itself
+        if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
+            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            dfCrypto.calcCMAC(cmd);
         }
-        curCommMode = commMode.PLAIN;
 
+        if ((passedCommMode == commMode.ENCIPHERED) && (cmdData != null)) {
+            //append cmd + plain data
+            // CRC32 it
+            // Add padding
+            // Encrypt
+        }
+
+
+        byte[] response = cardCommunicator.transceive(cmd);
+
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.trackCMAC) {
+                Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verfied");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutCMAC(response);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else if (result.status == statusType.ADDITONAL_FRAME) {
+            if (dfCrypto.trackCMAC) {
+                Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFCMAC(response);
+            }
+            result.data = ByteArray.appendCut(null, response);
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+
+
+        return result;
     }
 
     public DesfireResponse sendBytes(byte[] cmd) throws IOException {
@@ -446,113 +486,110 @@ public class MifareDesfire {
 
         byte[] response = cardCommunicator.transceive(cmd);
 
-
         DesfireResponse result = new DesfireResponse();
 
-        switch (response[0]) {
-            case (byte)0x00:
-                result.status = statusType.SUCCESS;
-                if (curCommMode == commMode.ENCIPHERED) {
-
-                    byte [] dataToDecrypt = ByteArray.appendCut(null, response);
-                    result.data = dfCrypto.decrypt(dataToDecrypt);
-                    curCommMode = commMode.PLAIN;
-                    Log.d ("sendBytes  ", "CommMode Encipered dataToDecrypt  = " + ByteArray.byteArrayToHexString(dataToDecrypt) );
-                    Log.d ("sendBytes  ", "CommMode Encipered decrypted data = " + ByteArray.byteArrayToHexString(result.data) );
-                }
-
-                if (dfCrypto.trackCMAC) {
-                    Log.d ("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response) );
-                    if (dfCrypto.verifyCMAC(response)) {
-                        scrollLog.appendStatus("CMAC Verfied");
-                    } else {
-                        scrollLog.appendError("CMAC Incorrect");
-                    }
-                    result.data = ByteArray.appendCutCMAC(response);
+        result.status = findStatus(response[0]);
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.trackCMAC) {
+                Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verfied");
                 } else {
-                    result.data = ByteArray.appendCut(null, response);
+                    scrollLog.appendError("CMAC Incorrect");
                 }
-
-                break;
-            case (byte)0x0C:
-                result.status = statusType.NO_CHANGES;
-                break;
-            case (byte)0x0E:
-                result.status = statusType.OUT_OF_EEPROM_ERROR;
-                break;
-            case (byte)0x1C:
-                result.status = statusType.ILLEGAL_COMMAND_CODE;
-                break;
-            case (byte)0x1E:
-                result.status = statusType.INTEGRITY_ERROR;
-                break;
-            case (byte)0x40:
-                result.status = statusType.NO_SUCH_KEY;
-                break;
-            case (byte)0x7E:
-                result.status = statusType.LENGTH_ERROR;
-                break;
-            case (byte)0x9D:
-                result.status = statusType.PERMISSION_DENIED;
-                break;
-            case (byte)0x9E:
-                result.status = statusType.PARAMETER_ERROR;
-                break;
-            case (byte)0xA0:
-                result.status = statusType.APPLICATION_NOT_FOUND;
-                break;
-            case (byte)0xA1:
-                result.status = statusType.APPL_INTEGRITY_ERROR;
-                break;
-            case (byte)0xAE:
-                result.status = statusType.AUTHENTICATION_ERROR;
-                break;
-            case (byte)0xAF:
-                result.status = statusType.ADDITONAL_FRAME;
-                if (dfCrypto.trackCMAC) {
-                    Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
-                    dfCrypto.storeAFCMAC(response);
-                }
+                result.data = ByteArray.appendCutCMAC(response);
+            } else {
                 result.data = ByteArray.appendCut(null, response);
-
-                break;
-            case (byte)0xBE:
-                result.status = statusType.BOUNDARY_ERROR;
-                break;
-            case (byte)0xC1:
-                result.status = statusType.PICC_INTEGRITY_ERROR;
-                break;
-            case (byte)0xCA:
-                result.status = statusType.COMMAND_ABORTED;
-                break;
-            case (byte)0xCD:
-                result.status = statusType.PICC_DISABLED_ERROR;
-                break;
-            case (byte)0xCE:
-                result.status = statusType.COUNT_ERROR;
-                break;
-            case (byte)0xDE:
-                result.status = statusType.DUPLICATE_ERROR;
-                break;
-            case (byte)0xEE:
-                result.status = statusType.EEPROM_ERROR;
-                break;
-            case (byte)0xF0:
-                result.status = statusType.FILE_NOT_FOUND;
-                break;
-            case (byte)0xF1:
-                result.status = statusType.FILE_INTEGRITY_ERROR;
-                break;
-
-            default:
-                throw new IOException("Error in card response: " + ByteArray.byteArrayToHexString(response));
-        }
-
-        if ((result.status != statusType.SUCCESS ) && (result.status != statusType.ADDITONAL_FRAME)) {
+            }
+        } else if (result.status == statusType.ADDITONAL_FRAME) {
+            if (dfCrypto.trackCMAC) {
+                Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFCMAC(response);
+            }
+            result.data = ByteArray.appendCut(null, response);
+        } else {
             dfCrypto.trackCMAC = false;
         }
 
         return result;
+    }
+
+    private statusType findStatus(byte statusCode) {
+        statusType retStatusType;
+        switch (statusCode) {
+            case (byte)0x00:
+                retStatusType = statusType.SUCCESS;
+                break;
+            case (byte)0x0C:
+                retStatusType = statusType.NO_CHANGES;
+                break;
+            case (byte)0x0E:
+                retStatusType = statusType.OUT_OF_EEPROM_ERROR;
+                break;
+            case (byte)0x1C:
+                retStatusType = statusType.ILLEGAL_COMMAND_CODE;
+                break;
+            case (byte)0x1E:
+                retStatusType = statusType.INTEGRITY_ERROR;
+                break;
+            case (byte)0x40:
+                retStatusType = statusType.NO_SUCH_KEY;
+                break;
+            case (byte)0x7E:
+                retStatusType = statusType.LENGTH_ERROR;
+                break;
+            case (byte)0x9D:
+                retStatusType = statusType.PERMISSION_DENIED;
+                break;
+            case (byte)0x9E:
+                retStatusType = statusType.PARAMETER_ERROR;
+                break;
+            case (byte)0xA0:
+                retStatusType = statusType.APPLICATION_NOT_FOUND;
+                break;
+            case (byte)0xA1:
+                retStatusType = statusType.APPL_INTEGRITY_ERROR;
+                break;
+            case (byte)0xAE:
+                retStatusType = statusType.AUTHENTICATION_ERROR;
+                break;
+            case (byte)0xAF:
+                retStatusType = statusType.ADDITONAL_FRAME;
+
+
+                break;
+            case (byte)0xBE:
+                retStatusType = statusType.BOUNDARY_ERROR;
+                break;
+            case (byte)0xC1:
+                retStatusType = statusType.PICC_INTEGRITY_ERROR;
+                break;
+            case (byte)0xCA:
+                retStatusType = statusType.COMMAND_ABORTED;
+                break;
+            case (byte)0xCD:
+                retStatusType = statusType.PICC_DISABLED_ERROR;
+                break;
+            case (byte)0xCE:
+                retStatusType = statusType.COUNT_ERROR;
+                break;
+            case (byte)0xDE:
+                retStatusType = statusType.DUPLICATE_ERROR;
+                break;
+            case (byte)0xEE:
+                retStatusType = statusType.EEPROM_ERROR;
+                break;
+            case (byte)0xF0:
+                retStatusType = statusType.FILE_NOT_FOUND;
+                break;
+            case (byte)0xF1:
+                retStatusType = statusType.FILE_INTEGRITY_ERROR;
+                break;
+            default:
+                retStatusType = statusType.UNKNOWN_ERROR;
+                break;
+        }
+        return retStatusType;
     }
 
     public String DesFireErrorMsg (statusType status) {
