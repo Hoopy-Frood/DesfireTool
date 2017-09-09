@@ -8,6 +8,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.zip.CRC32;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -21,9 +22,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class DesfireCrypto {
 
-    public final byte MODE_3DES = (byte) 0x0A;
-    public final byte MODE_3K3DES = (byte) 0x1A;
-    public final byte MODE_AES = (byte) 0xAA;
+    public final byte MODE_AUTHORIG = (byte) 0x0A;
+    public final byte MODE_AUTHISO = (byte) 0x1A;
+    public final byte MODE_AUTHAES = (byte) 0xAA;
     public final byte KEYTYPE_DES = 0;
     public final byte KEYTYPE_3DES = 1;
     public final byte KEYTYPE_3K3DES = 2;
@@ -42,6 +43,7 @@ public class DesfireCrypto {
     private byte[] sessionKey;
     private byte[] K1, K2;  // Subkey for CMAC
     public boolean trackCMAC;
+    public int CRCLength;
 
 
     public DesfireCrypto (){
@@ -55,15 +57,16 @@ public class DesfireCrypto {
         cipher = null;
         authType = (byte) 0x00;
         trackCMAC = false;
+        CRCLength = 0;
         storedCMACData = new ByteArray();
     }
 
     public boolean initialize (byte authToSet, byte [] key) throws Exception {
         boolean res;
         authType = authToSet;
-        if (authType == MODE_3DES || authType == MODE_3K3DES) {
+        if (authType == MODE_AUTHORIG || authType == MODE_AUTHISO) {
             getKeySpec(key);
-        }else if (authType == MODE_AES) {
+        }else if (authType == MODE_AUTHAES) {
              getKeySpecAES(key);
         } else {
             Log.e("initialize", "AuthType not valid");
@@ -121,17 +124,17 @@ public class DesfireCrypto {
 
         try {
             switch (authType) {
-                case MODE_3DES:
+                case MODE_AUTHORIG:
                     cipher = Cipher.getInstance("DESede/ECB/NoPadding");
                     blockLength = 8;
                     break;
-                case MODE_3K3DES:
+                case MODE_AUTHISO:
                     cipher = Cipher.getInstance("DESede/CBC/NoPadding");
                     blockLength = 8;
                     currentIV = new byte[blockLength];
                     Arrays.fill(currentIV, (byte) 0);
                     break;
-                case MODE_AES:
+                case MODE_AUTHAES:
                     cipher = Cipher.getInstance("AES/CBC/NoPadding");
                     blockLength = 16;
                     currentIV = new byte[blockLength];
@@ -159,12 +162,12 @@ public class DesfireCrypto {
 
         try {
             switch (authType) {
-                case MODE_3DES:
+                case MODE_AUTHORIG:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec);
                     encOutput = cipher.doFinal(encInput);
                     break;
-                case MODE_3K3DES:
-                case MODE_AES:
+                case MODE_AUTHISO:
+                case MODE_AUTHAES:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);   // Decrypt
                     // Write the first IV as the result from PICC's encryption
@@ -189,12 +192,12 @@ public class DesfireCrypto {
 
 
             switch (authType) {
-                case MODE_3DES:
+                case MODE_AUTHORIG:
                     cipher.init(Cipher.DECRYPT_MODE, keySpec);
                     decOutput = cipher.doFinal(decInput);
                     break;
-                case MODE_3K3DES:
-                case MODE_AES:
+                case MODE_AUTHISO:
+                case MODE_AUTHAES:
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     decOutput = cipher.doFinal(decInput);   // Decrypt
                     // Write the first IV as the result from PICC's encryption
@@ -220,7 +223,7 @@ public class DesfireCrypto {
         byte[] challengeMessage = null;
 
 
-        if (authType == MODE_3DES){
+        if (authType == MODE_AUTHORIG){
 
 
             // We decrypt the challenge, and rotate one byte to the left
@@ -243,7 +246,7 @@ public class DesfireCrypto {
             System.arraycopy(decRndBPrime, 0, challengeMessage, decRndA.length, decRndBPrime.length);
 
 
-        } else if (authType == MODE_3K3DES || authType == MODE_AES) {
+        } else if (authType == MODE_AUTHISO || authType == MODE_AUTHAES) {
 
 
             // We decrypt the challenge, and rotate one byte to the left
@@ -334,8 +337,7 @@ public class DesfireCrypto {
                 getKeySpec(sessionKey);
                 blockLength = 8;
                 Arrays.fill(currentIV, (byte)0);
-                trackCMAC = true;
-                genSubKeys();
+
                 break;
             case KEYTYPE_AES:
                 // TEST
@@ -364,7 +366,19 @@ public class DesfireCrypto {
                 getKeySpecAES(sessionKey);
                 blockLength = 16;
                 Arrays.fill(currentIV, (byte)0);
+                genSubKeys();
+                break;
+        }
+
+        switch (authType) {
+            case MODE_AUTHORIG:
+                trackCMAC = false;
+                CRCLength = 2;
+                break;
+            case MODE_AUTHISO:
+            case MODE_AUTHAES:
                 trackCMAC = true;
+                CRCLength = 4;
                 genSubKeys();
                 break;
         }
@@ -449,6 +463,7 @@ public class DesfireCrypto {
 
     }
 
+    /********** CMAC RELATED **********/
     public byte [] calcCMAC (byte [] data)  {
         byte[] output, encInput;
         ByteArray baEncInput = new ByteArray();
@@ -518,4 +533,32 @@ public class DesfireCrypto {
         storedCMACData.append(recvData,1,recvData.length-1);
         return;
     }
+
+    /********** CRC RELATED **********/
+    public static byte[] longToBytesInvertCRC(long l) {
+        byte[] result = new byte[4];
+        for (int i = 0; i< 4; i++) {
+            result[i] = (byte)~(l & 0xFF);
+            l >>= 8;
+        }
+        return result;
+    }
+
+
+    public byte [] calcCRC (byte [] data) {
+        long lcrc = 0;
+        if (CRCLength == 4) {
+            CRC32 crc = new CRC32();
+            crc.update(data);
+            lcrc = crc.getValue();
+
+        }
+        return longToBytesInvertCRC(lcrc);
+    }
+
+    public boolean verifyCRC (byte [] crcToVerify, byte [] data) {
+
+        return Arrays.equals(crcToVerify, calcCRC(data));
+    }
+
 }

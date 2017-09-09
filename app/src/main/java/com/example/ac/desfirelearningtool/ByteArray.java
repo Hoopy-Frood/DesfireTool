@@ -10,6 +10,19 @@ public class ByteArray {
 
     private static HashMap<String, Byte> hexMap = null;
 
+
+
+    public static int ISO9797m2PadCount (byte [] in) {
+        int count = in.length - 1;
+        while (count > 0 && in[count] == 0) {
+            count --;
+        }
+        if (in[count] != (byte) 0x80) {
+            return -1;
+        }
+        return in.length - count;
+    }
+
     public static byte[] appendCut(byte[] first, byte[] last) {
         byte[] ret;
         if (last == null || last.length == 0) {

@@ -1076,7 +1076,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             int offset = 0;
-            int length = 10;
+            int length = 3;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Test");
@@ -1113,8 +1113,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onReadDataEncryptedTest(byte fileID) {
         try {
 
-            int offset = 0;
-            int length = 10;
+            int offset = 250;
+            int length = 0;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Test");

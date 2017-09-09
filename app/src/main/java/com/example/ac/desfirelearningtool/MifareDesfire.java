@@ -326,6 +326,8 @@ public class MifareDesfire {
         return readData(fid,start,count,commMode.PLAIN);
     }
 
+
+
     public DesfireResponse  readData(byte fid, int start, int count, commMode curCommMode) throws IOException {
         ByteArray array = new ByteArray();
         byte[] cmd = array.append((byte) 0xBD).append(fid).append(start, 3).append(count, 3).toArray();
@@ -352,25 +354,36 @@ public class MifareDesfire {
                     throw new IOException("Returned no data");
                 }
                 decryptedData = dfCrypto.decrypt(encryptedData);
+                ByteArray baDecryptedPlainData = new ByteArray();
+                ByteArray baCRC = new ByteArray();
                 if (count != 0) {
-                    // figure out how many bytes read back matches
-                    ByteArray baDecryptedPlainData = new ByteArray();
                     baDecryptedPlainData.append(decryptedData, 0, count);
-                    ByteArray baCRC = new ByteArray();
-                    baCRC.append(decryptedData,count,4);
+                    baCRC.append(decryptedData,count,dfCrypto.CRCLength);
 
-                    System.arraycopy(baDecryptedPlainData.toArray(),0,response,1,count);
-                    Log.d("readData", "Encrypted Data = " + ByteArray.byteArrayToHexString(encryptedData));
-                    Log.d("readData", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
-                    Log.d("readData", "CRC  Data      = " + ByteArray.byteArrayToHexString(baCRC.toArray()));
+                } else {  // Count == 0, remove 80..00 padding
+                    int padCount = ByteArray.ISO9797m2PadCount(decryptedData);
+                    if (padCount == -1) throw new IOException("Decryption padding error");
+
+                    baDecryptedPlainData.append(decryptedData, 0, decryptedData.length - dfCrypto.CRCLength - padCount);
+                    baCRC.append(decryptedData, decryptedData.length - dfCrypto.CRCLength - padCount, dfCrypto.CRCLength);
                 }
 
-            }
+                Log.d("readData", "Encrypted Data = " + ByteArray.byteArrayToHexString(encryptedData));
+                Log.d("readData", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
+                Log.d("readData", "CRC  Data      = " + ByteArray.byteArrayToHexString(baCRC.toArray()));
+                result.data =baDecryptedPlainData.toArray();
+                baDecryptedPlainData.append(response[0]);
 
-            if (dfCrypto.trackCMAC) {
+                if (dfCrypto.verifyCRC(baCRC.toArray(),baDecryptedPlainData.toArray())) {
+                    scrollLog.appendStatus("CRC Verified");
+                } else {
+                    scrollLog.appendError("CRC Incorrect");
+                }
+
+            } else if (dfCrypto.trackCMAC) {
                 Log.d("readData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
                 if (dfCrypto.verifyCMAC(response)) {
-                    scrollLog.appendStatus("CMAC Verfied");
+                    scrollLog.appendStatus("CMAC Verified");
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
@@ -731,14 +744,13 @@ public class MifareDesfire {
 
 
         dfCrypto.initialize(authType, key);
-        // Send 0A
 
         byte[] cmd = ByteArray.from(authType).append(keyNumber).toArray();
         // Send the command to the key, receive the challenge
         DesfireResponse CardChallenge = sendBytes(cmd);
 
         if (CardChallenge.status != statusType.ADDITONAL_FRAME){
-            Log.d("authenicate", "Exitied after sending get card challenge");
+            Log.d("authenticate", "Exitied after sending get card challenge");
             return CardChallenge.status;
         }
 
