@@ -2,6 +2,7 @@ package com.example.ac.desfirelearningtool;
 
 import android.util.Log;
 
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -22,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class DesfireCrypto {
 
-    public final byte MODE_AUTHORIG = (byte) 0x0A;
+    public final byte MODE_AUTHD40 = (byte) 0x0A;
     public final byte MODE_AUTHISO = (byte) 0x1A;
     public final byte MODE_AUTHAES = (byte) 0xAA;
     public final byte KEYTYPE_DES = 0;
@@ -43,7 +44,8 @@ public class DesfireCrypto {
     private byte[] sessionKey;
     private byte[] K1, K2;  // Subkey for CMAC
     public boolean trackCMAC;
-    public int CRCLength;
+    public int CRCLength;    // Length of CRC 2 or 4 bytes
+    public int encryptedLength;  // specified dataLength at the first AF for Read Data
 
 
     public DesfireCrypto (){
@@ -58,13 +60,14 @@ public class DesfireCrypto {
         authType = (byte) 0x00;
         trackCMAC = false;
         CRCLength = 0;
-        storedCMACData = new ByteArray();
+        encryptedLength = 0;
+        storedAFData = new ByteArray();
     }
 
     public boolean initialize (byte authToSet, byte [] key) throws Exception {
         boolean res;
         authType = authToSet;
-        if (authType == MODE_AUTHORIG || authType == MODE_AUTHISO) {
+        if (authType == MODE_AUTHD40 || authType == MODE_AUTHISO) {
             getKeySpec(key);
         }else if (authType == MODE_AUTHAES) {
              getKeySpecAES(key);
@@ -124,7 +127,7 @@ public class DesfireCrypto {
 
         try {
             switch (authType) {
-                case MODE_AUTHORIG:
+                case MODE_AUTHD40:
                     cipher = Cipher.getInstance("DESede/ECB/NoPadding");
                     blockLength = 8;
                     break;
@@ -162,7 +165,7 @@ public class DesfireCrypto {
 
         try {
             switch (authType) {
-                case MODE_AUTHORIG:
+                case MODE_AUTHD40:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec);
                     encOutput = cipher.doFinal(encInput);
                     break;
@@ -178,6 +181,7 @@ public class DesfireCrypto {
                     break;
             }
         } catch (GeneralSecurityException e) {
+            Log.d("encrypt", "General Security Exception Error: " + e);
             encOutput = null;
         }
         return encOutput;
@@ -192,7 +196,7 @@ public class DesfireCrypto {
 
 
             switch (authType) {
-                case MODE_AUTHORIG:
+                case MODE_AUTHD40:
                     cipher.init(Cipher.DECRYPT_MODE, keySpec);
                     decOutput = cipher.doFinal(decInput);
                     break;
@@ -204,6 +208,7 @@ public class DesfireCrypto {
                     System.arraycopy(decInput, decInput.length-blockLength, currentIV, 0, blockLength);
             }
         } catch (GeneralSecurityException e) {
+            Log.d("decrypt", "General Security Exception Error: " + e);
             decOutput = null;
         }
         return decOutput;
@@ -223,7 +228,7 @@ public class DesfireCrypto {
         byte[] challengeMessage = null;
 
 
-        if (authType == MODE_AUTHORIG){
+        if (authType == MODE_AUTHD40){
 
 
             // We decrypt the challenge, and rotate one byte to the left
@@ -371,7 +376,7 @@ public class DesfireCrypto {
         }
 
         switch (authType) {
-            case MODE_AUTHORIG:
+            case MODE_AUTHD40:
                 trackCMAC = false;
                 CRCLength = 2;
                 break;
@@ -511,26 +516,26 @@ public class DesfireCrypto {
             return false;
 
 
-        storedCMACData.append(recvData,1,recvData.length-8-1);
-        storedCMACData.append(recvData[0]);
+        storedAFData.append(recvData,1,recvData.length-8-1);
+        storedAFData.append(recvData[0]);
 
         System.arraycopy(recvData, recvData.length-8, CMACToVerify, 0,8 );
 
-        Log.d ("verifyCMAC", "Data to Verify = " + ByteArray.byteArrayToHexString(storedCMACData.toArray()) );
-        calcCMAC(storedCMACData.toArray());
+        Log.d ("verifyCMAC", "Data to Verify = " + ByteArray.byteArrayToHexString(storedAFData.toArray()) );
+        calcCMAC(storedAFData.toArray());
         Log.d ("verifyCMAC", "CMAC to Verify = " + ByteArray.byteArrayToHexString(CMACToVerify) );
         Log.d ("verifyCMAC", "CMAC computed  = " + ByteArray.byteArrayToHexString(currentIV) );
 
-        storedCMACData.clear();
+        storedAFData.clear();
         System.arraycopy(currentIV,0,computedCMACToVerify,0,8);
 
 
         return Arrays.equals(CMACToVerify, computedCMACToVerify);
     }
-    ByteArray storedCMACData;
+    ByteArray storedAFData;
 
     public void  storeAFCMAC (byte [] recvData)  {
-        storedCMACData.append(recvData,1,recvData.length-1);
+        storedAFData.append(recvData,1,recvData.length-1);
         return;
     }
 
@@ -553,12 +558,68 @@ public class DesfireCrypto {
             lcrc = crc.getValue();
 
         }
+        Log.d("calcCRC", "Calculated CRC      = " +  ByteArray.byteArrayToHexString(longToBytesInvertCRC(lcrc)));
         return longToBytesInvertCRC(lcrc);
     }
 
     public boolean verifyCRC (byte [] crcToVerify, byte [] data) {
 
         return Arrays.equals(crcToVerify, calcCRC(data));
+    }
+
+    public void  storeAFEncryptedSetLength (byte [] recvData, int len)  {
+        encryptedLength = len;
+        storedAFData.append(recvData,1,recvData.length-1);
+    }
+    public void  storeAFEncrypted (byte [] recvData)  {
+        storedAFData.append(recvData,1,recvData.length-1);
+    }
+
+
+    public byte [] decryptReadData () throws IOException{
+        byte [] decryptedData;
+
+
+        if (storedAFData.length() < 8) {
+            throw new IOException("Returned no data");
+        }
+        Log.d("decryptReadData", "Encrypted Data = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
+
+        //Arrays.fill(currentIV, (byte)0);
+        decryptedData = decrypt(storedAFData.toArray());
+
+        if (decryptedData == null)
+            throw new IOException("Decryption Error");
+
+        Log.d("decryptReadData", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
+
+        ByteArray baDecryptedPlainData = new ByteArray();
+        ByteArray baCRC = new ByteArray();
+        if (encryptedLength != 0) {  // if count is specified 00 .. 00 padding is used
+            baDecryptedPlainData.append(decryptedData, 0, encryptedLength);
+            baCRC.append(decryptedData,encryptedLength,CRCLength);
+
+        } else {  // Count == 0, remove 80..00 padding
+            int padCount = ByteArray.ISO9797m2PadCount(decryptedData);
+            if (padCount == -1) throw new IOException("Decryption padding error");
+
+            baDecryptedPlainData.append(decryptedData, 0, decryptedData.length - CRCLength - padCount);
+            baCRC.append(decryptedData, decryptedData.length - CRCLength - padCount, CRCLength);
+        }
+
+        Log.d("decryptReadData", "CRC  Data      = " + ByteArray.byteArrayToHexString(baCRC.toArray()));
+        byte [] returnData =baDecryptedPlainData.toArray();
+        baDecryptedPlainData.append((byte) 0x00);  // status must be 0x00
+
+        if (!verifyCRC(baCRC.toArray(),baDecryptedPlainData.toArray())) {
+            Log.d("decryptReadData", "CRC Error");
+            //throw new IOException("CRC Error");
+        }
+        // Reset
+        encryptedLength = 0;
+        storedAFData.clear();
+
+        return returnData;
     }
 
 }

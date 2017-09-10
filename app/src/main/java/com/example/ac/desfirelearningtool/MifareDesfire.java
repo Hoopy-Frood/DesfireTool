@@ -327,6 +327,56 @@ public class MifareDesfire {
     }
 
 
+    public DesfireResponse getMoreData(commMode curCommMode) throws IOException {
+        ByteArray array = new ByteArray();
+        byte[] cmd = new byte[] {(byte)0xAF};
+
+
+        if ((dfCrypto.trackCMAC)) {
+            Log.d ("getMoreData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            dfCrypto.calcCMAC(cmd);
+        }
+
+        byte[] response = cardCommunicator.transceive(cmd);
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+        if (result.status == statusType.SUCCESS) {
+            if (curCommMode == commMode.ENCIPHERED) {
+
+                dfCrypto.storeAFEncrypted(response);
+                result.data = dfCrypto.decryptReadData();
+
+            } else if (dfCrypto.trackCMAC) {
+                Log.d("readData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verified");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutCMAC(response);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else if (result.status == statusType.ADDITONAL_FRAME) {
+            if (curCommMode == commMode.ENCIPHERED) {
+                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFEncrypted(response);
+            } else if (dfCrypto.trackCMAC) {
+                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFCMAC(response);
+            }
+            result.data = ByteArray.appendCut(null, response);
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+
+
+        return result;
+
+    }
 
     public DesfireResponse  readData(byte fid, int start, int count, commMode curCommMode) throws IOException {
         ByteArray array = new ByteArray();
@@ -345,40 +395,10 @@ public class MifareDesfire {
 
         result.status = findStatus(response[0]);
 
-        byte [] decryptedData;
-
         if (result.status == statusType.SUCCESS) {
             if (curCommMode == commMode.ENCIPHERED) {
-                byte [] encryptedData = ByteArray.appendCut(null, response);
-                if (encryptedData.length < 8) {
-                    throw new IOException("Returned no data");
-                }
-                decryptedData = dfCrypto.decrypt(encryptedData);
-                ByteArray baDecryptedPlainData = new ByteArray();
-                ByteArray baCRC = new ByteArray();
-                if (count != 0) {
-                    baDecryptedPlainData.append(decryptedData, 0, count);
-                    baCRC.append(decryptedData,count,dfCrypto.CRCLength);
-
-                } else {  // Count == 0, remove 80..00 padding
-                    int padCount = ByteArray.ISO9797m2PadCount(decryptedData);
-                    if (padCount == -1) throw new IOException("Decryption padding error");
-
-                    baDecryptedPlainData.append(decryptedData, 0, decryptedData.length - dfCrypto.CRCLength - padCount);
-                    baCRC.append(decryptedData, decryptedData.length - dfCrypto.CRCLength - padCount, dfCrypto.CRCLength);
-                }
-
-                Log.d("readData", "Encrypted Data = " + ByteArray.byteArrayToHexString(encryptedData));
-                Log.d("readData", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
-                Log.d("readData", "CRC  Data      = " + ByteArray.byteArrayToHexString(baCRC.toArray()));
-                result.data =baDecryptedPlainData.toArray();
-                baDecryptedPlainData.append(response[0]);
-
-                if (dfCrypto.verifyCRC(baCRC.toArray(),baDecryptedPlainData.toArray())) {
-                    scrollLog.appendStatus("CRC Verified");
-                } else {
-                    scrollLog.appendError("CRC Incorrect");
-                }
+                dfCrypto.storeAFEncryptedSetLength(response, count);
+                result.data = dfCrypto.decryptReadData();
 
             } else if (dfCrypto.trackCMAC) {
                 Log.d("readData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
@@ -392,8 +412,11 @@ public class MifareDesfire {
                 result.data = ByteArray.appendCut(null, response);
             }
         } else if (result.status == statusType.ADDITONAL_FRAME) {
-            if (dfCrypto.trackCMAC) {
-                Log.d ("readData", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
+            if (curCommMode == commMode.ENCIPHERED) {
+                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFEncryptedSetLength(response,count);
+            } else if (dfCrypto.trackCMAC) {
+                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
             }
             result.data = ByteArray.appendCut(null, response);
@@ -496,54 +519,8 @@ public class MifareDesfire {
         ENCIPHERED
     }
 
-    public DesfireResponse sendBytes(byte[] cmd, byte [] cmdData, commMode passedCommMode) throws IOException {
-        // TODO: Build this into read data itself
-        if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
-            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
-            dfCrypto.calcCMAC(cmd);
-        }
-
-        if ((passedCommMode == commMode.ENCIPHERED) && (cmdData != null)) {
-            //append cmd + plain data
-            // CRC32 it
-            // Add padding
-            // Encrypt
-        }
 
 
-        byte[] response = cardCommunicator.transceive(cmd);
-
-
-        DesfireResponse result = new DesfireResponse();
-
-        result.status = findStatus(response[0]);
-
-        if (result.status == statusType.SUCCESS) {
-
-            if (dfCrypto.trackCMAC) {
-                Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
-                if (dfCrypto.verifyCMAC(response)) {
-                    scrollLog.appendStatus("CMAC Verfied");
-                } else {
-                    scrollLog.appendError("CMAC Incorrect");
-                }
-                result.data = ByteArray.appendCutCMAC(response);
-            } else {
-                result.data = ByteArray.appendCut(null, response);
-            }
-        } else if (result.status == statusType.ADDITONAL_FRAME) {
-            if (dfCrypto.trackCMAC) {
-                Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
-                dfCrypto.storeAFCMAC(response);
-            }
-            result.data = ByteArray.appendCut(null, response);
-        } else {
-            dfCrypto.trackCMAC = false;
-        }
-
-
-        return result;
-    }
 
     public DesfireResponse sendBytes(byte[] cmd) throws IOException {
 

@@ -243,6 +243,10 @@ public class ByteArray {
         return this;
     }
 
+    public int length() {
+        return count;
+    }
+
     private void checkResize(int n) {
         if (count + n >= buffer.length) {
             byte[] tmp = new byte[count + n + INITIAL_SIZE];

@@ -1113,7 +1113,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onReadDataEncryptedTest(byte fileID) {
         try {
 
-            int offset = 250;
+            int offset = 0;
             int length = 0;
             ByteArray baRecvData = new ByteArray();
 
@@ -1121,12 +1121,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.ENCIPHERED);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
-                baRecvData.append(res.data);
-
                 while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData();
-                    baRecvData.append(res.data);
+                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
                 }
+                baRecvData.append(res.data);
             }
             if (baRecvData.toArray().length > 0)
                 scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
