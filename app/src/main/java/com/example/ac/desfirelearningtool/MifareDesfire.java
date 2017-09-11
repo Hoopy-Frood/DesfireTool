@@ -332,10 +332,10 @@ public class MifareDesfire {
         byte[] cmd = new byte[] {(byte)0xAF};
 
 
-        if ((dfCrypto.trackCMAC)) {
+        /*if ((dfCrypto.trackCMAC)) {
             Log.d ("getMoreData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
             dfCrypto.calcCMAC(cmd);
-        }
+        }*/
 
         byte[] response = cardCommunicator.transceive(cmd);
 
