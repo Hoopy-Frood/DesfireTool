@@ -42,14 +42,14 @@ public class ByteArray {
         return ret;
     }
 
-    public static byte[] appendCutCMAC ( byte[] data) {
+    public static byte[] appendCutMAC ( byte[] data, int macLength) {
         byte[] ret;
         if (data == null || data.length < 9) {
             return null;
         }
 
-        ret = new byte[data.length - 9];
-        System.arraycopy(data, 1, ret, 0, data.length-9);
+        ret = new byte[data.length - macLength - 1];
+        System.arraycopy(data, 1, ret, 0, data.length - macLength - 1);
         return ret;
     }
 

@@ -210,7 +210,7 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {
 
                 mCallback.onReadDataTest((byte) 0x01);  // Plain Free / Free
-                mCallback.onReadDataTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
+                mCallback.onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
                 mCallback.onReadDataTest((byte) 0x03);  // Enc   Free / Free
                 mCallback.onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
                 // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0

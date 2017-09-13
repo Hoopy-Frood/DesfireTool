@@ -332,11 +332,6 @@ public class MifareDesfire {
         byte[] cmd = new byte[] {(byte)0xAF};
 
 
-        /*if ((dfCrypto.trackCMAC)) {
-            Log.d ("getMoreData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
-            dfCrypto.calcCMAC(cmd);
-        }*/
-
         byte[] response = cardCommunicator.transceive(cmd);
 
         DesfireResponse result = new DesfireResponse();
@@ -356,7 +351,14 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutCMAC(response);
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+                if (dfCrypto.verifyD40MAC(response)) {
+                    scrollLog.appendStatus("MAC Verified");
+                } else {
+                    scrollLog.appendError("MAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,4);
             } else {
                 result.data = ByteArray.appendCut(null, response);
             }
@@ -407,7 +409,14 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutCMAC(response);
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+                if (dfCrypto.verifyD40MAC(response)) {
+                    scrollLog.appendStatus("MAC Verified");
+                } else {
+                    scrollLog.appendError("MAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,4);
             } else {
                 result.data = ByteArray.appendCut(null, response);
             }
@@ -415,7 +424,7 @@ public class MifareDesfire {
             if (curCommMode == commMode.ENCIPHERED) {
                 Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFEncryptedSetLength(response,count);
-            } else if (dfCrypto.trackCMAC) {
+            } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
                 Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
             }
@@ -543,7 +552,7 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutCMAC(response);
+                result.data = ByteArray.appendCutMAC(response,8);
             } else {
                 result.data = ByteArray.appendCut(null, response);
             }

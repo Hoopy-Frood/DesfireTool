@@ -1114,10 +1114,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             int offset = 0;
-            int length = 0;
+            int length = 1;
             ByteArray baRecvData = new ByteArray();
 
-            scrollLog.appendTitle("Read Data Test");
+            scrollLog.appendTitle("Read Data Encrypted Test");
             MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.ENCIPHERED);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
@@ -1137,12 +1137,45 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendData("No data returned");
             }
 
-
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
             Log.e("onGetVersion", e.getMessage(), e);
+        }
+    }
+
+    public void onReadDataMACTest(byte fileID) {
+        try {
+
+            int offset = 0;
+            int length = 10;
+            ByteArray baRecvData = new ByteArray();
+
+            scrollLog.appendTitle("Read Data MAC Test");
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.MAC);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
+                }
+                baRecvData.append(res.data);
+            }
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data MAC Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+                scrollLog.appendData("No data returned");
+            }
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onReadDataMACTest", e.getMessage(), e);
         }
     }
 
@@ -1159,30 +1192,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //region Miscellaneous Helpers
     @Override
     public void onBackPressed() {
 
@@ -1275,5 +1285,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
         return super.dispatchTouchEvent(event);
     }
+    //endregion
 
 }
