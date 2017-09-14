@@ -643,10 +643,60 @@ public class DesfireCrypto {
         return result;
     }
 
+    //https://www.lammertbies.nl/forum/viewtopic.php?t=1907
+    static byte[] ComputeCRC(byte[] val) {
+        int crc;
+        int q;
+        byte c;
+        crc = 0x0000;
+        for (int i = 0; i < val.length; i++) {
+            c = val[i];
+            q = (crc ^ c) & 0x0f;
+            crc = (crc >> 4) ^ (q * 0x1081);
+            q = (crc ^ (c >> 4)) & 0x0f;
+            crc = (crc >> 4) ^ (q * 0x1081);
+        }
+        int crcend = ((byte) crc << 8 | (byte) (crc >> 8)) & 0xffff;
+//Swap bytes
+        int byte1 = (crcend & 0xff);
+        int byte2 = ((crcend >> 8) & 0xff);
+        int result = ((byte1 << 8) | (byte2));
+//Swap
+
+        Log.d ("ComputeCRC", "Calc CRC" + result);
+        ByteBuffer b = ByteBuffer.allocate(4);
+        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
+
+        byte[] returnCRC = new byte[4];
+        System.arraycopy(b.putInt(result).array(), 0 , returnCRC, 0 , 4);
+
+        return returnCRC;
+    }
+
+    static byte [] crc16(final byte[] buffer) {
+        int crc = 0xFFFF;
+
+        for (int j = 0; j < buffer.length ; j++) {
+            crc = ((crc  >>> 8) | (crc  << 8) )& 0xffff;
+            crc ^= (buffer[j] & 0xff);//byte to int, trunc sign
+            crc ^= ((crc & 0xff) >> 4);
+            crc ^= (crc << 12) & 0xffff;
+            crc ^= ((crc & 0xFF) << 5) & 0xffff;
+        }
+        crc &= 0xffff;
+        ByteBuffer b = ByteBuffer.allocate(4);
+        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
+
+        byte[] returnCRC = new byte[4];
+        System.arraycopy(b.putInt(crc).array(), 0 , returnCRC, 0 , 4);
+
+        return returnCRC;
+
+    }
 
     public static byte []  CRC16CCITT(byte[] bytes) {
         int crc = 0xFFFF;          // initial value
-        int polynomial = 0xA001;   // 0001 0000 0010 0001  (0, 5, 12)
+        int polynomial = 0x8408;   // 0001 0000 0010 0001  (0, 5, 12)
 
         for (byte b : bytes) {
             for (int i = 0; i < 8; i++) {
@@ -679,7 +729,7 @@ public class DesfireCrypto {
             returnCRC = longToBytesInvertCRC(lcrc);
 
         } else {
-            returnCRC = CRC16CCITT(data);
+            returnCRC = ComputeCRC(data);
 
         }
         Log.d("calcCRC", "Calculated CRC      = " +  ByteArray.byteArrayToHexString(returnCRC));

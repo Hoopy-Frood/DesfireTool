@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     private Button buttonClearScreen;
     private Button buttonCopyLog;
     private ScrollLog scrollLog;
+    public ScrollView scrollViewTextLog;
 
     private byte[] applicationList;
     private boolean applicationListPopulated;
@@ -121,7 +123,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // Buttons - Log Management
         buttonClearScreen = (Button) findViewById(R.id.button_ClearScreen);
         buttonCopyLog = (Button) findViewById(R.id.button_CopyLog);
-        scrollLog = new ScrollLog((TextView) findViewById(R.id.textView_scrollLog));
+        scrollViewTextLog = findViewById(R.id.scrollview_TextLog);
+        scrollLog = new ScrollLog((TextView) findViewById(R.id.textView_scrollLog),scrollViewTextLog);
+
         applicationList = null;
         baFileIDList = null;
 
@@ -174,6 +178,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                     .add(R.id.fragment_container, commandFragment).commit();
 
         }
+
+
 
     }
 
@@ -265,7 +271,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
             commandFragment.enableAllButtons();
+            scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00,(byte) 0x09,(byte) 0x10,(byte) 0x01,(byte) 0x01,(byte) 0x7C,(byte) 0xF4,(byte) 0xB8,(byte) 0x00}));
+            scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00,(byte) 0x09,(byte) 0x10,(byte) 0x01,(byte) 0x01,(byte) 0x7C,(byte) 0xF4,(byte) 0xB8,(byte) 0x00})));
 
+            scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00}));
+            scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00})));
+            scrollLog.appendData("Needs to be FE 51");
+
+            scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00,(byte) 0x00}));
+            scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00,(byte) 0x00})));
+            scrollLog.appendData("Needs to be 3A 55");
 
         }
         catch (Exception e) {
@@ -1114,7 +1129,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             int offset = 0;
-            int length = 1;
+            int length = 8;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Encrypted Test");

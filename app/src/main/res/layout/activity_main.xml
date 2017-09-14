@@ -49,21 +49,27 @@
             android:text="Copy"
             android:textAllCaps="false" />
 
-        <TextView
-            android:id="@+id/textView_scrollLog"
+        <ScrollView
+            android:id="@+id/scrollview_TextLog"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_above="@+id/button_ClearScreen"
             android:layout_alignParentTop="true"
-            android:layout_marginLeft = "4dp"
-            android:layout_marginRight = "4dp"
-            android:fontFamily="monospace"
             android:gravity="bottom"
-            android:maxLines="2048"
-            android:scrollbars="vertical"
-            android:text="Scroll Log View"
-            android:textSize="12sp"
-            android:elevation="4dp"/>
+            android:layout_marginLeft = "4dp"
+            android:layout_marginRight = "4dp">
+            <TextView
+                android:id="@+id/textView_scrollLog"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fontFamily="monospace"
+                android:gravity="bottom"
+                android:maxLines="2048"
+                android:scrollbars="vertical"
+                android:text="Scroll Log View"
+                android:textSize="12sp"
+                android:elevation="4dp"/>
+        </ScrollView>
 
     </RelativeLayout>
 

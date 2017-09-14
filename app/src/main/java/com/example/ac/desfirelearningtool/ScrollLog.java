@@ -5,6 +5,7 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
@@ -13,12 +14,14 @@ import android.widget.TextView;
 
 public class ScrollLog {
     private TextView scrollLog;
+    private ScrollView scrollView;
 
-    public ScrollLog(TextView scrollID){
+    public ScrollLog(TextView scrollID, ScrollView inScrollView){
         scrollLog = scrollID;
         scrollLog.setMovementMethod(new ScrollingMovementMethod());
         scrollLog.setText("");
         scrollLog.setTextColor(0xAA000000);
+        scrollView = inScrollView;
 
     }
 
@@ -43,7 +46,11 @@ public class ScrollLog {
 
         scrollLog.append(builder);
         scrollLog.append("\n");
-
+        scrollView.post(new Runnable() {
+            public void run() {
+                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+            }
+        });
     }
 
     public void appendStatus(String appendText){
@@ -55,6 +62,11 @@ public class ScrollLog {
 
         scrollLog.append(builder);
         scrollLog.append("\n");
+        scrollView.post(new Runnable() {
+            public void run() {
+                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+            }
+        });
 
     }
 
@@ -67,7 +79,11 @@ public class ScrollLog {
 
         scrollLog.append(builder);
         scrollLog.append("\n");
-
+        scrollView.post(new Runnable() {
+            public void run() {
+                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+            }
+        });
     }
 
     public void appendError(String appendText){
@@ -79,7 +95,11 @@ public class ScrollLog {
 
         scrollLog.append(builder);
         scrollLog.append("\n");
-
+        scrollView.post(new Runnable() {
+            public void run() {
+                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+            }
+        });
     }
 
 }
