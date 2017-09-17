@@ -1,6 +1,7 @@
 package com.example.ac.desfirelearningtool;
 
 import android.graphics.Color;
+import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 public class ScrollLog {
     private TextView scrollLog;
     private ScrollView scrollView;
+    private static int MAX_OUTPUT_LINES = 2048;
 
     public ScrollLog(TextView scrollID, ScrollView inScrollView){
         scrollLog = scrollID;
@@ -38,68 +40,52 @@ public class ScrollLog {
     }
 
     public void appendTitle(String appendText){
-        SpannableStringBuilder builder = new SpannableStringBuilder();
-
-        SpannableString spanText= new SpannableString(appendText);
-        spanText.setSpan(new ForegroundColorSpan(Color.BLUE), 0, appendText.length(), 0);
-        builder.append(spanText);
-
-        scrollLog.append(builder);
-        scrollLog.append("\n");
-        scrollView.post(new Runnable() {
-            public void run() {
-                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-            }
-        });
+        appendColor (appendText, Color.BLUE);
     }
 
     public void appendStatus(String appendText){
-        SpannableStringBuilder builder = new SpannableStringBuilder();
-
-        SpannableString spanText= new SpannableString(appendText);
-        spanText.setSpan(new ForegroundColorSpan((int) 0xFF008000), 0, appendText.length(), 0);  // Dark Green
-        builder.append(spanText);
-
-        scrollLog.append(builder);
-        scrollLog.append("\n");
-        scrollView.post(new Runnable() {
-            public void run() {
-                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-            }
-        });
-
+        appendColor (appendText, (int) 0xFF008000);
     }
 
     public void appendData(String appendText){
-        SpannableStringBuilder builder = new SpannableStringBuilder();
-
-        SpannableString spanText= new SpannableString(appendText);
-        spanText.setSpan(new ForegroundColorSpan((int) 0xFF000080), 0, appendText.length(), 0);
-        builder.append(spanText);
-
-        scrollLog.append(builder);
-        scrollLog.append("\n");
-        scrollView.post(new Runnable() {
-            public void run() {
-                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-            }
-        });
+        appendColor (appendText, (int) 0xFF000080);
     }
 
     public void appendError(String appendText){
+        appendColor (appendText, Color.RED);
+    }
+
+    public void appendColor(String appendText, int color){
         SpannableStringBuilder builder = new SpannableStringBuilder();
 
         SpannableString spanText= new SpannableString(appendText);
-        spanText.setSpan(new ForegroundColorSpan(Color.RED), 0, appendText.length(), 0);
+        spanText.setSpan(new ForegroundColorSpan(color), 0, appendText.length(), 0);
         builder.append(spanText);
 
         scrollLog.append(builder);
         scrollLog.append("\n");
+
+        removeLinesFromTextView();
+
         scrollView.post(new Runnable() {
             public void run() {
                 scrollView.fullScroll(ScrollView.FOCUS_DOWN);
             }
         });
     }
+
+    // remove leading lines from beginning of the output view
+    private void removeLinesFromTextView() {
+        int linesToRemove = scrollLog.getLineCount() - MAX_OUTPUT_LINES;
+        if (linesToRemove > 0) {
+            for (int i = 0; i < linesToRemove; i++) {
+                Editable text = scrollLog.getEditableText();
+                int lineStart = scrollLog.getLayout().getLineStart(0);
+                int lineEnd = scrollLog.getLayout().getLineEnd(0);
+                text.delete(lineStart, lineEnd);
+            }
+        }
+    }
+
 
 }

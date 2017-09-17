@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 
 
@@ -342,7 +343,11 @@ public class MifareDesfire {
             if (curCommMode == commMode.ENCIPHERED) {
 
                 dfCrypto.storeAFEncrypted(response);
-                result.data = dfCrypto.decryptReadData();
+                try {
+                    result.data = dfCrypto.decryptReadData();
+                } catch (GeneralSecurityException e) {
+                    scrollLog.appendError(e.getMessage());
+                }
 
             } else if (dfCrypto.trackCMAC) {
                 Log.d("readData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
@@ -400,7 +405,11 @@ public class MifareDesfire {
         if (result.status == statusType.SUCCESS) {
             if (curCommMode == commMode.ENCIPHERED) {
                 dfCrypto.storeAFEncryptedSetLength(response, count);
-                result.data = dfCrypto.decryptReadData();
+                try {
+                    result.data = dfCrypto.decryptReadData();
+                } catch (GeneralSecurityException e) {
+                    scrollLog.appendError(e.getMessage());
+                }
 
             } else if (dfCrypto.trackCMAC) {
                 Log.d("readData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));

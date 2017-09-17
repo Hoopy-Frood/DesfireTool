@@ -648,7 +648,7 @@ public class DesfireCrypto {
         int crc;
         int q;
         byte c;
-        crc = 0x0000;
+        crc = 0x6363;
         for (int i = 0; i < val.length; i++) {
             c = val[i];
             q = (crc ^ c) & 0x0f;
@@ -667,12 +667,12 @@ public class DesfireCrypto {
         ByteBuffer b = ByteBuffer.allocate(4);
         b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
 
-        byte[] returnCRC = new byte[4];
-        System.arraycopy(b.putInt(result).array(), 0 , returnCRC, 0 , 4);
+        byte[] returnCRC = new byte[2];
+        System.arraycopy(b.putInt(result).array(), 0 , returnCRC, 0 , 2);
 
         return returnCRC;
     }
-
+    //region bad CRC16s
     static byte [] crc16(final byte[] buffer) {
         int crc = 0xFFFF;
 
@@ -696,7 +696,7 @@ public class DesfireCrypto {
 
     public static byte []  CRC16CCITT(byte[] bytes) {
         int crc = 0xFFFF;          // initial value
-        int polynomial = 0x8408;   // 0001 0000 0010 0001  (0, 5, 12)
+        int polynomial = 0x6363;   // 0001 0000 0010 0001  (0, 5, 12)
 
         for (byte b : bytes) {
             for (int i = 0; i < 8; i++) {
@@ -717,7 +717,7 @@ public class DesfireCrypto {
 
         return returnCRC;
     }
-
+//endregion
 
     public byte [] calcCRC (byte [] data) {
         long lcrc = 0;
@@ -751,7 +751,7 @@ public class DesfireCrypto {
     }
 
 
-    public byte [] decryptReadData () throws IOException{
+    public byte [] decryptReadData () throws IOException, GeneralSecurityException{
         byte [] decryptedData;
 
 
@@ -782,14 +782,15 @@ public class DesfireCrypto {
         }
 
         Log.d("decryptReadData", "CRC  Data      = " + ByteArray.byteArrayToHexString(baCRC.toArray()));
-        byte[] returnData = returnData = baDecryptedPlainData.toArray();
+        byte[] returnData = baDecryptedPlainData.toArray();
         if (CRCLength == 4) {
             baDecryptedPlainData.append((byte) 0x00);  // status must be 0x00
         }
 
-        if (!verifyCRC(baCRC.toArray(),baDecryptedPlainData.toArray())) {
-            Log.d("decryptReadData", "CRC Error");
-            //throw new IOException("CRC Error");
+        byte [] computedCRC = calcCRC(baDecryptedPlainData.toArray());
+        if (!Arrays.equals(baCRC.toArray(), computedCRC)) {
+            Log.d("decryptReadData", "CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
+            throw new GeneralSecurityException("CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
         }
         // Reset
         encryptedLength = 0;
