@@ -154,7 +154,7 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonAuthenticate.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onAuthenticateTest();
+            public void onClick(View v) {mCallback.onAuthenticate();
             }
         });
         buttonGetKeySettings.setOnClickListener(new View.OnClickListener() {

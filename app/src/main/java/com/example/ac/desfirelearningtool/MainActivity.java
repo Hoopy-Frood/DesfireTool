@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fCreateFile createFileFragment;
     fGetFileSettings getFileSettingsFragment;
     fDeleteFile getDeleteFileFragment;
+    fAuthenticate authenticateFragment;
 
 
 
@@ -489,6 +490,48 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
             } else{
 
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
+        }
+    }
+
+
+    public void onAuthenticate (){
+        scrollLog.appendTitle("Authenticate");
+
+        getSupportActionBar().setTitle("Authenticate");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        authenticateFragment = new fAuthenticate();
+        authenticateFragment.setArguments(getIntent().getExtras());
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,authenticateFragment).addToBackStack("commandview").commit();
+
+    }
+
+    public void onAuthenticateReturn(byte bAuthCmd, byte bKeyNo, byte[] key) {
+        scrollLog.appendTitle("Authenticate Return");
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+
+        getSupportFragmentManager().popBackStack();
+
+        try {
+            scrollLog.appendTitle("Authentication");
+            MifareDesfire.statusType res = desfireCard.authenticate(bAuthCmd, (byte) bKeyNo, key);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
 

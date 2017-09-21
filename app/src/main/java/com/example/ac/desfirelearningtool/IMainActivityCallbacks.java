@@ -28,6 +28,8 @@ public interface IMainActivityCallbacks {
     public void onCreateFileDataReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize);
     public void onCreateFileRecordReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iRecordSize, int iNumOfRecords);
     public void onCreateFileValueReturn (byte bFileType, byte bFileId, byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte);
+    public void onAuthenticate();
+    public void onAuthenticateReturn (byte bAuthCmd, byte bKeyNo, byte[] key);
     public void onDeleteFile();
     public void onDeleteFileReturn(byte bFileID);
     public void onGetFileIDs();
@@ -37,7 +39,6 @@ public interface IMainActivityCallbacks {
     public void onGetFileSettingsReturn(byte bFileID);
 
 
-    public void onAuthenticateTest();
 
     public void onReadDataTest(byte fileID);
     public void onReadDataMACTest(byte fileID);

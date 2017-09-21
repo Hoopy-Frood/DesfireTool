@@ -6,22 +6,6 @@
     android:background="#FFFFFF">
 
 
-    <ScrollView
-        android:id="@+id/verticalScrollArea"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-
-        <RelativeLayout
-            android:id="@+id/scrollArea"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:focusableInTouchMode="true">
-
-
-
-
-
             <!-- Authentication Type application -->
             <TextView
                 android:id="@+id/Block_AuthenticationType"
@@ -80,12 +64,22 @@
                 android:gravity="center"
                 android:dropDownWidth="wrap_content"/>
 
+
+            <Button
+                android:id="@+id/button_Go"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Go"
+                android:layout_alignBaseline="@+id/TextView_KeyID"
+                android:layout_alignParentRight="true"
+                android:textAllCaps="false"/>
+
             <TextView
                 android:id="@+id/KeyText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/TextView_KeyID"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="20dp"
                 android:layout_marginStart="5dp"
                 android:text="Key: "
                 android:textColor="#000000"
@@ -107,11 +101,9 @@
             <ListView
                 android:id="@+id/lv_KeyList"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_below="@+id/KeyText"
                 android:layout_marginTop="10dp"/>
-        </RelativeLayout>
 
-    </ScrollView>
 </RelativeLayout>
 
