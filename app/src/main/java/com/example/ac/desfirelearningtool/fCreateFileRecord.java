@@ -1,7 +1,5 @@
 package com.example.ac.desfirelearningtool;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -182,34 +180,36 @@ public class fCreateFileRecord extends Fragment {
                 Toast.makeText(getActivity().getApplicationContext(), "Please ensure the optional ISO File Name must be 2 bytes ", Toast.LENGTH_SHORT).show();
                 isIncompleteForm = true;
             }
-            if (etRecordSize.getText().toString().length() == 0) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a valid record size is entered", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
-            }
-            if (etNumOfRecords.getText().toString().length() == 0) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a valid number of record is entered", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
-            }
-
-            try {
-                iRecordSize = (parseInt(etRecordSize.getText().toString()));
-                iNumOfRecords = (parseInt(etNumOfRecords.getText().toString()));
-            } catch (NumberFormatException e) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in record size and number of records", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
-
-            }
-
-
             if (cryptoModeGroup.getCheckedRadioButtonId() == -1) {
                 Toast.makeText(getActivity().getApplicationContext(), "Please select a communication setting", Toast.LENGTH_SHORT).show();
                 isIncompleteForm = true;
             }
 
 
+            try {
+                if (etRecordSize.getText().toString().length() != 0)
+                    iRecordSize = (parseInt(etRecordSize.getText().toString()));
+                if (etNumOfRecords.getText().toString().length() != 0)
+                    iNumOfRecords = (parseInt(etNumOfRecords.getText().toString()));
+            } catch (NumberFormatException e) {
+                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in record size and number of records", Toast.LENGTH_SHORT).show();
+                isIncompleteForm = true;
+            }
 
             if (isIncompleteForm)
                 return;
+
+            if (etRecordSize.getText().toString().length() == 0) {
+                Toast.makeText(getActivity().getApplicationContext(), "Using default record size of " + R.string.default_recordsize + " bytes" , Toast.LENGTH_SHORT).show();
+                etRecordSize.setText(R.string.default_recordsize);
+                iRecordSize = (parseInt(etRecordSize.getText().toString()));
+            }
+            if (etNumOfRecords.getText().toString().length() == 0) {
+                Toast.makeText(getActivity().getApplicationContext(), "PUsing default record size of " + R.string.default_num_of_records + " bytes", Toast.LENGTH_SHORT).show();
+                etNumOfRecords.setText(R.string.default_num_of_records);
+                iNumOfRecords = (parseInt(etNumOfRecords.getText().toString()));
+            }
+
 
             // Access Rights 2 bytes
             byte ACByte1 = (byte) ((((byte) (spReadAccess.getSelectedItemPosition())) << 4) | (((byte) (spWriteAccess.getSelectedItemPosition())) & (byte) 0x0F)) ;

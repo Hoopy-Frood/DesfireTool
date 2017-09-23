@@ -69,8 +69,6 @@ public class fCreateFileData extends Fragment {
         dataFileType =(RadioGroup) rootView.findViewById(R.id.radioGroup_DataFileType);
         populateSpinners ();
 
-        FileSize.setText("256");
-
         bFileType = (byte) 0x00;
         bCommSetting = (byte) 0xff;
         iFileSize = 0;
@@ -182,22 +180,26 @@ public class fCreateFileData extends Fragment {
             Toast.makeText(getActivity().getApplicationContext(), "Please select a communication setting", Toast.LENGTH_SHORT).show();
             isIncompleteForm = true;
         }
-        if (FileSize.getText().toString().length() == 0) {
-            Toast.makeText(getActivity().getApplicationContext(), "Please ensure a valid file size is entered", Toast.LENGTH_SHORT).show();
-            isIncompleteForm = true;
-        }
 
-        try {
-            iFileSize = (parseInt(FileSize.getText().toString()));
-        } catch (NumberFormatException e) {
-            Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in file size", Toast.LENGTH_SHORT).show();
-            isIncompleteForm = true;
-
+        if (FileSize.getText().toString().length() != 0) {
+            try {
+                iFileSize = (parseInt(FileSize.getText().toString()));
+            } catch (NumberFormatException e) {
+                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in file size", Toast.LENGTH_SHORT).show();
+                isIncompleteForm = true;
+            }
         }
 
 
         if (isIncompleteForm)
             return;
+
+        if (FileSize.getText().toString().length() == 0) {
+            Toast.makeText(getActivity().getApplicationContext(), "Using Default filesize of 32 bytes ", Toast.LENGTH_SHORT).show();
+            FileSize.setText(R.string.default_filesize);
+            iFileSize = (parseInt(FileSize.getText().toString()));
+        }
+
 
         // Access Rights 2 bytes
         byte ACByte1 = (byte) ((((byte) (spReadAccess.getSelectedItemPosition())) << 4) | (((byte) (spWriteAccess.getSelectedItemPosition())) & (byte) 0x0F)) ;

@@ -341,8 +341,6 @@ public class DesfireCrypto {
                 Log.d("genSessionKey", "DES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
                 getKeySpec(sessionKey);
                 blockLength = 8;
-                currentIV = new byte [blockLength];
-                Arrays.fill(currentIV, (byte)0);
                 break;
             case KEYTYPE_3DES:
                 sessionKey = new byte [16];
@@ -353,7 +351,6 @@ public class DesfireCrypto {
                 Log.d("genSessionKey", "3DES sessionKey   = " + ByteArray.byteArrayToHexString(sessionKey));
                 getKeySpec(sessionKey);
                 blockLength = 8;
-                Arrays.fill(currentIV, (byte)0);
                 break;
             case KEYTYPE_3K3DES:
                 sessionKey = new byte [24];
@@ -366,8 +363,6 @@ public class DesfireCrypto {
                 Log.d("genSessionKey", "3K3DES sessionKey  = " + ByteArray.byteArrayToHexString(sessionKey));
                 getKeySpec(sessionKey);
                 blockLength = 8;
-                Arrays.fill(currentIV, (byte)0);
-
                 break;
             case KEYTYPE_AES:
                 // TEST
@@ -397,6 +392,8 @@ public class DesfireCrypto {
                 blockLength = 16;
                 break;
         }
+        currentIV = new byte[blockLength];
+        Arrays.fill(currentIV, (byte) 0);
 
         switch (authMode) {
             case MODE_AUTHD40:
@@ -695,8 +692,8 @@ public class DesfireCrypto {
     }
 
     public static byte []  CRC16CCITT(byte[] bytes) {
-        int crc = 0xFFFF;          // initial value
-        int polynomial = 0x6363;   // 0001 0000 0010 0001  (0, 5, 12)
+        int crc = 0x6363;          // initial value
+        int polynomial = 0x1021;   // 0001 0000 0010 0001  (0, 5, 12)
 
         for (byte b : bytes) {
             for (int i = 0; i < 8; i++) {
@@ -730,7 +727,7 @@ public class DesfireCrypto {
 
         } else {
             returnCRC = ComputeCRC(data);
-
+            //returnCRC = CRC16CCITT(data);
         }
         Log.d("calcCRC", "Calculated CRC      = " +  ByteArray.byteArrayToHexString(returnCRC));
         return returnCRC;

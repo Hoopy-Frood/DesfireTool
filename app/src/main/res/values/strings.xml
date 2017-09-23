@@ -3,5 +3,8 @@
     <string name="lower_limit">-50</string>
     <string name="upper_limit">1000</string>
     <string name="value">100</string>
+    <string name="default_filesize">32</string>
+    <string name="default_recordsize">8</string>
+    <string name="default_num_of_records">4</string>
 
 </resources>

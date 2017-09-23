@@ -1172,7 +1172,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             int offset = 0;
-            int length = 0;
+            int length = 32;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Encrypted Test");
@@ -1207,7 +1207,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             int offset = 0;
-            int length = 10;
+            int length = 8;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data MAC Test");
