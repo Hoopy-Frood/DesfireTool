@@ -1172,7 +1172,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             int offset = 0;
-            int length = 32;
+            int length = 0;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Encrypted Test");
