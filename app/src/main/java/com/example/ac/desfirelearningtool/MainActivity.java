@@ -274,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             commandFragment.enableAllButtons();
             scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00,(byte) 0x09,(byte) 0x10,(byte) 0x01,(byte) 0x01,(byte) 0x7C,(byte) 0xF4,(byte) 0xB8,(byte) 0x00}));
             scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00,(byte) 0x09,(byte) 0x10,(byte) 0x01,(byte) 0x01,(byte) 0x7C,(byte) 0xF4,(byte) 0xB8,(byte) 0x00})));
+            scrollLog.appendData("CRC16 Check Needs to be A3 5E");
 
             scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00}));
             scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00})));
@@ -281,7 +282,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00,(byte) 0x00}));
             scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00,(byte) 0x00})));
-            scrollLog.appendData("Needs to be 3A 55");
+            scrollLog.appendData("Needs to be A0 1E");
 
         }
         catch (Exception e) {
@@ -1168,11 +1169,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
-    public void onReadDataEncryptedTest(byte fileID) {
+    public void onReadDataEncryptedTest(byte fileID, int bytesToRead) {
         try {
 
             int offset = 0;
-            int length = 0;
+            int length = bytesToRead;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Encrypted Test");

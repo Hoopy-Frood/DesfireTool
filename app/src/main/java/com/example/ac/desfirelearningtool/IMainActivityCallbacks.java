@@ -42,7 +42,7 @@ public interface IMainActivityCallbacks {
 
     public void onReadDataTest(byte fileID);
     public void onReadDataMACTest(byte fileID);
-    public void onReadDataEncryptedTest(byte fileID);
+    public void onReadDataEncryptedTest(byte fileID, int bytesToRead);
     public void onAuthISOTest();
     public void onAuthAESTest();
 }
