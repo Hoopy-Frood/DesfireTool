@@ -219,8 +219,6 @@ public class fCommandMenu extends Fragment{
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-
             }
         });
 

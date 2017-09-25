@@ -162,6 +162,12 @@ public class fAuthenticate extends Fragment {
             isIncompleteForm = true;
         }
 
+        if (inputKeyLength == 0) {
+            Toast.makeText(getActivity().getApplicationContext(), "Using Default DES Key of 8 null bytes", Toast.LENGTH_SHORT).show();
+            etKey.setText("0000000000000000");
+            inputKeyLength = 16;
+        }
+
         switch (bAuthCmd){
             case (byte)0x0A:
                 if ((inputKeyLength != 16) && (inputKeyLength != 32) && (inputKeyLength != 48)) {
@@ -182,8 +188,12 @@ public class fAuthenticate extends Fragment {
                 }
                 break;
             default:
-                Toast.makeText(getActivity().getApplicationContext(), "Please select an authentication method", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
+                if ((inputKeyLength != 16) && (inputKeyLength != 32) && (inputKeyLength != 48)) {
+                    Toast.makeText(getActivity().getApplicationContext(), "Please ensure Key 8, 16 or 24 bytes", Toast.LENGTH_SHORT).show();
+                    isIncompleteForm = true;
+                }
+                Toast.makeText(getActivity().getApplicationContext(), "Using Default D40 Authentication", Toast.LENGTH_SHORT).show();
+                bAuthCmd = (byte) 0x0A;
                 break;
         }
 
