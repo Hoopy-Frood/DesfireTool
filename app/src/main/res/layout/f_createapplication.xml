@@ -39,7 +39,6 @@
                 android:maxLength="6"
                 android:textAlignment="textStart"
                 android:layout_alignBaseline="@+id/ApplicationIDText"
-                android:layout_alignBottom="@+id/ApplicationIDText"
                 android:layout_toEndOf="@+id/TextView_ISOFileID" />
 
             <TextView
