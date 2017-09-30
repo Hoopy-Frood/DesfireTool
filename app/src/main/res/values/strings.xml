@@ -6,5 +6,6 @@
     <string name="default_filesize">32</string>
     <string name="default_recordsize">8</string>
     <string name="default_num_of_records">4</string>
-
+    <string name="default_readOffset">0</string>
+    <string name="default_readLength">0</string>
 </resources>

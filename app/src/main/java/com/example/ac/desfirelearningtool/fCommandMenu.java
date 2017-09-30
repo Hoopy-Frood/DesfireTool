@@ -55,6 +55,8 @@ public class fCommandMenu extends Fragment{
     private Button buttonCreateFile;
     private Button buttonDeleteFile;
     private Button buttonChangeFileSettings;
+    // Buttons - File Management
+    private Button buttonCreateTestPerso;
     // TEST
     private Button buttonAuthISO;
     private Button buttonAuthAES;
@@ -114,6 +116,8 @@ public class fCommandMenu extends Fragment{
         buttonCreateFile = (Button) rootView.findViewById(R.id.button_CreateFile);
         buttonDeleteFile = (Button) rootView.findViewById(R.id.button_DeleteFile);
         buttonChangeFileSettings = (Button) rootView.findViewById(R.id.button_ChangeFileSettings);
+        // Buttons - File Management
+        buttonCreateTestPerso = (Button) rootView.findViewById(R.id.button_CreateTestPerso);
 
         //Button - Test
         buttonAuthISO = (Button) rootView.findViewById(R.id.button_AuthISOTest);
@@ -206,7 +210,17 @@ public class fCommandMenu extends Fragment{
                 mCallback.onDeleteApplication();
             }
         });
+        buttonCreateTestPerso.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onCreateTestPerso();
+            }
+        });
         buttonReadData.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onReadData();
+            }
+        });
+        /*buttonReadData.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
                 mCallback.onReadDataTest((byte) 0x01);  // Plain Free / Free
@@ -220,8 +234,7 @@ public class fCommandMenu extends Fragment{
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
             }
-        });
-
+        });*/
 
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthISOTest();
@@ -289,6 +302,8 @@ public class fCommandMenu extends Fragment{
         buttonCreateFile.setEnabled(true);
         buttonDeleteFile.setEnabled(false);
         buttonChangeFileSettings.setEnabled(false);
+        // Buttons - Test Perso
+        buttonCreateTestPerso.setEnabled(false);
     }
 
     protected void enableAllButtons() {
@@ -331,6 +346,8 @@ public class fCommandMenu extends Fragment{
         buttonCreateFile.setEnabled(true);
         buttonDeleteFile.setEnabled(true);
         buttonChangeFileSettings.setEnabled(false);
+        // Buttons - Test Perso
+        buttonCreateTestPerso.setEnabled(true);
     }
 
 }

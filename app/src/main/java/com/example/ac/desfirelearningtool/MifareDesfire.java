@@ -142,23 +142,23 @@ public class MifareDesfire {
     public statusType createApplication(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] baDFName) throws IOException {
         // TODO: Sanity Checks
 
-        ByteArray baCreateDataFileArray = new ByteArray();
+        ByteArray baCreateApplicationArray = new ByteArray();
 
-        baCreateDataFileArray.append((byte) 0xCA)
+        baCreateApplicationArray.append((byte) 0xCA)
                 .append(appId)
                 .append(bKeySetting1)
                 .append(bKeySetting2);
 
         if (baISOName.length == 2) {
-            baCreateDataFileArray.append(baISOName);
+            baCreateApplicationArray.append(baISOName);
         }
-        baCreateDataFileArray.append(baDFName);
+        baCreateApplicationArray.append(baDFName);
 
-        Log.v("createDataFile", "Command for Create Data File  : " + ByteArray.byteArrayToHexString(baCreateDataFileArray.toArray()));
+        Log.v("createApplication", "Command for Create Application  File  : " + ByteArray.byteArrayToHexString(baCreateApplicationArray.toArray()));
 
 
         // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
+        DesfireResponse res = sendBytes(baCreateApplicationArray.toArray());
 
         return res.status;
     }

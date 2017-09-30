@@ -29,7 +29,7 @@ public class fAuthenticate extends Fragment {
     IMainActivityCallbacks mCallback;
     private Button buttonGo;
     private Spinner spKeyNo;
-    private RadioGroup rgRuthenticateGroup;
+    private RadioGroup rgAuthenticateGroup;
     private EditText etKey;
     private ListView lvKeyList;
     byte bAuthCmd;
@@ -56,10 +56,11 @@ public class fAuthenticate extends Fragment {
         spKeyNo = (Spinner) rootView.findViewById(R.id.spinner_KeyID);
         etKey = rootView.findViewById(R.id.EditText_Key);
         lvKeyList = rootView.findViewById(R.id.lv_KeyList);
-        rgRuthenticateGroup = rootView.findViewById(R.id.radioGroup_Authentication);
+        rgAuthenticateGroup = rootView.findViewById(R.id.radioGroup_Authentication);
 
+        rgAuthenticateGroup.check(R.id.radio_authD40);
         populateSpinners ();
-        rgRuthenticateGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener(){
+        rgAuthenticateGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener(){
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 Log.d("rgRuthenticateGroup:", "Radio button clicked");
                 // checkedId is the RadioButton selected

@@ -38,7 +38,9 @@ public interface IMainActivityCallbacks {
     public void onGetFileSettings();
     public void onGetFileSettingsReturn(byte bFileID);
 
-
+    public void onReadData();
+    public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
+    public void onCreateTestPerso();
 
     public void onReadDataTest(byte fileID);
     public void onReadDataMACTest(byte fileID);

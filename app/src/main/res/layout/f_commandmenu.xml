@@ -498,6 +498,34 @@
                 android:textAllCaps="false"
                 android:textSize="12sp" />
 
+            <!-- Personalization Management Commands -->
+            <TextView
+                android:id="@+id/divider_PersoManagement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/divider_FileManagement"
+                android:layout_alignEnd="@+id/divider_Informational"
+                android:layout_alignStart="@+id/divider_Informational"
+                android:layout_alignBottom="@+id/button_CreateTestPerso"
+                android:background="#FFe0e0"
+                android:text="Test Personalization"
+                android:gravity="top|end"
+                android:textAllCaps="true"
+                android:textColor="#808080"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/button_CreateTestPerso"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/divider_FileManagement"
+                android:layout_marginTop="14dp"
+                android:text="Create\nTest Personalization"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+
 
         </RelativeLayout>
 

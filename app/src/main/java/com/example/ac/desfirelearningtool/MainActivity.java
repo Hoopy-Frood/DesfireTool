@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fGetFileSettings getFileSettingsFragment;
     fDeleteFile getDeleteFileFragment;
     fAuthenticate authenticateFragment;
+    fReadData getReadDataFragment;
 
 
 
@@ -1015,7 +1016,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                     scrollLog.appendData("- Plain communication");
                     break;
                 case (byte) 0x01:
-                    scrollLog.appendData("- Plain communication secured by MACing");
+                    scrollLog.appendData("- Plain communication secured with MAC");
                     break;
                 case (byte) 0x03:
                     scrollLog.appendData("- Fully enciphered communication");
@@ -1113,7 +1114,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteArrayToHexString(new byte [] {bFileID}));
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
 
         try {
             MifareDesfire.DesfireResponse res = desfireCard.deleteFile(bFileID);
@@ -1123,6 +1124,147 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             }
 
             scrollLog.appendTitle("Delete File " + ByteArray.byteArrayToHexString(new byte [] {bFileID}) + " Ok ");
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //TEST TESTTEST
+
+    public void onCreateTestPerso() {
+        scrollLog.appendTitle("Create Test Personalization File System");
+
+        try {
+            scrollLog.appendTitle("Authentication");
+
+            byte [] key = new byte[8];
+            Arrays.fill(key,(byte)0);
+            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+            // Create Application D40 DES (D4 0D E5)
+            byte[] baAppId = new byte[] {(byte) 0xD4,(byte) 0x0D,(byte) 0xE5 };
+            byte [] baNull = new byte[] {};
+            MifareDesfire.statusType mfResult = desfireCard.createApplication(baAppId, (byte)0x0F, (byte)0x03, baNull, baNull);
+            if (mfResult != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(mfResult));
+                return;
+            } else {
+                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+            }
+
+            // Select Application
+            MifareDesfire.statusType retValue = desfireCard.selectApplication(baAppId);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+
+            // Authenticate
+            res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+            // Create Data File
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x01, baNull, (byte) 0x00, new byte[] {(byte) 0xEE, (byte)0xEE}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }else
+                scrollLog.appendTitle("Create Data File OK");
+
+
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[] {(byte) 0x0E, (byte)0x0E}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x03, baNull, (byte) 0x03, new byte[] {(byte) 0xeE, (byte)0xeE}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x04, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0xeE}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[] {(byte) 0x2E, (byte)0x0E}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
+        }
+    }
+
+    public void onReadData() {
+        scrollLog.appendTitle("Read Data");
+
+        getSupportActionBar().setTitle("Read Data");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getReadDataFragment = new fReadData();
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
+
+        try {
+            ByteArray baRecvData = new ByteArray();
+
+            scrollLog.appendTitle("Read Data Encrypted Test");
+            MifareDesfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData(selCommMode);
+                }
+                baRecvData.append(res.data);
+            }
+
+            // Output
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
+                scrollLog.appendData("No data returned");
+            }
 
         } catch (Exception e) {
             commandFragment.disableAllButtons();

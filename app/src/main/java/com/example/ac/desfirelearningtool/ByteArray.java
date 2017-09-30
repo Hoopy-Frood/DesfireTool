@@ -104,6 +104,10 @@ public class ByteArray {
         return out;
     }
 
+    public static byte hexStringToByte(String s) {
+        return hexStringToByteArray(s)[0];
+    }
+
     public static byte[] hexStringToByteArray(String s) {
         s = s.replaceAll("[^A-Fa-f0-9]", "");
 

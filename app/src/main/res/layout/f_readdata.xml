@@ -10,7 +10,7 @@
         android:id="@+id/tv_FileID"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="25dp"
         android:layout_marginStart="5dp"
         android:text="File ID: "
         android:textColor="#000000"
@@ -20,30 +20,20 @@
         android:id="@+id/spinner_FileID"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/tv_FileID"
-        android:layout_alignBottom="@+id/tv_FileID"
         android:gravity="center"
-        android:dropDownWidth="wrap_content"/>
-    <!--EditText
-        android:id="@+id/et_FileID"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:digits="0123456789ABCDEF"
-        android:ems="10"
-        android:hint="3 Byte Hex"
-        android:inputType="textCapCharacters"
-        android:maxLength="6"
-        android:textAlignment="textStart"
-        android:layout_alignBaseline="@+id/tv_FileID"
-        android:layout_toEndOf="@+id/tv_FileID" /-->
+        android:dropDownWidth="wrap_content"
+        android:layout_alignTop="@+id/tv_FileID"
+        android:layout_toEndOf="@+id/tv_FileID"
+        android:layout_marginStart="5dp"/>
+
 
 
     <Button
         android:id="@+id/button_GetFiles"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get File IDs"
-        android:layout_alignTop="@+id/tv_FileID"
+        android:text="Get Available Files"
+        android:layout_alignTop="@+id/spinner_FileID"
         android:layout_alignParentRight="true"
         android:textAllCaps="false"/>
 
@@ -64,6 +54,8 @@
         android:layout_height="wrap_content"
         android:layout_toEndOf="@+id/tv_Offset"
         android:layout_alignBaseline="@+id/tv_Offset"
+
+        android:layout_alignStart="@+id/spinner_FileID"
         android:layout_marginTop="0dp"
         android:digits="0123456789ABCDEF"
         android:ems="10"
@@ -71,6 +63,8 @@
         android:inputType="textCapCharacters"
         android:maxLength="4"
         android:textAlignment="textEnd" />
+
+
     <TextView
         android:id="@+id/tv_Length"
         android:layout_width="wrap_content"
@@ -95,25 +89,6 @@
         android:maxLength="32"
         android:textAlignment="textEnd"/>
 
-    <TextView
-        android:id="@+id/TextView_NumOfKeys"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/et_Length"
-        android:layout_marginStart="5dp"
-        android:textColor="#000000"
-        android:textSize="16dp"
-        android:text="Number of keys   " />
-
-    <Spinner
-        android:id="@+id/spinner_NumOfKeys"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/TextView_NumOfKeys"
-        android:layout_alignBottom="@+id/TextView_NumOfKeys"
-        android:gravity="center"
-        android:dropDownWidth="wrap_content"/>
 
 
     <!-- Crypto method of the application -->
@@ -127,7 +102,7 @@
         android:textAllCaps="true"
         android:textColor="#F0F0F0"
         android:textSize="14sp"
-        android:layout_below="@+id/spinner_NumOfKeys"
+        android:layout_below="@+id/et_Length"
         android:layout_marginTop="10dp"
         android:layout_alignBottom="@+id/radioGroup_CommMode" />
 
@@ -135,7 +110,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/radioGroup_CommMode"
-        android:layout_below="@+id/spinner_NumOfKeys"
+        android:layout_below="@+id/et_Length"
         android:layout_marginTop="30dp"
         android:layout_alignParentStart="true">
 
@@ -155,7 +130,15 @@
 
     </RadioGroup>
 
-
+    <Button
+        android:id="@+id/button_GetFileSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/Block_CommMode"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="20dp"
+        android:text="Get File Settings"
+        android:textAllCaps="false"/>
 
     <Button
         android:id="@+id/button_Go"
