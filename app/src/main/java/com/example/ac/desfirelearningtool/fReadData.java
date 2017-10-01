@@ -37,7 +37,7 @@ public class fReadData extends Fragment {
 
     private byte [] fileList;
     private boolean fileListPopulated;
-
+    private ScrollLog scrollLog;
 
 
 
@@ -72,6 +72,7 @@ public class fReadData extends Fragment {
 
         selCommMode = MifareDesfire.commMode.PLAIN;
 
+        scrollLog = mCallback.getScrollLogObject ();
 
         commModeGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener(){
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -180,7 +181,62 @@ public class fReadData extends Fragment {
     }
 
     public void onFileSettings() {
-        mCallback.onGetFileSettingsReturn(ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem()));
+
+        Log.d("fReadData", "onGetFileIDs");
+
+        Bundle fileSettings = mCallback.onFragmentGetFileSettings(ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem()));
+        if (fileSettings.getBoolean("boolCommandSuccess")){
+
+        }
+        byte fileType = fileSettings.getByte("fileType");
+        if ((fileType != (byte) 0x00) && (fileType != (byte) 0x01)) {
+            scrollLog.appendWarning("Warning: Selected file ID is not Data File type");
+            return;
+        }
+        byte fileCommSetting = fileSettings.getByte("commSetting");
+        int currentAuthenticatedKey = fileSettings.getInt("currentAuthenticatedKey");
+
+        byte readAccess = fileSettings.getByte("readAccess");
+        byte readWriteAccess = fileSettings.getByte("readWriteAccess");
+
+        if ((readAccess == (byte)0x0E) || (readWriteAccess == (byte)0x0E)) {
+            Log.d("onFileSettings", "Setting to plain text");
+            scrollLog.appendData("Free read access");
+            commModeGroup.check(R.id.radio_PlainCommunication);
+            return;
+        }
+
+        if (fileCommSetting != (byte)0) {
+            if (currentAuthenticatedKey != -1) {
+                if ((currentAuthenticatedKey == (int) readAccess) || (currentAuthenticatedKey == (int) readWriteAccess)) {
+                    switch (fileCommSetting) {
+                        case (byte) 0x00:
+                            scrollLog.appendData("Key required authenticated; Plaintext communication");
+                            commModeGroup.check(R.id.radio_PlainCommunication);
+                            break;
+                        case (byte) 0x01:
+                            scrollLog.appendData("Key required authenticated; MAC communication");
+                            commModeGroup.check(R.id.radio_MACCommunication);
+                            break;
+                        case (byte) 0x03:
+                            scrollLog.appendData("Key required authenticated; Encrypted communication");
+                            commModeGroup.check(R.id.radio_EncryptedCommunication);
+                            break;
+                        default:
+                            //toast a warning
+                            scrollLog.appendWarning("Key required authenticated; Communication unknown");
+                    }
+                    return;
+                }
+                scrollLog.appendWarning("Warning: File requires authentication of key: " + readAccess +" or " + readWriteAccess + " but current authenticated key is " + currentAuthenticatedKey);
+            } else {
+                scrollLog.appendWarning("Warning: File requires authentication of key: " + readAccess +" or " + readWriteAccess + " but no key authenticated");
+            }
+        } else {
+            commModeGroup.check(R.id.radio_PlainCommunication);
+            return;
+        }
+
     }
 
 

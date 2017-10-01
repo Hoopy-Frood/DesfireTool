@@ -48,6 +48,7 @@ public class DesfireCrypto {
     public boolean trackCMAC;
     public int CRCLength;    // Length of CRC 2 or 4 bytes
     public int encryptedLength;  // specified dataLength at the first AF for Read Data
+    public int currentAuthenticatedKey;
 
 
     public DesfireCrypto (){
@@ -64,6 +65,7 @@ public class DesfireCrypto {
         CRCLength = 0;
         encryptedLength = 0;
         storedAFData = new ByteArray();
+        currentAuthenticatedKey = -1;
     }
 
     //region Key Related
@@ -408,6 +410,7 @@ public class DesfireCrypto {
                 break;
         }
         initCipher();
+
     }
     
     public byte getAuthMode () {
@@ -924,14 +927,14 @@ public class DesfireCrypto {
 
 
         if (storedAFData.length() < 8) {
-            throw new IOException("Returned no data");
+            throw new  GeneralSecurityException("Length error: Data returned too short. Data = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
         }
         Log.d("decryptReadData", "Encrypted Data = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
 
         decryptedData = decrypt(storedAFData.toArray());
 
         if (decryptedData == null)
-            throw new IOException("Decryption Error");
+            throw new GeneralSecurityException("Decryption error: Encryption Input = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
 
         Log.d("decryptReadData", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
 
@@ -943,7 +946,9 @@ public class DesfireCrypto {
 
         } else {  // Count == 0, remove 80..00 padding
             int padCount = ByteArray.ISO9797m2PadCount(decryptedData);
-            if (padCount == -1) throw new IOException("Decryption padding error");
+            if (padCount == -1) {
+                throw new GeneralSecurityException("Decryption padding error: Decrypted data = " + ByteArray.byteArrayToHexString(decryptedData));
+            }
 
             baDecryptedPlainData.append(decryptedData, 0, decryptedData.length - CRCLength - padCount);
             baCRC.append(decryptedData, decryptedData.length - CRCLength - padCount, CRCLength);

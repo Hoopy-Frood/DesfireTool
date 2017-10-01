@@ -273,6 +273,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
             commandFragment.enableAllButtons();
+
+            /*  CRC Test
             scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00,(byte) 0x09,(byte) 0x10,(byte) 0x01,(byte) 0x01,(byte) 0x7C,(byte) 0xF4,(byte) 0xB8,(byte) 0x00}));
             scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00,(byte) 0x09,(byte) 0x10,(byte) 0x01,(byte) 0x01,(byte) 0x7C,(byte) 0xF4,(byte) 0xB8,(byte) 0x00})));
             scrollLog.appendData("CRC16 Check Needs to be A3 5E");
@@ -283,13 +285,17 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             scrollLog.appendData(ByteArray.byteArrayToHexString(new byte[] {(byte) 0x00,(byte) 0x00}));
             scrollLog.appendData(ByteArray.byteArrayToHexString(desfireCard.dfCrypto.calcCRC(new byte[] {(byte) 0x00,(byte) 0x00})));
-            scrollLog.appendData("Needs to be A0 1E");
+            scrollLog.appendData("Needs to be A0 1E");*/
 
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
             Log.e("onCardDetection", e.getMessage(), e);
         }
+    }
+
+    public ScrollLog getScrollLogObject () {
+        return scrollLog;
     }
 
     public void onGetVersion (){
@@ -458,8 +464,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
-
-
     public void onGetDFNames (){
 
         try {
@@ -481,6 +485,46 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+
+    public void onAuthenticate (){
+        getSupportActionBar().setTitle("Authenticate");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        authenticateFragment = new fAuthenticate();
+        authenticateFragment.setArguments(getIntent().getExtras());
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,authenticateFragment).addToBackStack("commandview").commit();
+
+    }
+
+    public void onAuthenticateReturn(byte bAuthCmd, byte bKeyNo, byte[] key) {
+        scrollLog.appendTitle("Authenticate");
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+
+        getSupportFragmentManager().popBackStack();
+
+        try {
+            MifareDesfire.statusType res = desfireCard.authenticate(bAuthCmd, bKeyNo, key);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+
+            }
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
+        }
+    }
+
     public void onAuthenticateTest (){
         byte[] zeroKey = new byte[8];
         Arrays.fill(zeroKey, (byte)0);
@@ -502,49 +546,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onAuthenticate", e.getMessage(), e);
         }
     }
-
-
-    public void onAuthenticate (){
-        scrollLog.appendTitle("Authenticate");
-
-        getSupportActionBar().setTitle("Authenticate");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        authenticateFragment = new fAuthenticate();
-        authenticateFragment.setArguments(getIntent().getExtras());
-        //getSupportFragmentManager().addToBackStack(null);
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,authenticateFragment).addToBackStack("commandview").commit();
-
-    }
-
-    public void onAuthenticateReturn(byte bAuthCmd, byte bKeyNo, byte[] key) {
-        scrollLog.appendTitle("Authenticate Return");
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-
-        getSupportFragmentManager().popBackStack();
-
-        try {
-            scrollLog.appendTitle("Authentication");
-            MifareDesfire.statusType res = desfireCard.authenticate(bAuthCmd, (byte) bKeyNo, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
-            } else {
-                scrollLog.appendStatus("Authentication Successful");
-            }
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
-        }
-    }
-
 
     public void onAuthISOTest (){
 
@@ -1087,6 +1088,96 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
+    public Bundle onFragmentGetFileSettings (byte bFileID){
+        Bundle bundleFileSettings = new Bundle();
+        try {
+
+            MifareDesfire.DesfireResponse res = desfireCard.getFileSettings(bFileID);
+            if (res.status != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get File Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                bundleFileSettings.putBoolean("boolCommandSuccess", false);
+                return bundleFileSettings;
+            }
+
+
+            bundleFileSettings.putBoolean("boolCommandSuccess", true);
+
+            bundleFileSettings.putInt("currentAuthenticatedKey", desfireCard.currentAuthenticatedKey());
+            bundleFileSettings.putByte("fileType",res.data[0]);
+            bundleFileSettings.putByte("commSetting",res.data[1]);
+
+
+            // Separate parsing of the three types of files
+            // Standard or backup file type
+            if ((res.data[0] == (byte) 0x00) || (res.data[0] == (byte) 0x01)) {
+
+                bundleFileSettings.putByte("readAccess",(byte)((res.data[2] >>> 4) & (byte) 0x0F));
+                bundleFileSettings.putByte("writeAccess", (byte)(res.data[2] & (byte) 0x0F));
+                bundleFileSettings.putByte("readWriteAccess", (byte)((res.data[3] >>> 4) & (byte) 0x0F));
+                bundleFileSettings.putByte("changeAccessRights", (byte)(res.data[3] & (byte) 0x0F));
+
+                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                int iFileSize = bb.getShort();
+                bundleFileSettings.putInt("fileSize", iFileSize);
+
+            } else if ((res.data[0] == (byte) 0x02) ) {
+                bundleFileSettings.putByte("GVD", (byte)((res.data[2] >> 4) & (byte) 0x0F));
+                bundleFileSettings.putByte("GVDLC", (byte)(res.data[2] & (byte) 0x0F));
+                bundleFileSettings.putByte("GVDLCC", (byte)((res.data[3] >> 4) & (byte) 0x0F));
+                bundleFileSettings.putByte("changeAccessRights", (byte)(res.data[3] & (byte) 0x0F));
+
+                ByteBuffer bb = ByteBuffer.wrap(res.data,4,4);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                bundleFileSettings.putInt("lowerLimit",bb.getInt());
+                scrollLog.appendData("- Lower Limit              : " + bb.getInt());
+
+                bb = ByteBuffer.wrap(res.data,8,4);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                bundleFileSettings.putInt("upperLimit",bb.getInt());
+                scrollLog.appendData("- Upper Limit              : " + bb.getInt());
+
+                bb = ByteBuffer.wrap(res.data,12,4);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                bundleFileSettings.putInt("limitedCreditValue",bb.getInt());
+                scrollLog.appendData("- Limited Credit Value     : " + bb.getInt());
+
+
+                bundleFileSettings.putByte("limitedCreditValue",(res.data[16]));
+
+
+            } else if ((res.data[0] == (byte) 0x03) || (res.data[0] == (byte) 0x04)) {
+
+                bundleFileSettings.putByte("readAccess",(byte)((res.data[2] >> 4) & (byte) 0x0F));
+                bundleFileSettings.putByte("writeAccess", (byte)(res.data[2] & (byte) 0x0F));
+                bundleFileSettings.putByte("readWriteAccess ", (byte)((res.data[3] >> 4) & (byte) 0x0F));
+                bundleFileSettings.putByte("changeAccessRights", (byte)(res.data[3] & (byte) 0x0F));
+
+                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Record size          : " + bb.getShort() );
+                bundleFileSettings.putInt("recordSize",bb.getInt());
+                bb = ByteBuffer.wrap(res.data,7,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Max no of records    : " + bb.getShort() );
+                bundleFileSettings.putInt("MaxNumOfRecords",bb.getInt());
+                bb = ByteBuffer.wrap(res.data,10,3);
+                bb.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Current no of records: " + bb.getShort() );
+                bundleFileSettings.putInt("currentNumOfRecords",bb.getInt());
+            }
+
+
+
+        } catch (Exception e) {
+            bundleFileSettings.putBoolean("boolCommandSuccess", false);
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+
+        }
+        return bundleFileSettings;
+    }
 
     public void onDeleteFile() {
         scrollLog.appendTitle("Delete File");
@@ -1131,6 +1222,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+
     //TEST TESTTEST
 
     public void onCreateTestPerso() {
@@ -1182,10 +1274,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
-            }else
-                scrollLog.appendTitle("Create Data File OK");
-
-
+            }
             retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[] {(byte) 0x0E, (byte)0x0E}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
@@ -1201,11 +1290,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x05, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0x2E}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
             retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[] {(byte) 0x2E, (byte)0x0E}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
+            scrollLog.appendTitle("Create Data File OK");
+
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1244,7 +1340,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
             ByteArray baRecvData = new ByteArray();
 
-            scrollLog.appendTitle("Read Data Encrypted Test");
             MifareDesfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
@@ -1272,6 +1367,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+
+    //region Read Data Test
 
     public void onReadDataTest(byte fileID) {
         try {
@@ -1379,19 +1476,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onReadDataMACTest", e.getMessage(), e);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //endregion
 
     //region Miscellaneous Helpers
     @Override

@@ -37,6 +37,7 @@ public interface IMainActivityCallbacks {
     public void onGetISOFileIDs();
     public void onGetFileSettings();
     public void onGetFileSettingsReturn(byte bFileID);
+    public Bundle onFragmentGetFileSettings (byte bFileID);
 
     public void onReadData();
     public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
@@ -47,4 +48,6 @@ public interface IMainActivityCallbacks {
     public void onReadDataEncryptedTest(byte fileID, int bytesToRead);
     public void onAuthISOTest();
     public void onAuthAESTest();
+
+     public ScrollLog getScrollLogObject ();
 }

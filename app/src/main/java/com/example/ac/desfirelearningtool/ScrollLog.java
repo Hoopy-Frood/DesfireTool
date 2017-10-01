@@ -32,7 +32,7 @@ public class ScrollLog {
     }
 
     public void append(String appendText){
-        scrollLog.append(appendText + "\n");
+        appendColor (appendText, (int) 0xAA000000);  // Default color dark grey
     }
 
     public void clearScreen(){
@@ -44,11 +44,15 @@ public class ScrollLog {
     }
 
     public void appendStatus(String appendText){
-        appendColor (appendText, (int) 0xFF008000);
+        appendColor (appendText, (int) 0xFF008000);  // Dark green
     }
 
     public void appendData(String appendText){
-        appendColor (appendText, (int) 0xFF000080);
+        appendColor (appendText, (int) 0xFF000080);  // Dark blue
+    }
+
+    public void appendWarning(String appendText){
+        appendColor (appendText, (int) 0xFF800000);  // Dark red
     }
 
     public void appendError(String appendText){

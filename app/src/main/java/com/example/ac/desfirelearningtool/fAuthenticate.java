@@ -193,7 +193,6 @@ public class fAuthenticate extends Fragment {
                     Toast.makeText(getActivity().getApplicationContext(), "Please ensure Key 8, 16 or 24 bytes", Toast.LENGTH_SHORT).show();
                     isIncompleteForm = true;
                 }
-                Toast.makeText(getActivity().getApplicationContext(), "Using Default D40 Authentication", Toast.LENGTH_SHORT).show();
                 bAuthCmd = (byte) 0x0A;
                 break;
         }

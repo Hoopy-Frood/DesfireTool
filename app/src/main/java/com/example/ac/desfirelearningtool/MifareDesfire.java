@@ -402,6 +402,7 @@ public class MifareDesfire {
 
         result.status = findStatus(response[0]);
 
+
         if (result.status == statusType.SUCCESS) {
             if (curCommMode == commMode.ENCIPHERED) {
                 dfCrypto.storeAFEncryptedSetLength(response, count);
@@ -734,6 +735,10 @@ public class MifareDesfire {
 
     DesfireCrypto dfCrypto;
 
+    public int currentAuthenticatedKey () {
+        return dfCrypto.currentAuthenticatedKey;
+    }
+
 
     public statusType authenticate(byte authType, byte keyNumber, byte[] key) throws Exception {
 
@@ -763,8 +768,10 @@ public class MifareDesfire {
             return cardResponse.status;
         }
 
-        if (dfCrypto.verifyCardResponse(cardResponse.data))
+        if (dfCrypto.verifyCardResponse(cardResponse.data)) {
+            dfCrypto.currentAuthenticatedKey = keyNumber;
             return statusType.SUCCESS;
+        }
 
         return statusType.PCD_AUTHENTICATION_ERROR;
 
