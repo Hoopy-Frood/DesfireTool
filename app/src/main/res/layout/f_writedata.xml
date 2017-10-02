@@ -90,6 +90,31 @@
         android:textAlignment="textEnd"/>
 
 
+    <TextView
+        android:id="@+id/tv_DataToWrite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_Length"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="5dp"
+        android:text="Data: "
+        android:textColor="#000000"
+        android:textSize="16sp" />
+
+    <EditText
+        android:id="@+id/et_DataToWrite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/et_Offset"
+        android:layout_alignBaseline="@+id/tv_DataToWrite"
+        android:digits="0123456789ABCDEF"
+        android:ems="10"
+        android:hint="0"
+        android:inputType="textCapCharacters"
+        android:maxLength="32"
+        android:textAlignment="textStart"/>
+
+
 
     <!-- Crypto method of the application -->
     <TextView
@@ -102,7 +127,7 @@
         android:textAllCaps="true"
         android:textColor="#F0F0F0"
         android:textSize="14sp"
-        android:layout_below="@+id/et_Length"
+        android:layout_below="@+id/et_DataToWrite"
         android:layout_marginTop="10dp"
         android:layout_alignBottom="@+id/radioGroup_CommMode" />
 
@@ -110,7 +135,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/radioGroup_CommMode"
-        android:layout_below="@+id/et_Length"
+        android:layout_below="@+id/et_DataToWrite"
         android:layout_marginTop="30dp"
         android:layout_alignParentStart="true">
 

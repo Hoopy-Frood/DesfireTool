@@ -43,6 +43,9 @@ public interface IMainActivityCallbacks {
     public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
     public void onCreateTestPerso();
 
+    public void onWriteData();
+    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
+
     public void onReadDataTest(byte fileID);
     public void onReadDataMACTest(byte fileID);
     public void onReadDataEncryptedTest(byte fileID, int bytesToRead);

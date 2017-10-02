@@ -220,9 +220,13 @@ public class fCommandMenu extends Fragment{
                 mCallback.onReadData();
             }
         });
+        buttonWriteData.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onWriteData();
+            }
+        });
         /*buttonReadData.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
                 mCallback.onReadDataTest((byte) 0x01);  // Plain Free / Free
                 mCallback.onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
                 mCallback.onReadDataTest((byte) 0x03);  // Enc   Free / Free
@@ -233,6 +237,7 @@ public class fCommandMenu extends Fragment{
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
                 mCallback.onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
             }
         });*/
 
@@ -324,7 +329,7 @@ public class fCommandMenu extends Fragment{
         buttonGetISOFileIDs.setEnabled(true);
         // Buttons - Data Manipulation
         buttonReadData.setEnabled(true);
-        buttonWriteData.setEnabled(false);
+        buttonWriteData.setEnabled(true);
         buttonReadRecord.setEnabled(false);
         buttonWriteRecord.setEnabled(false);
         buttonClearRecordFile.setEnabled(false);

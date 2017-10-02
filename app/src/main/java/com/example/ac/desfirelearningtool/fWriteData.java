@@ -19,10 +19,10 @@ import java.util.List;
 import static java.lang.Integer.parseInt;
 
 /**
- * Created by Ac on 9/30/2017.
+ * Created by Ac on 10/2/2017.
  */
 
-public class fReadData extends Fragment {
+public class fWriteData extends Fragment {
     View rootView;
     IMainActivityCallbacks mCallback;
     private Button buttonGo;
@@ -30,6 +30,7 @@ public class fReadData extends Fragment {
     private Spinner spinnerFileID;
     private EditText etOffset;
     private EditText etLength;
+    private EditText etDataToWrite;
     private RadioGroup commModeGroup;
     private Button buttonGetFileID;
     private MifareDesfire.commMode selCommMode;
@@ -45,7 +46,7 @@ public class fReadData extends Fragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.f_readdata, container, false);
+        rootView = inflater.inflate(R.layout.f_writedata, container, false);
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
@@ -62,6 +63,7 @@ public class fReadData extends Fragment {
         spinnerFileID = (Spinner) rootView.findViewById(R.id.spinner_FileID);
         etOffset = (EditText) rootView.findViewById(R.id.et_Offset);
         etLength = (EditText) rootView.findViewById(R.id.et_Length);
+        etDataToWrite = (EditText) rootView.findViewById(R.id.et_DataToWrite);
 
         commModeGroup = (RadioGroup) rootView.findViewById(R.id.radioGroup_CommMode);
         commModeGroup.check(R.id.radio_PlainCommunication);
@@ -84,7 +86,7 @@ public class fReadData extends Fragment {
 
         buttonGo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                onGoReadData();
+                onGoWriteData();
             }
         });
         buttonGetFileID.setOnClickListener(new View.OnClickListener() {
@@ -148,7 +150,7 @@ public class fReadData extends Fragment {
 
     public void onRadioButtonClicked(RadioGroup group, int checkedId) {
         // Is the button now checked?
-        Log.d("fReadData", "onRadioButtonClicked");
+        Log.d("fWriteData", "onRadioButtonClicked");
 
         // Check which radio button was clicked
         switch(checkedId) {
@@ -167,7 +169,7 @@ public class fReadData extends Fragment {
 
 
     public void onGetFileIDs () {
-        Log.d("fReadData", "onGetFileIDs");
+        Log.d("fWriteData", "onGetFileIDs");
 
         Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
         fileList = fileListInfo.getByteArray("baFileIDList");
@@ -182,7 +184,7 @@ public class fReadData extends Fragment {
 
     public void onFileSettings() {
 
-        Log.d("fReadData", "onGetFileIDs");
+        Log.d("fWriteData", "onGetFileIDs");
 
         Bundle fileSettings = mCallback.onFragmentGetFileSettings(ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem()));
         if (!fileSettings.getBoolean("boolCommandSuccess")){
@@ -245,7 +247,7 @@ public class fReadData extends Fragment {
 
 
 
-    private void onGoReadData(){
+    private void onGoWriteData(){
         boolean isIncompleteForm = false;
 
         if (commModeGroup.getCheckedRadioButtonId() == -1) {
@@ -284,12 +286,12 @@ public class fReadData extends Fragment {
             etLength.setText(R.string.default_readLength);
             iLength = (parseInt(etLength.getText().toString()));
         }
-        Log.d("ReadData", "Input OK");
+        Log.d("WriteData", "Input OK");
         byte fileSelected = ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem());
 
 
 
-        mCallback.onReadDataReturn(fileSelected,
+        mCallback.onWriteDataReturn(fileSelected,
                 iOffset,
                 iLength,
                 selCommMode
