@@ -1234,6 +1234,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Arrays.fill(key,(byte)0);
             byte [] T3DESKey = new byte [24];
             Arrays.fill(T3DESKey,(byte)0);
+            byte [] AESKey = new byte [24];
+            Arrays.fill(AESKey,(byte)0);
 
             MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
             if (res != MifareDesfire.statusType.SUCCESS) {
@@ -1343,6 +1345,85 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0x1A, (byte)0, T3DESKey);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+            // Create Data File
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x01, baNull, (byte) 0x00, new byte[] {(byte) 0xEE, (byte)0xEE}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[] {(byte) 0x0E, (byte)0x0E}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x03, baNull, (byte) 0x03, new byte[] {(byte) 0xeE, (byte)0xeE}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x04, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0xeE}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x05, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0x2E}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[] {(byte) 0x2E, (byte)0x0E}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            scrollLog.appendTitle("Create Data File OK");
+            //endregion
+
+            //region  Create Application ISO AES (15 0A E5)
+            // Select Application
+            baAppId = new byte[] {(byte) 0x00,(byte) 0x00,(byte) 0x00 };
+            retValue = desfireCard.selectApplication(baAppId);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+
+            // Authenticate main key
+            res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+            baAppId = new byte[] {(byte) 0x15,(byte) 0x0A,(byte) 0xE5 };
+            mfResult = desfireCard.createApplication(baAppId, (byte)0x0F, (byte)0x43, baNull, baNull);
+            if (mfResult != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(mfResult));
+                return;
+            } else {
+                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+            }
+
+            // Select Application
+            retValue = desfireCard.selectApplication(baAppId);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+
+            // Authenticate
+            res = desfireCard.authenticate((byte) 0xAA, (byte)0, AESKey);
             if (res != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
                 return;

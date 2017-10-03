@@ -200,6 +200,9 @@ public class fReadData extends Fragment {
         byte readAccess = fileSettings.getByte("readAccess");
         byte readWriteAccess = fileSettings.getByte("readWriteAccess");
 
+        int ifileSize = fileSettings.getByte("fileSize");
+        scrollLog.appendData("File size = " + ifileSize);
+
         // If Free Access
         if ((readAccess == (byte)0x0E) || (readWriteAccess == (byte)0x0E)) {
             Log.d("onFileSettings", "Setting to plain text");
