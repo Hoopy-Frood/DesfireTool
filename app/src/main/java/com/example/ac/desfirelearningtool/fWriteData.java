@@ -252,11 +252,19 @@ public class fWriteData extends Fragment {
 
     private void onGoWriteData(){
         boolean isIncompleteForm = false;
+        int iDataToWriteLength;
 
         if (commModeGroup.getCheckedRadioButtonId() == -1) {
             Toast.makeText(getActivity().getApplicationContext(), "Please select a communication method", Toast.LENGTH_SHORT).show();
             isIncompleteForm = true;
         }
+
+        iDataToWriteLength = etDataToWrite.getText().toString().length();
+        if (iDataToWriteLength %2 == 1) {
+            Toast.makeText(getActivity().getApplicationContext(), "Please enter valid hex string to write", Toast.LENGTH_SHORT).show();
+            isIncompleteForm = true;
+        }
+
 
         if (etOffset.getText().toString().length() != 0) {
             try {
@@ -274,9 +282,9 @@ public class fWriteData extends Fragment {
                 isIncompleteForm = true;
             }
         }
+
         if (isIncompleteForm)
             return;
-
 
 
         if (etOffset.getText().toString().length() == 0) {
@@ -284,11 +292,21 @@ public class fWriteData extends Fragment {
             etOffset.setText(R.string.default_readOffset);
             iOffset= (parseInt(etOffset.getText().toString()));
         }
+
         if (etLength.getText().toString().length() == 0) {
-            Toast.makeText(getActivity().getApplicationContext(), "Using Default length of 0 ", Toast.LENGTH_SHORT).show();
             etLength.setText(R.string.default_readLength);
             iLength = (parseInt(etLength.getText().toString()));
         }
+
+
+
+        if (iLength != iDataToWriteLength) {
+            Toast.makeText(getActivity().getApplicationContext(), "Using input data length of " + iDataToWriteLength + " in length field", Toast.LENGTH_SHORT).show();
+            iOffset= iDataToWriteLength;
+        }
+
+        byte [] bDataToWrite = ByteArray.hexStringToByteArray(etDataToWrite.getText().toString());
+
         Log.d("WriteData", "Input OK");
         byte fileSelected = ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem());
 
@@ -297,7 +315,7 @@ public class fWriteData extends Fragment {
         mCallback.onWriteDataReturn(fileSelected,
                 iOffset,
                 iLength,
-
+                bDataToWrite,
                 selCommMode
         );
     }

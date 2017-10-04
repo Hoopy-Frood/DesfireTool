@@ -632,7 +632,7 @@ public class DesfireCrypto {
     }
     //endregion
 
-    //region CRC Related
+    //region CRC16 Related
     /********** CRC RELATED **********/
     public static byte[] longToBytesInvertCRC(long l) {
         byte[] result = new byte[4];
@@ -644,7 +644,7 @@ public class DesfireCrypto {
     }
 
     //
-    byte[] iso14443a_crc(byte[] Data)   // DESFireSAM crc16 do not invert the result
+    private byte[] iso14443a_crc(byte[] Data)   // DESFireSAM crc16 do not invert the result
     {
         int  bt;
         int wCrc = 0x6363;
@@ -725,7 +725,7 @@ public class DesfireCrypto {
 
 
     // http://automationwiki.com/index.php?title=CRC-16-CCITT
-    static int  crc_table [] = {
+    private static int  crc_table [] = {
 
         0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
                 0x60c6, 0x70e7, 0x8108, 0x9129, 0xa14a, 0xb16b,
@@ -838,51 +838,7 @@ public class DesfireCrypto {
         Log.d ("ComputeCRC", "Calc CRC: " + ByteArray.byteArrayToHexString(result));
         return result;
     }
-    //region bad CRC16s
-    /*static byte [] crc16(final byte[] buffer) {
-        long crc = 0x6363;
 
-        for (int j = 0; j < buffer.length ; j++) {
-            crc = ((crc  >>> 8) | (crc  << 8) )& 0xffff;
-            crc ^= (buffer[j] & 0xff);//byte to int, trunc sign
-            crc ^= ((crc & 0xff) >> 4);
-            crc ^= (crc << 12) & 0xffff;
-            crc ^= ((crc & 0xFF) << 5) & 0xffff;
-        }
-        crc &= 0xffff;
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-
-        byte[] returnCRC = new byte[4];
-        System.arraycopy(b.putLong(crc).array(), 0 , returnCRC, 0 , 4);
-
-        return returnCRC;
-
-    }
-*/
-    public static byte []  CRC16CCITT(byte[] bytes) {
-        int crc = 0x6363;          // initial value
-        int polynomial = 0x1021;   // 0001 0000 0010 0001  (0, 5, 12)
-
-        for (byte b : bytes) {
-            for (int i = 0; i < 8; i++) {
-                boolean bit = ((b >> (7 - i) & 1) == 1);
-                boolean c15 = ((crc >> 15 & 1) == 1);
-                crc <<= 1;
-                if (c15 ^ bit) crc ^= polynomial;
-            }
-        }
-
-        crc &= 0xffff;
-        //System.out.println("CRC16-CCITT = " + Integer.toHexString(crc));
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-
-        byte[] returnCRC = new byte[4];
-        System.arraycopy(b.putInt(crc).array(), 0 , returnCRC, 0 , 4);
-
-        return returnCRC;
-    }
 //endregion
 
     public byte [] calcCRC (byte [] data) {

@@ -1640,6 +1640,52 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
+
+    public void onWriteData() {
+        scrollLog.appendTitle("Write Data");
+
+        getSupportActionBar().setTitle("Write Data");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getReadDataFragment = new fReadData();
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
+
+        try {
+            ByteArray baRecvData = new ByteArray();
+
+            MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
+                scrollLog.appendStatus("Write Data File Success");
+            } else {
+                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+
     //region Miscellaneous Helpers
     @Override
     public void onBackPressed() {

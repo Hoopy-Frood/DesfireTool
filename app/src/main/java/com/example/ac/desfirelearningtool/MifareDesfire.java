@@ -1,6 +1,7 @@
 package com.example.ac.desfirelearningtool;
 
 
+import android.media.tv.TvContract;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -442,11 +443,72 @@ public class MifareDesfire {
         } else {
             dfCrypto.trackCMAC = false;
         }
-
-
         return result;
-
     }
+
+
+    public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
+        ByteArray array = new ByteArray();
+        byte[] cmd = array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).toArray();
+
+
+        if ((dfCrypto.trackCMAC)) {
+            Log.d ("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            dfCrypto.calcCMAC(cmd);
+        }
+
+        byte [] encipheredData;
+        if (curCommMode == commMode.ENCIPHERED) {
+            try {
+                encipheredData = dfCrypto.encryptWriteData();
+            } catch (GeneralSecurityException e) {
+               scrollLog.appendError(e.getMessage());
+            }
+
+        }
+
+        byte[] response = cardCommunicator.transceive(cmd);
+
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.trackCMAC) {
+                Log.d("writeData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verified");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+                if (dfCrypto.verifyD40MAC(response)) {
+                    scrollLog.appendStatus("MAC Verified");
+                } else {
+                    scrollLog.appendError("MAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,4);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else if (result.status == statusType.ADDITONAL_FRAME) {
+            if (curCommMode == commMode.ENCIPHERED) {
+                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFEncryptedSetLength(response,count);
+            } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
+                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFCMAC(response);
+            }
+            result.data = ByteArray.appendCut(null, response);
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+        return result;
+    }
+
 
     private void writeInternal(byte cmd, byte[] data, int file, int offset, int size) throws IOException {
         int data_size;
