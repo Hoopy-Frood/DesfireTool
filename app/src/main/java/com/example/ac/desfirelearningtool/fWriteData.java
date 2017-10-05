@@ -34,7 +34,7 @@ public class fWriteData extends Fragment {
     private RadioGroup commModeGroup;
     private Button buttonGetFileID;
     private MifareDesfire.commMode selCommMode;
-    private int iOffset, iLength;
+
 
     private byte [] fileList;
     private boolean fileListPopulated;
@@ -251,6 +251,8 @@ public class fWriteData extends Fragment {
 
 
     private void onGoWriteData(){
+        int iOffset =0;
+        int iLength = 0;
         boolean isIncompleteForm = false;
         int iDataToWriteLength;
 

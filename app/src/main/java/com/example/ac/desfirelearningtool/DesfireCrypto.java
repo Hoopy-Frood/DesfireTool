@@ -928,4 +928,57 @@ public class DesfireCrypto {
         return returnData;
     }
 
+    public byte [] encryptWriteDataBlock (byte [] bDataToEncrypt) throws IOException, GeneralSecurityException{
+
+
+        // compute CRC
+
+        //
+        if (storedAFData.length() < 8) {
+            throw new  GeneralSecurityException("Length error: Data returned too short. Data = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
+        }
+        Log.d("decryptReadData", "Encrypted Data = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
+
+        decryptedData = decrypt(storedAFData.toArray());
+
+        if (decryptedData == null)
+            throw new GeneralSecurityException("Decryption error: Encryption Input = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
+
+        Log.d("decryptReadData", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
+
+        ByteArray baDecryptedPlainData = new ByteArray();
+        ByteArray baCRC = new ByteArray();
+        if (encryptedLength != 0) {  // if count is specified 00 .. 00 padding is used
+            baDecryptedPlainData.append(decryptedData, 0, encryptedLength);
+            baCRC.append(decryptedData,encryptedLength,CRCLength);
+
+        } else {  // Count == 0, remove 80..00 padding
+            int padCount = ByteArray.ISO9797m2PadCount(decryptedData);
+            if (padCount == -1) {
+                throw new GeneralSecurityException("Decryption padding error: Decrypted data = " + ByteArray.byteArrayToHexString(decryptedData));
+            }
+
+            baDecryptedPlainData.append(decryptedData, 0, decryptedData.length - CRCLength - padCount);
+            baCRC.append(decryptedData, decryptedData.length - CRCLength - padCount, CRCLength);
+        }
+
+        Log.d("decryptReadData", "CRC  Data      = " + ByteArray.byteArrayToHexString(baCRC.toArray()));
+        byte[] returnData = baDecryptedPlainData.toArray();
+        if (CRCLength == 4) {
+            baDecryptedPlainData.append((byte) 0x00);  // status must be 0x00
+        }
+
+        byte [] computedCRC = calcCRC(baDecryptedPlainData.toArray());
+        if (!Arrays.equals(baCRC.toArray(), computedCRC)) {
+            Log.d("decryptReadData", "CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
+            throw new GeneralSecurityException("CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
+        }
+        // Reset
+        encryptedLength = 0;
+        storedAFData.clear();
+
+        return returnData;
+    }
+
+
 }
