@@ -172,14 +172,17 @@ public class fWriteData extends Fragment {
         Log.d("fWriteData", "onGetFileIDs");
 
         Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+        Log.d("onGetFileIDs", "going to fill list");
         fileList = fileListInfo.getByteArray("baFileIDList");
         fileListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
+        Log.d("onGetFileIDs", "after filling list to fill list");
 
+        if (fileList != null)
 
-        if (fileList.length > 0) {
-            Log.d("fileList", "File list: " + ByteArray.byteArrayToHexString(fileList));
-            populateFileIDs(fileList);
-        }
+            if (fileList.length > 0) {
+                Log.d("fileList", "File list: " + ByteArray.byteArrayToHexString(fileList));
+                populateFileIDs(fileList);
+            }
     }
 
     public void onFileSettings() {
@@ -267,6 +270,7 @@ public class fWriteData extends Fragment {
             isIncompleteForm = true;
         }
 
+        iDataToWriteLength = iDataToWriteLength / 2;
 
         if (etOffset.getText().toString().length() != 0) {
             try {
@@ -304,7 +308,7 @@ public class fWriteData extends Fragment {
 
         if (iLength != iDataToWriteLength) {
             Toast.makeText(getActivity().getApplicationContext(), "Using input data length of " + iDataToWriteLength + " in length field", Toast.LENGTH_SHORT).show();
-            iOffset= iDataToWriteLength;
+            iLength= iDataToWriteLength;
         }
 
         byte [] bDataToWrite = ByteArray.hexStringToByteArray(etDataToWrite.getText().toString());
