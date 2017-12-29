@@ -1,7 +1,6 @@
 package com.example.ac.desfirelearningtool;
 
 
-import android.media.tv.TvContract;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -448,26 +447,47 @@ public class MifareDesfire {
 
 
     public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
-        ByteArray array = new ByteArray();
-        byte[] cmd = array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).toArray();
-
 
         if ((dfCrypto.trackCMAC)) {
-            Log.d ("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
-            dfCrypto.calcCMAC(cmd);
+            ByteArray array = new ByteArray();
+            byte[] cmdToCMAC = array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
+
+            Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            dfCrypto.calcCMAC(cmdToCMAC);
         }
 
-        byte [] encipheredData;
+
+        ByteArray array = new ByteArray();
+        array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3);
+
         if (curCommMode == commMode.ENCIPHERED) {
             try {
-                encipheredData = dfCrypto.encryptWriteData();
+                byte [] encipheredData;
+                encipheredData = dfCrypto.encryptWriteDataBlock(array.toArray(), dataToWrite);
+                array.append(encipheredData);
             } catch (GeneralSecurityException e) {
-               scrollLog.appendError(e.getMessage());
+                scrollLog.appendError(e.getMessage());
+                DesfireResponse badResult = new DesfireResponse();
+
+                badResult.status = statusType.PCD_ENCRYPTION_ERROR;
+                badResult.data = null;
+                return badResult;
             }
 
+
+        } else {
+            array.append(dataToWrite);
         }
 
-        byte[] response = cardCommunicator.transceive(cmd);
+        byte[] cmdToSend = array.toArray();
+
+        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(cmdToSend));
+
+        // Testing behavior when encryption is incorrect.  It still returns boundary error.  So it should be the encryption algo that is incorrect.
+        // cmdToSend[12] = (byte)0xAA;
+        // Log.d("writeData","Modified  send: " + ByteArray.byteArrayToHexString(cmdToSend));
+
+        byte[] response = cardCommunicator.transceive(cmdToSend);
 
 
         DesfireResponse result = new DesfireResponse();
@@ -585,6 +605,7 @@ public class MifareDesfire {
         FILE_NOT_FOUND,
         FILE_INTEGRITY_ERROR,
         PCD_AUTHENTICATION_ERROR,
+        PCD_ENCRYPTION_ERROR,
         UNKNOWN_ERROR
     }
 
@@ -789,6 +810,9 @@ public class MifareDesfire {
                 break;
             case PCD_AUTHENTICATION_ERROR:
                 returnString = "PCD authentication verification failed";
+                break;
+            case PCD_ENCRYPTION_ERROR:
+                returnString = "PCD encryption error";
             default:
                 returnString = "Unknown error";
         }

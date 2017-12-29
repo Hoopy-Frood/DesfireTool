@@ -72,6 +72,8 @@ public class DesfireCrypto {
     //---------------------------------------------------------------------------------------
     public boolean initialize (byte authToSet, byte [] key) throws Exception {
         boolean res;
+
+        reset();
         authMode = authToSet;
         if (authMode == MODE_AUTHD40 || authMode == MODE_AUTHISO) {
             getKeySpec(key);
@@ -167,7 +169,7 @@ public class DesfireCrypto {
             initCipher();
         }
 
-        byte [] encOutput = null;
+        byte [] encOutput;
 
         try {
             switch (authMode) {
@@ -632,7 +634,7 @@ public class DesfireCrypto {
     }
     //endregion
 
-    //region CRC16 Related
+    //region CRC32 Related
     /********** CRC RELATED **********/
     public static byte[] longToBytesInvertCRC(long l) {
         byte[] result = new byte[4];
@@ -643,7 +645,9 @@ public class DesfireCrypto {
         return result;
     }
 
-    //
+    //endregion
+
+    //region CRC16 Related
     private byte[] iso14443a_crc(byte[] Data)   // DESFireSAM crc16 do not invert the result
     {
         int  bt;
@@ -916,6 +920,7 @@ public class DesfireCrypto {
             baDecryptedPlainData.append((byte) 0x00);  // status must be 0x00
         }
 
+        Log.d("decryptReadData","CRC Input = " + ByteArray.byteArrayToHexString(baDecryptedPlainData.toArray()));
         byte [] computedCRC = calcCRC(baDecryptedPlainData.toArray());
         if (!Arrays.equals(baCRC.toArray(), computedCRC)) {
             Log.d("decryptReadData", "CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
@@ -927,5 +932,39 @@ public class DesfireCrypto {
 
         return returnData;
     }
+
+    public byte [] encryptWriteDataBlock (byte [] bCmdHeader, byte [] bDataToEncrypt) throws IOException, GeneralSecurityException{
+
+
+        // CALC CRC
+        ByteArray baDataToCRC = new ByteArray();
+
+        Log.d("encryptWriteDataBlock","CRC Input = " + ByteArray.byteArrayToHexString(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray()));
+        byte [] computedCRC = calcCRC(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray());
+
+        // DO PADDING
+        int iPaddingLen = blockLength - ((bDataToEncrypt.length + CRCLength) % blockLength);
+        //int iDataToEncryptLen = bDataToEncrypt.length + CRCLength + iPaddingLen;
+        byte [] bPadding = new byte[iPaddingLen];
+        Arrays.fill(bPadding, (byte) 0);
+
+        // ENCRYPT ALL BLOCKS
+        ByteArray baDataToEncrypt = new ByteArray();
+
+        baDataToEncrypt.append(bDataToEncrypt).append(computedCRC).append(bPadding);
+
+        //Arrays.fill(currentIV, (byte)0);
+        Log.d("encryptWriteDataBlock", "Input Data     = " + ByteArray.byteArrayToHexString(baDataToEncrypt.toArray()));
+
+        byte [] bEncryptedData = encrypt(baDataToEncrypt.toArray());
+
+        if (bEncryptedData == null)
+            throw new GeneralSecurityException("Encryption error: Encryption Input = " + ByteArray.byteArrayToHexString(bEncryptedData));
+
+        Log.d("encryptWriteDataBlock", "Encrypted Data = " + ByteArray.byteArrayToHexString(bEncryptedData));
+
+        return bEncryptedData;
+    }
+
 
 }

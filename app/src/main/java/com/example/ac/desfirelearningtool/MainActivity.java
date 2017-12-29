@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fDeleteFile getDeleteFileFragment;
     fAuthenticate authenticateFragment;
     fReadData getReadDataFragment;
+    fWriteData getWriteDataFragment;
 
 
 
@@ -177,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             // Add the fragment to the 'fragment_container' FrameLayout
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragment_container, commandFragment).commit();
+                    .replace(R.id.fragment_container, commandFragment).commit();
 
         }
 
@@ -495,7 +496,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         authenticateFragment.setArguments(getIntent().getExtras());
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,authenticateFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,authenticateFragment).addToBackStack("commandview").commit();
 
     }
 
@@ -587,6 +588,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendStatus("Authentication Successful");
             }
 
+            onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
+
+
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -610,7 +614,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container, selectFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container, selectFragment).addToBackStack("commandview").commit();
 
     }
 
@@ -654,7 +658,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         createApplicationFragment.setArguments(getIntent().getExtras());
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,createApplicationFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,createApplicationFragment).addToBackStack("commandview").commit();
 
     }
 
@@ -699,7 +703,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container, deleteApplicationFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container, deleteApplicationFragment).addToBackStack("commandview").commit();
 
     }
 
@@ -736,13 +740,14 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setTitle("Get Key Version");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+
         getKeyVersionFragment = new fGetKeyVersion();
 
 
         getKeyVersionFragment.setArguments(getIntent().getExtras());
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,getKeyVersionFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,getKeyVersionFragment).addToBackStack("commandview").commit();
 
     }
 
@@ -753,6 +758,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
+        commandFragment.enableAllButtons();
+        
 
         scrollLog.appendTitle("Key to inquire = " + iKeyToInquire);
 
@@ -798,7 +805,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         createFileFragment.setArguments(getIntent().getExtras());
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,createFileFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,createFileFragment).addToBackStack("commandview").commit();
     }
 
     public void onCreateFileDataReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize) {
@@ -888,9 +895,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (res.status != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Get FileIDs Failed: " + desfireCard.DesFireErrorMsg(res.status));
 
-            if (res.data.length > 0 ) {
-                scrollLog.appendTitle("FileIDs :" + ByteArray.byteArrayToHexString(res.data));
-                baFileIDList = res.data;
+            if (res.data != null) {
+                if (res.data.length > 0) {
+                    scrollLog.appendTitle("FileIDs :" + ByteArray.byteArrayToHexString(res.data));
+                    baFileIDList = res.data;
+                }
             } else {
                 scrollLog.appendTitle("No file in directory.");
                 baFileIDList = null;
@@ -959,7 +968,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getFileSettingsFragment.setArguments(bundle);
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,getFileSettingsFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,getFileSettingsFragment).addToBackStack("commandview").commit();
     }
 
     private void parseAccessRight(String sAccessType, Byte accesss) {
@@ -1194,7 +1203,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getDeleteFileFragment.setArguments(bundle);
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,getDeleteFileFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,getDeleteFileFragment).addToBackStack("commandview").commit();
     }
 
 
@@ -1234,7 +1243,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Arrays.fill(key,(byte)0);
             byte [] T3DESKey = new byte [24];
             Arrays.fill(T3DESKey,(byte)0);
-            byte [] AESKey = new byte [24];
+            byte [] AESKey = new byte [16];
             Arrays.fill(AESKey,(byte)0);
 
             MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
@@ -1273,38 +1282,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendStatus("Authentication Successful");
             }
 
-            // Create Data File
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x01, baNull, (byte) 0x00, new byte[] {(byte) 0xEE, (byte)0xEE}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[] {(byte) 0x0E, (byte)0x0E}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x03, baNull, (byte) 0x03, new byte[] {(byte) 0xeE, (byte)0xeE}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x04, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0xeE}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x05, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0x2E}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[] {(byte) 0x2E, (byte)0x0E}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            scrollLog.appendTitle("Create Data File OK");
+            createTestPersoFiles ();
             //endregion
 
             //region  Create Application ISO DES (15 0D E5)
@@ -1351,39 +1329,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
-
-            // Create Data File
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x01, baNull, (byte) 0x00, new byte[] {(byte) 0xEE, (byte)0xEE}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[] {(byte) 0x0E, (byte)0x0E}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x03, baNull, (byte) 0x03, new byte[] {(byte) 0xeE, (byte)0xeE}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x04, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0xeE}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x05, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0x2E}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[] {(byte) 0x2E, (byte)0x0E}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            scrollLog.appendTitle("Create Data File OK");
+            createTestPersoFiles ();
             //endregion
 
             //region  Create Application ISO AES (15 0A E5)
@@ -1406,7 +1352,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             }
 
             baAppId = new byte[] {(byte) 0x15,(byte) 0x0A,(byte) 0xE5 };
-            mfResult = desfireCard.createApplication(baAppId, (byte)0x0F, (byte)0x43, baNull, baNull);
+            mfResult = desfireCard.createApplication(baAppId, (byte)0x0F, (byte)0x83, baNull, baNull);
             if (mfResult != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(mfResult));
                 return;
@@ -1430,42 +1376,54 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
+            createTestPersoFiles ();
+            //endregion
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
+        }
+    }
 
+    public void createTestPersoFiles () {
+        try {
+            byte[] baNull = new byte[]{};
+
+            MifareDesfire.statusType retValue;
             // Create Data File
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x01, baNull, (byte) 0x00, new byte[] {(byte) 0xEE, (byte)0xEE}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x01, baNull, (byte) 0x00, new byte[]{(byte) 0xEE, (byte) 0xEE}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[] {(byte) 0x0E, (byte)0x0E}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[]{(byte) 0x00, (byte) 0x00}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x03, baNull, (byte) 0x03, new byte[] {(byte) 0xeE, (byte)0xeE}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x03, baNull, (byte) 0x03, new byte[]{(byte) 0xeE, (byte) 0xeE}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x04, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0xeE}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x04, baNull, (byte) 0x03, new byte[]{(byte) 0x1E, (byte) 0xeE}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x05, baNull, (byte) 0x03, new byte[] {(byte) 0x1E, (byte)0x2E}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x05, baNull, (byte) 0x03, new byte[]{(byte) 0x1E, (byte) 0x2E}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[] {(byte) 0x2E, (byte)0x0E}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[]{(byte) 0x2E, (byte) 0x00}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
             scrollLog.appendTitle("Create Data File OK");
-            //endregion
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
             Log.e("onAuthenticate", e.getMessage(), e);
@@ -1485,7 +1443,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getReadDataFragment = new fReadData();
 
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
     }
 
 
@@ -1651,10 +1609,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
 
-        getReadDataFragment = new fReadData();
+        getWriteDataFragment = new fWriteData();
 
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
     }
 
 
@@ -1671,6 +1629,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
             ByteArray baRecvData = new ByteArray();
 
+            // TODO: separate data blocks if too long
             MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
             if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
                 scrollLog.appendStatus("Write Data File Success");

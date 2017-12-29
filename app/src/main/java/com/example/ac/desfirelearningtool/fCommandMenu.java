@@ -251,7 +251,7 @@ public class fCommandMenu extends Fragment{
         });
         //Log.d("fCommandMenu Create", "5");
         
-        disableAllButtons();
+        //disableAllButtons();
 
         return rootView;
     }
