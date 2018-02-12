@@ -46,11 +46,15 @@ public interface IMainActivityCallbacks {
     public void onWriteData();
     public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
 
+    public void onReadRecords();
+    public void onReadRecordsReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
+
     public void onReadDataTest(byte fileID);
     public void onReadDataMACTest(byte fileID);
     public void onReadDataEncryptedTest(byte fileID, int bytesToRead);
     public void onAuthISOTest();
     public void onAuthAESTest();
+    public void onTestAll();
 
      public ScrollLog getScrollLogObject ();
 }

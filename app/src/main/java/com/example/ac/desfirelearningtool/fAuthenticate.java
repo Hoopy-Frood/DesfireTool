@@ -164,7 +164,7 @@ public class fAuthenticate extends Fragment {
         }
 
         if (inputKeyLength == 0) {
-            Toast.makeText(getActivity().getApplicationContext(), "Using Default DES Key of 8 null bytes", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity().getApplicationContext(), "Using Default DES Key of 8 0x00 bytes", Toast.LENGTH_SHORT).show();
             etKey.setText("0000000000000000");
             inputKeyLength = 16;
         }

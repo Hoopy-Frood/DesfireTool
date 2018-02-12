@@ -109,7 +109,7 @@
                 android:layout_below="@+id/divider_Informational"
                 android:layout_alignEnd="@+id/divider_Informational"
                 android:layout_alignStart="@+id/divider_Informational"
-                android:layout_alignBottom="@+id/button_Authenticate"
+                android:layout_alignBottom="@+id/button_AuthAESTest"
                 android:background="#b0b0FF"
                 android:text="Security"
                 android:gravity="top|end"
@@ -164,9 +164,17 @@
                 android:text="Auth AES\nTest"
                 android:textAllCaps="false"
                 android:textSize="12sp"
-                android:layout_below="@+id/divider_Security"
-                android:layout_toEndOf="@+id/button_ChangeKeySettings" />
+                android:layout_below="@+id/button_AuthISOTest"
+                android:layout_toEndOf="@+id/button_GetKeySettings" />
 
+            <Button
+                android:id="@+id/button_TestAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Test All"
+                android:textAllCaps="false"
+                android:textSize="12sp"
+                android:layout_below="@+id/button_AuthISOTest" />
 
 
 
@@ -190,9 +198,9 @@
                 android:id="@+id/button_Select"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/divider_Security"
-                android:layout_marginTop="14dp"
                 android:layout_alignParentStart="true"
+                android:layout_below="@+id/divider_Security"
+                android:layout_marginTop="10dp"
                 android:text="Select"
                 android:textAllCaps="false"
                 android:textSize="12sp" />
@@ -270,7 +278,7 @@
 
             <!-- Record Handling -->
             <Button
-                android:id="@+id/button_ReadRecord"
+                android:id="@+id/button_ReadRecords"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
@@ -283,8 +291,8 @@
                 android:id="@+id/button_WriteRecord"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@+id/button_ReadRecord"
-                android:layout_alignBottom="@+id/button_ReadRecord"
+                android:layout_toEndOf="@+id/button_ReadRecords"
+                android:layout_alignBottom="@+id/button_ReadRecords"
                 android:text="Write\nRecord"
                 android:textAllCaps="false"
                 android:textSize="12sp" />
@@ -294,7 +302,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@+id/button_WriteRecord"
-                android:layout_alignBottom="@+id/button_ReadRecord"
+                android:layout_alignBottom="@+id/button_ReadRecords"
                 android:text="Clear\nRecord File"
                 android:textAllCaps="false"
                 android:textSize="12sp" />
@@ -305,7 +313,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:layout_below="@+id/button_ReadRecord"
+                android:layout_below="@+id/button_ReadRecords"
                 android:text="Get\nValue"
                 android:textAllCaps="false"
                 android:textSize="12sp" />

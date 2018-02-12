@@ -34,7 +34,7 @@ public class fCommandMenu extends Fragment{
     // Buttons - Data Manipulation
     private Button buttonReadData;
     private Button buttonWriteData;
-    private Button buttonReadRecord;
+    private Button buttonReadRecords;
     private Button buttonWriteRecord;
     private Button buttonClearRecordFile;
     private Button buttonGetValue;
@@ -58,6 +58,7 @@ public class fCommandMenu extends Fragment{
     // Buttons - File Management
     private Button buttonCreateTestPerso;
     // TEST
+    private Button buttonTestAll;
     private Button buttonAuthISO;
     private Button buttonAuthAES;
 
@@ -95,7 +96,7 @@ public class fCommandMenu extends Fragment{
         // Buttons - Data Manipulation
         buttonReadData = (Button) rootView.findViewById(R.id.button_ReadData);
         buttonWriteData = (Button) rootView.findViewById(R.id.button_WriteData);
-        buttonReadRecord = (Button) rootView.findViewById(R.id.button_ReadRecord);
+        buttonReadRecords = (Button) rootView.findViewById(R.id.button_ReadRecords);
         buttonWriteRecord = (Button) rootView.findViewById(R.id.button_WriteRecord);
         buttonClearRecordFile = (Button) rootView.findViewById(R.id.button_ClearRecordFile);
         buttonGetValue = (Button) rootView.findViewById(R.id.button_GetValue);
@@ -120,6 +121,8 @@ public class fCommandMenu extends Fragment{
         buttonCreateTestPerso = (Button) rootView.findViewById(R.id.button_CreateTestPerso);
 
         //Button - Test
+        buttonTestAll = (Button) rootView.findViewById(R.id.button_TestAll);
+
         buttonAuthISO = (Button) rootView.findViewById(R.id.button_AuthISOTest);
         buttonAuthAES = (Button) rootView.findViewById(R.id.button_AuthAESTest);
 
@@ -225,21 +228,20 @@ public class fCommandMenu extends Fragment{
                 mCallback.onWriteData();
             }
         });
-        /*buttonReadData.setOnClickListener(new View.OnClickListener() {
+
+        buttonReadRecords.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mCallback.onReadDataTest((byte) 0x01);  // Plain Free / Free
-                mCallback.onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
-                mCallback.onReadDataTest((byte) 0x03);  // Enc   Free / Free
-                mCallback.onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
-                // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
-                mCallback.onReadDataEncryptedTest((byte) 0x06, 1);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-                mCallback.onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-                mCallback.onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-                mCallback.onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-                mCallback.onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+                mCallback.onReadRecords();
+            }
+        });
+
+        buttonTestAll.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onTestAll();
+
 
             }
-        });*/
+        });
 
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthISOTest();
@@ -286,7 +288,7 @@ public class fCommandMenu extends Fragment{
         // Buttons - Data Manipulation
         buttonReadData.setEnabled(false);
         buttonWriteData.setEnabled(false);
-        buttonReadRecord.setEnabled(false);
+        buttonReadRecords.setEnabled(false);
         buttonWriteRecord.setEnabled(false);
         buttonClearRecordFile.setEnabled(false);
         buttonGetValue.setEnabled(false);
@@ -309,6 +311,8 @@ public class fCommandMenu extends Fragment{
         buttonChangeFileSettings.setEnabled(false);
         // Buttons - Test Perso
         buttonCreateTestPerso.setEnabled(false);
+        buttonTestAll.setEnabled(false);
+
     }
 
     protected void enableAllButtons() {
@@ -330,8 +334,8 @@ public class fCommandMenu extends Fragment{
         // Buttons - Data Manipulation
         buttonReadData.setEnabled(true);
         buttonWriteData.setEnabled(true);
-        buttonReadRecord.setEnabled(false);
-        buttonWriteRecord.setEnabled(false);
+        buttonReadRecords.setEnabled(true);
+        buttonWriteRecord.setEnabled(true);
         buttonClearRecordFile.setEnabled(false);
         buttonGetValue.setEnabled(false);
         buttonCredit.setEnabled(false);
@@ -353,6 +357,7 @@ public class fCommandMenu extends Fragment{
         buttonChangeFileSettings.setEnabled(false);
         // Buttons - Test Perso
         buttonCreateTestPerso.setEnabled(true);
+        buttonTestAll.setEnabled(true);
     }
 
 }

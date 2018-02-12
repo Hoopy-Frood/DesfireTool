@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fAuthenticate authenticateFragment;
     fReadData getReadDataFragment;
     fWriteData getWriteDataFragment;
-
+    fReadRecords getReadRecordsFragment;
 
 
     protected PendingIntent pendingIntent;
@@ -527,6 +527,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onAuthenticateTest (){
+        // Select preset app ISO DES 150DE5
+        onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
+
+
         byte[] zeroKey = new byte[8];
         Arrays.fill(zeroKey, (byte)0);
 
@@ -587,8 +591,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
-
-            onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
 
 
         }
@@ -1486,6 +1488,104 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             scrollLog.appendError("DESFire Disconnected\n");
             Log.e("onActivityResult", e.getMessage(), e);
         }
+    }
+
+    public void onReadRecords() {
+        scrollLog.appendTitle("Read Recores");
+
+        getSupportActionBar().setTitle("Read Records");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getReadRecordsFragment = new fReadRecords();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getReadRecordsFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onReadRecordsReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
+
+        try {
+            ByteArray baRecvData = new ByteArray();
+
+            MifareDesfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData(selCommMode);
+                }
+                baRecvData.append(res.data);
+            }
+
+            // Output
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
+                scrollLog.appendData("No data returned");
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+
+    public void onTestAll() {
+        onAuthenticateTest ();
+        onReadDataTest((byte) 0x01);  // Plain Free / Free
+        onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
+        onReadDataTest((byte) 0x03);  // Enc   Free / Free
+        onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
+        // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 1);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        onAuthISOTest ();
+        onReadDataTest((byte) 0x01);  // Plain Free / Free
+        onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
+        onReadDataTest((byte) 0x03);  // Enc   Free / Free
+        onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
+        // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 1);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        onAuthAESTest ();
+        onReadDataTest((byte) 0x01);  // Plain Free / Free
+        onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
+        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
+        onReadDataTest((byte) 0x03);  // Enc   Free / Free
+        onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
+        // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 1);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
     }
 
     //region Read Data Test
