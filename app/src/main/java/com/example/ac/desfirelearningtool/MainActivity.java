@@ -1551,7 +1551,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     public void onTestAll() {
         onAuthenticateTest ();
-        onReadDataTest((byte) 0x01);  // Plain Free / Free
+        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
+/*        onReadDataTest((byte) 0x01);  // Plain Free / Free
         onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
         onReadDataTest((byte) 0x03);  // Enc   Free / Free
         onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
@@ -1561,9 +1562,15 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
+*/
+/*
 
         onAuthISOTest ();
-        onReadDataTest((byte) 0x01);  // Plain Free / Free
+        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        Log.d("TestALL", "Write Encrypted Data ");
+        onWriteDataReturn((byte) 0x06, 0, 8, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
+        /*onReadDataTest((byte) 0x01);  // Plain Free / Free
         onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
         onReadDataTest((byte) 0x03);  // Enc   Free / Free
         onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
@@ -1572,8 +1579,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+*/
 
+/*
         onAuthAESTest ();
         onReadDataTest((byte) 0x01);  // Plain Free / Free
         onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
@@ -1586,6 +1594,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+  */
     }
 
     //region Read Data Test

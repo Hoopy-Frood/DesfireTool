@@ -448,7 +448,7 @@ public class MifareDesfire {
 
     public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
 
-        if ((dfCrypto.trackCMAC)) {
+        if ((dfCrypto.trackCMAC) && (curCommMode != commMode.ENCIPHERED)) {
             ByteArray array = new ByteArray();
             byte[] cmdToCMAC = array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
 

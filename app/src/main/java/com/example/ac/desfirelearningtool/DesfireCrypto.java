@@ -42,6 +42,7 @@ public class DesfireCrypto {
     private SecretKey keySpec;
     private byte[] rndA, rndB ;
     private byte [] currentIV;
+    private byte [] encryptionIV;
     private int blockLength;
     private byte[] sessionKey;
     private byte[] K1, K2;  // Subkey for CMAC
@@ -175,12 +176,12 @@ public class DesfireCrypto {
             switch (authMode) {
                 case MODE_AUTHD40:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));  // IV is always 00..00
-                    encOutput = cipher.doFinal(encInput);   // Decrypt
+                    encOutput = cipher.doFinal(encInput);
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
-                    encOutput = cipher.doFinal(encInput);   // Decrypt
+                    encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
                     System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
                     break;
@@ -396,6 +397,9 @@ public class DesfireCrypto {
                 blockLength = 16;
                 break;
         }
+
+        encryptionIV = Arrays.copyOf(currentIV, currentIV.length);
+
         currentIV = new byte[blockLength];
         Arrays.fill(currentIV, (byte) 0);
 
@@ -953,6 +957,7 @@ public class DesfireCrypto {
 
         baDataToEncrypt.append(bDataToEncrypt).append(computedCRC).append(bPadding);
 
+      //  currentIV = Arrays.copyOf(encryptionIV, encryptionIV.length);
         //Arrays.fill(currentIV, (byte)0);
         Log.d("encryptWriteDataBlock", "Input Data     = " + ByteArray.byteArrayToHexString(baDataToEncrypt.toArray()));
 
