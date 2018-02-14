@@ -527,9 +527,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onAuthenticateTest (){
-        // Select preset app ISO DES 150DE5
-        onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
-
 
         byte[] zeroKey = new byte[8];
         Arrays.fill(zeroKey, (byte)0);
@@ -1419,7 +1416,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[]{(byte) 0x2E, (byte) 0x00}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[]{(byte) 0x0E, (byte) 0xEE}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
@@ -1428,7 +1425,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
+            Log.e("createTestPersoFiles", e.getMessage(), e);
         }
     }
 
@@ -1550,8 +1547,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onTestAll() {
+
+        // Select preset app ISO DES 150DE5
+        onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
+        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.PLAIN);
         onAuthenticateTest ();
-        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
+        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 /*        onReadDataTest((byte) 0x01);  // Plain Free / Free
         onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
         onReadDataTest((byte) 0x03);  // Enc   Free / Free

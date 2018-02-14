@@ -398,7 +398,7 @@ public class DesfireCrypto {
                 break;
         }
 
-        encryptionIV = Arrays.copyOf(currentIV, currentIV.length);
+        //encryptionIV = Arrays.copyOf(currentIV, currentIV.length);
 
         currentIV = new byte[blockLength];
         Arrays.fill(currentIV, (byte) 0);
