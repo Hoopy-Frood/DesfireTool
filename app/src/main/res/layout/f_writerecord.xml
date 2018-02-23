@@ -23,7 +23,7 @@
         android:gravity="center"
         android:dropDownWidth="wrap_content"
         android:layout_alignTop="@+id/tv_FileID"
-        android:layout_alignStart="@+id/et_NumOfRecords"
+        android:layout_alignStart="@+id/et_RecordNumber"
         android:layout_marginStart="5dp"/>
 
 
@@ -38,24 +38,22 @@
         android:textAllCaps="false"/>
 
     <TextView
-        android:id="@+id/tv_OffsetRecord"
+        android:id="@+id/tv_RecordNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/spinner_FileID"
         android:layout_marginTop="10dp"
         android:layout_marginStart="5dp"
-        android:text="Offset Record: "
+        android:text="Record Number: "
         android:textColor="#000000"
         android:textSize="16sp" />
 
     <EditText
-        android:id="@+id/et_OffsetRecord"
+        android:id="@+id/et_RecordNumber"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/tv_OffsetRecord"
-        android:layout_alignBaseline="@+id/tv_OffsetRecord"
-
-        android:layout_alignStart="@+id/et_NumOfRecords"
+        android:layout_toEndOf="@+id/tv_RecordNumber"
+        android:layout_alignBaseline="@+id/tv_RecordNumber"
         android:layout_marginTop="0dp"
         android:digits="0123456789"
         android:ems="10"
@@ -66,28 +64,53 @@
 
 
     <TextView
-        android:id="@+id/tv_NumOfRecords"
+        android:id="@+id/tv_Length"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/et_OffsetRecord"
+        android:layout_below="@+id/et_RecordNumber"
         android:layout_marginTop="10dp"
         android:layout_marginStart="5dp"
-        android:text="Number Of Records: "
+        android:text="Length: "
         android:textColor="#000000"
         android:textSize="16sp" />
 
     <EditText
-        android:id="@+id/et_NumOfRecords"
+        android:id="@+id/et_Length"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/tv_NumOfRecords"
-        android:layout_alignBaseline="@+id/tv_NumOfRecords"
+        android:layout_alignStart="@+id/et_RecordNumber"
+        android:layout_alignBaseline="@+id/tv_Length"
         android:digits="0123456789"
         android:ems="10"
         android:hint="0"
         android:inputType="textCapCharacters"
         android:maxLength="32"
         android:textAlignment="textEnd"/>
+
+
+    <TextView
+        android:id="@+id/tv_DataToWrite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_Length"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="5dp"
+        android:text="Data: "
+        android:textColor="#000000"
+        android:textSize="16sp" />
+
+    <EditText
+        android:id="@+id/et_DataToWrite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/tv_DataToWrite"
+        android:layout_alignBaseline="@+id/tv_DataToWrite"
+        android:digits="0123456789ABCDEF"
+        android:ems="10"
+        android:hint="0"
+        android:inputType="textCapCharacters"
+        android:maxLength="32"
+        android:textAlignment="textStart"/>
 
 
 
@@ -102,7 +125,7 @@
         android:textAllCaps="true"
         android:textColor="#F0F0F0"
         android:textSize="14sp"
-        android:layout_below="@+id/et_NumOfRecords"
+        android:layout_below="@+id/et_DataToWrite"
         android:layout_marginTop="10dp"
         android:layout_alignBottom="@+id/radioGroup_CommMode" />
 
@@ -110,7 +133,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/radioGroup_CommMode"
-        android:layout_below="@+id/et_NumOfRecords"
+        android:layout_below="@+id/et_DataToWrite"
         android:layout_marginTop="30dp"
         android:layout_alignParentStart="true">
 

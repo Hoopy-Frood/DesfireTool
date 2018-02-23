@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
-
+    //region Card Detection methods
     /**
      *  Rearm Thread
      *
@@ -294,11 +294,108 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onCardDetection", e.getMessage(), e);
         }
     }
+    //endregion
+
+    //region Miscellaneous Helpers
+    @Override
+    public void onBackPressed() {
+
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+
+            getSupportActionBar().setTitle("DESFire Tool");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowHomeEnabled(false);
+            getSupportFragmentManager().popBackStack();
+            Log.d("onBackPressed", "popBackStack");
+        } else {
+            super.onBackPressed();
+            getSupportActionBar().setTitle("DESFire Tool");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowHomeEnabled(false);
+            Log.d("onBackPressed", "onBackPressed()");
+        }
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
+    public static Object Tag_getTagService(Tag that) {
+        try {
+            Class c = Tag.class;
+            //c = Class.forName("android.nfc.Tag");
+            Method m = c.getMethod("getTagService");
+            Object nfcTag = m.invoke(that);
+            return nfcTag;
+        }
+        catch (Exception ex) {
+            Log.e("Tag_getTagService", ex.getMessage());
+            return null;
+        }
+    }
+
+
+    public static int Tag_getServiceHandle(Tag that) {
+        try {
+            Class c = Tag.class;
+            //c = Class.forName("android.nfc.Tag");
+            Method m = c.getMethod("getServiceHandle");
+            int serviceHandle = (Integer)m.invoke(that);
+            return serviceHandle;
+        }
+        catch (Exception ex) {
+            Log.e("Tag_getServiceHandle", ex.getMessage());
+            return 0;
+        }
+    }
+
+    public static int INfcTag_connect(Object that, int nativeHandle, int technology) {
+        try {
+            Class c = Class.forName("android.nfc.INfcTag$Stub$Proxy");
+
+            Method m = c.getMethod("connect", int.class, int.class);
+            return (Integer)m.invoke(that, nativeHandle, technology);
+        }
+        catch (Exception ex) {
+            Log.e("INfcTag_connect", ex.getMessage());
+            return -1;
+        }
+    }
+
+    //public boolean isPresent(int nativeHandle) throws RemoteException
+    public static boolean INfcTag_isPresent(Object that, int nativeHandle) throws Exception {
+        Class c = Class.forName("android.nfc.INfcTag$Stub$Proxy");
+
+        Method m = c.getMethod("isPresent", int.class);
+        boolean result = (Boolean)m.invoke(that, nativeHandle);
+        return result;
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if (v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int) event.getRawX(), (int) event.getRawY())) {
+                    v.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
+    //endregion
 
     public ScrollLog getScrollLogObject () {
         return scrollLog;
     }
 
+    //region Get Version
     public void onGetVersion (){
 
         try {
@@ -334,8 +431,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+    //endregion
 
-
+    //region Get Card UID
     public void onGetCardUID (){
 
         try {
@@ -353,7 +451,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Get Application IDs
     public void onGetApplicationIDs (){
 
         try {
@@ -391,9 +491,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         return appListInfo;
 
     }
+    //endregion
 
-
-
+    //region Get Free Memory
     public void onGetFreeMem (){
 
         try {
@@ -411,7 +511,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Get Key Settings
     public void onGetKeySettings (){
 
         try {
@@ -464,7 +566,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Get DF Names
     public void onGetDFNames (){
 
         try {
@@ -486,7 +590,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Authenticate
     public void onAuthenticate (){
         getSupportActionBar().setTitle("Authenticate");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -525,7 +631,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onAuthenticate", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Authentication Test
     public void onAuthenticateTest (){
 
         byte[] zeroKey = new byte[8];
@@ -597,7 +705,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onAuthenticate", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Select Application
     public void onSelectApplication (){
         scrollLog.appendTitle("Select Application");
 
@@ -645,7 +755,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Create Application
     public void onCreateApplication (){
         scrollLog.appendTitle("Create Application");
 
@@ -687,7 +799,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Delete Application
     public void onDeleteApplication (){
         scrollLog.appendTitle("Delete Application");
 
@@ -732,7 +846,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Get Key Version
     public void onGetKeyVersion (){
         scrollLog.appendTitle("Get Key Version");
 
@@ -774,8 +890,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+    //endregion
 
-
+    //region Format PICC
     public void onFormatPICC (){
 
         try {
@@ -791,7 +908,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region create File
     public void onCreateFile (){
         scrollLog.appendTitle("Create File");
 
@@ -886,7 +1005,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Get File IDs
     public void onGetFileIDs() {
         try {
             scrollLog.appendTitle("Get FileIDs");
@@ -951,7 +1072,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetVersion", e.getMessage(), e);
         }
     }
+    //endregion
 
+    //region Get File Settings
     public void onGetFileSettings() {
         scrollLog.appendTitle("Get File Settings");
 
@@ -984,6 +1107,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
+    //
     public void onGetFileSettingsReturn(byte bFileID) {
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1186,7 +1310,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
         return bundleFileSettings;
     }
+    //endregion
 
+    //region Delete File
     public void onDeleteFile() {
         scrollLog.appendTitle("Delete File");
 
@@ -1230,9 +1356,341 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+    //endregion
 
-    //TEST TESTTEST
+    //region Read Data
+    public void onReadData() {
+        scrollLog.appendTitle("Read Data");
 
+        getSupportActionBar().setTitle("Read Data");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getReadDataFragment = new fReadData();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
+
+        try {
+            ByteArray baRecvData = new ByteArray();
+
+            MifareDesfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData(selCommMode);
+                }
+                baRecvData.append(res.data);
+            }
+
+            // Output
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
+                scrollLog.appendData("No data returned");
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+    //region Read Records
+    public void onReadRecords() {
+        scrollLog.appendTitle("Read Recores");
+
+        getSupportActionBar().setTitle("Read Records");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getReadRecordsFragment = new fReadRecords();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getReadRecordsFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onReadRecordsReturn(byte bFileID, int iOffsetRecord, int iNumOfRecords, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
+
+        try {
+            ByteArray baRecvData = new ByteArray();
+
+            MifareDesfire.DesfireResponse res = desfireCard.readRecords(bFileID, iOffsetRecord, iNumOfRecords, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData(selCommMode);
+                }
+                baRecvData.append(res.data);
+            }
+
+            // Output
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
+                scrollLog.appendData("No data returned");
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+    //region Write Data
+    public void onWriteData() {
+        scrollLog.appendTitle("Write Data");
+
+        getSupportActionBar().setTitle("Write Data");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getWriteDataFragment = new fWriteData();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
+
+        try {
+
+            // TODO: separate data blocks if too long
+            MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
+                scrollLog.appendStatus("Write Data File Success");
+            } else {
+                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+    //region Write Record
+    public void onWriteRecord() {
+        scrollLog.appendTitle("Write Record");
+
+        getSupportActionBar().setTitle("Write Record");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getWriteDataFragment = new fWriteData();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onWriteRecordReturn(byte bFileID, int iRecordNum, int iSizeToWrite, byte [] bDataToWrite, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
+
+        try {
+
+            // TODO: separate data blocks if too long
+            MifareDesfire.DesfireResponse res = desfireCard.writeRecord(bFileID, iRecordNum, iSizeToWrite, bDataToWrite, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
+                scrollLog.appendStatus("Write Data File Success");
+            } else {
+                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+    //region Read Data Test
+
+    public void onReadDataTest(byte fileID) {
+        try {
+
+            int offset = 0;
+            int length = 3;
+            ByteArray baRecvData = new ByteArray();
+
+            scrollLog.appendTitle("Read Data Test");
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.PLAIN);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                baRecvData.append(res.data);
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData();
+                    baRecvData.append(res.data);
+                }
+            }
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
+                scrollLog.appendData("No data returned");
+            }
+
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onGetVersion", e.getMessage(), e);
+        }
+    }
+
+    public void onReadDataEncryptedTest(byte fileID, int bytesToRead) {
+        try {
+
+            int offset = 0;
+            int length = bytesToRead;
+            ByteArray baRecvData = new ByteArray();
+
+            scrollLog.appendTitle("Read Data Encrypted Test");
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.ENCIPHERED);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
+                }
+                baRecvData.append(res.data);
+            }
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+
+                scrollLog.appendData("No data returned");
+            }
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onGetVersion", e.getMessage(), e);
+        }
+    }
+
+    public void onReadDataMACTest(byte fileID) {
+        try {
+
+            int offset = 0;
+            int length = 8;
+            ByteArray baRecvData = new ByteArray();
+
+            scrollLog.appendTitle("Read Data MAC Test");
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.MAC);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+
+                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
+                }
+                baRecvData.append(res.data);
+            }
+            if (baRecvData.toArray().length > 0)
+                scrollLog.appendData("Read Data MAC Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+            else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+                scrollLog.appendData("No data returned");
+            }
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onReadDataMACTest", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+
+    //region Write Data Test
+
+
+
+    //endregion
+
+
+    //region Write Data Test
+
+    //region Create Test Perso
     public void onCreateTestPerso() {
         scrollLog.appendTitle("Create Test Personalization File System");
 
@@ -1384,6 +1842,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onAuthenticate", e.getMessage(), e);
         }
     }
+    //endregion
+
 
     public void createTestPersoFiles () {
         try {
@@ -1429,121 +1889,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
-    public void onReadData() {
-        scrollLog.appendTitle("Read Data");
-
-        getSupportActionBar().setTitle("Read Data");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        Bundle bundle = new Bundle();
-        bundle.putByteArray("baFileIDList", baFileIDList);
-
-        getReadDataFragment = new fReadData();
-
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
-    }
-
-
-
-    public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
-
-        try {
-            ByteArray baRecvData = new ByteArray();
-
-            MifareDesfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData(selCommMode);
-                }
-                baRecvData.append(res.data);
-            }
-
-            // Output
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-
-                scrollLog.appendData("No data returned");
-            }
-
-        } catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onActivityResult", e.getMessage(), e);
-        }
-    }
-
-    public void onReadRecords() {
-        scrollLog.appendTitle("Read Recores");
-
-        getSupportActionBar().setTitle("Read Records");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        Bundle bundle = new Bundle();
-        bundle.putByteArray("baFileIDList", baFileIDList);
-
-        getReadRecordsFragment = new fReadRecords();
-
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container,getReadRecordsFragment).addToBackStack("commandview").commit();
-    }
-
-
-
-    public void onReadRecordsReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
-
-        try {
-            ByteArray baRecvData = new ByteArray();
-
-            MifareDesfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData(selCommMode);
-                }
-                baRecvData.append(res.data);
-            }
-
-            // Output
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-
-                scrollLog.appendData("No data returned");
-            }
-
-        } catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onActivityResult", e.getMessage(), e);
-        }
-    }
 
 
     public void onTestAll() {
@@ -1598,256 +1943,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
   */
     }
 
-    //region Read Data Test
-
-    public void onReadDataTest(byte fileID) {
-        try {
-
-            int offset = 0;
-            int length = 3;
-            ByteArray baRecvData = new ByteArray();
-
-            scrollLog.appendTitle("Read Data Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.PLAIN);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
-
-                baRecvData.append(res.data);
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData();
-                    baRecvData.append(res.data);
-                }
-            }
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-
-                scrollLog.appendData("No data returned");
-            }
 
 
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
-        }
-    }
-
-    public void onReadDataEncryptedTest(byte fileID, int bytesToRead) {
-        try {
-
-            int offset = 0;
-            int length = bytesToRead;
-            ByteArray baRecvData = new ByteArray();
-
-            scrollLog.appendTitle("Read Data Encrypted Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.ENCIPHERED);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
-                }
-                baRecvData.append(res.data);
-            }
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-
-                scrollLog.appendData("No data returned");
-            }
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
-        }
-    }
-
-    public void onReadDataMACTest(byte fileID) {
-        try {
-
-            int offset = 0;
-            int length = 8;
-            ByteArray baRecvData = new ByteArray();
-
-            scrollLog.appendTitle("Read Data MAC Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.MAC);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
-                }
-                baRecvData.append(res.data);
-            }
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data MAC Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-                scrollLog.appendData("No data returned");
-            }
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onReadDataMACTest", e.getMessage(), e);
-        }
-    }
-    //endregion
-
-
-    public void onWriteData() {
-        scrollLog.appendTitle("Write Data");
-
-        getSupportActionBar().setTitle("Write Data");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        Bundle bundle = new Bundle();
-        bundle.putByteArray("baFileIDList", baFileIDList);
-
-        getWriteDataFragment = new fWriteData();
-
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
-    }
-
-
-
-    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
-
-        try {
-            ByteArray baRecvData = new ByteArray();
-
-            // TODO: separate data blocks if too long
-            MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
-                scrollLog.appendStatus("Write Data File Success");
-            } else {
-                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
-            }
-
-        } catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onActivityResult", e.getMessage(), e);
-        }
-    }
-
-
-    //region Miscellaneous Helpers
-    @Override
-    public void onBackPressed() {
-
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-
-            getSupportActionBar().setTitle("DESFire Tool");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-            getSupportActionBar().setDisplayShowHomeEnabled(false);
-            getSupportFragmentManager().popBackStack();
-            Log.d("onBackPressed", "popBackStack");
-        } else {
-            super.onBackPressed();
-            getSupportActionBar().setTitle("DESFire Tool");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-            getSupportActionBar().setDisplayShowHomeEnabled(false);
-            Log.d("onBackPressed", "onBackPressed()");
-        }
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
-        return true;
-    }
-
-    public static Object Tag_getTagService(Tag that) {
-        try {
-            Class c = Tag.class;
-            //c = Class.forName("android.nfc.Tag");
-            Method m = c.getMethod("getTagService");
-            Object nfcTag = m.invoke(that);
-            return nfcTag;
-        }
-        catch (Exception ex) {
-            Log.e("Tag_getTagService", ex.getMessage());
-            return null;
-        }
-    }
-
-
-    public static int Tag_getServiceHandle(Tag that) {
-        try {
-            Class c = Tag.class;
-            //c = Class.forName("android.nfc.Tag");
-            Method m = c.getMethod("getServiceHandle");
-            int serviceHandle = (Integer)m.invoke(that);
-            return serviceHandle;
-        }
-        catch (Exception ex) {
-            Log.e("Tag_getServiceHandle", ex.getMessage());
-            return 0;
-        }
-    }
-
-    public static int INfcTag_connect(Object that, int nativeHandle, int technology) {
-        try {
-            Class c = Class.forName("android.nfc.INfcTag$Stub$Proxy");
-
-            Method m = c.getMethod("connect", int.class, int.class);
-            return (Integer)m.invoke(that, nativeHandle, technology);
-        }
-        catch (Exception ex) {
-            Log.e("INfcTag_connect", ex.getMessage());
-            return -1;
-        }
-    }
-
-    //public boolean isPresent(int nativeHandle) throws RemoteException
-    public static boolean INfcTag_isPresent(Object that, int nativeHandle) throws Exception {
-        Class c = Class.forName("android.nfc.INfcTag$Stub$Proxy");
-
-        Method m = c.getMethod("isPresent", int.class);
-        boolean result = (Boolean)m.invoke(that, nativeHandle);
-        return result;
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            View v = getCurrentFocus();
-            if (v instanceof EditText) {
-                Rect outRect = new Rect();
-                v.getGlobalVisibleRect(outRect);
-                if (!outRect.contains((int) event.getRawX(), (int) event.getRawY())) {
-                    v.clearFocus();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
-            }
-        }
-        return super.dispatchTouchEvent(event);
-    }
-    //endregion
 
 }

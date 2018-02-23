@@ -19,21 +19,22 @@ import java.util.List;
 import static java.lang.Integer.parseInt;
 
 /**
- * Created by andrew on 2018/02/12.
+ * Created by Ac on 2/20/2018.
  */
 
-public class fReadRecords extends Fragment {
+public class fWriteRecord extends Fragment {
     View rootView;
     IMainActivityCallbacks mCallback;
     private Button buttonGo;
     private Button buttonGetFileSettings;
     private Spinner spinnerFileID;
-    private EditText etOffsetRecord;
-    private EditText etNumOfRecords;
+    private EditText etOffset;
+    private EditText etLength;
+    private EditText etDataToWrite;
     private RadioGroup commModeGroup;
     private Button buttonGetFileID;
     private MifareDesfire.commMode selCommMode;
-    private int iOffsetRecord, iNumOfRecords;
+
 
     private byte [] fileList;
     private boolean fileListPopulated;
@@ -45,7 +46,7 @@ public class fReadRecords extends Fragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.f_readrecords, container, false);
+        rootView = inflater.inflate(R.layout.f_writerecord, container, false);
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
@@ -60,8 +61,9 @@ public class fReadRecords extends Fragment {
 
         buttonGo = (Button) rootView.findViewById(R.id.button_Go);
         spinnerFileID = (Spinner) rootView.findViewById(R.id.spinner_FileID);
-        etOffsetRecord = (EditText) rootView.findViewById(R.id.et_OffsetRecord);
-        etNumOfRecords = (EditText) rootView.findViewById(R.id.et_NumOfRecords);
+        etOffset = (EditText) rootView.findViewById(R.id.et_Offset);
+        etLength = (EditText) rootView.findViewById(R.id.et_Length);
+        etDataToWrite = (EditText) rootView.findViewById(R.id.et_DataToWrite);
 
         commModeGroup = (RadioGroup) rootView.findViewById(R.id.radioGroup_CommMode);
         commModeGroup.check(R.id.radio_PlainCommunication);
@@ -84,7 +86,7 @@ public class fReadRecords extends Fragment {
 
         buttonGo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                onGoReadRecords();
+                onGoWriteRecord();
             }
         });
         buttonGetFileID.setOnClickListener(new View.OnClickListener() {
@@ -131,7 +133,7 @@ public class fReadRecords extends Fragment {
 */
 
     private void populateFileIDs (byte[] fileIDs) {
-        List <String> list = new ArrayList<>();
+        List<String> list = new ArrayList<>();
 
         for (int i = 0; i < fileIDs.length; i++) {
             list.add(ByteArray.byteToHexString(fileIDs[i]));
@@ -148,7 +150,7 @@ public class fReadRecords extends Fragment {
 
     public void onRadioButtonClicked(RadioGroup group, int checkedId) {
         // Is the button now checked?
-        Log.d("fReadRecords","onRadioButtonClicked");
+        Log.d("fWriteData", "onRadioButtonClicked");
 
         // Check which radio button was clicked
         switch(checkedId) {
@@ -167,22 +169,25 @@ public class fReadRecords extends Fragment {
 
 
     public void onGetFileIDs () {
-        Log.d("fReadRecords", "onGetFileIDs");
+        Log.d("fWriteData", "onGetFileIDs");
 
         Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+        Log.d("onGetFileIDs", "going to fill list");
         fileList = fileListInfo.getByteArray("baFileIDList");
         fileListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
+        Log.d("onGetFileIDs", "after filling list to fill list");
 
+        if (fileList != null)
 
-        if (fileList.length > 0) {
-            Log.d("fileList", "File list: " + ByteArray.byteArrayToHexString(fileList));
-            populateFileIDs(fileList);
-        }
+            if (fileList.length > 0) {
+                Log.d("fileList", "File list: " + ByteArray.byteArrayToHexString(fileList));
+                populateFileIDs(fileList);
+            }
     }
 
     public void onFileSettings() {
 
-        Log.d("fReadRecords", "onGetFileIDs");
+        Log.d("fWriteData", "onGetFileIDs");
 
         Bundle fileSettings = mCallback.onFragmentGetFileSettings(ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem()));
         if (!fileSettings.getBoolean("boolCommandSuccess")){
@@ -248,51 +253,75 @@ public class fReadRecords extends Fragment {
 
 
 
-    private void onGoReadRecords(){
+    private void onGoWriteRecord(){
+        int iOffset =0;
+        int iLength = 0;
         boolean isIncompleteForm = false;
+        int iDataToWriteLength;
 
         if (commModeGroup.getCheckedRadioButtonId() == -1) {
             Toast.makeText(getActivity().getApplicationContext(), "Please select a communication method", Toast.LENGTH_SHORT).show();
             isIncompleteForm = true;
         }
 
-        if (etOffsetRecord.getText().toString().length() != 0) {
+        iDataToWriteLength = etDataToWrite.getText().toString().length();
+        if (iDataToWriteLength %2 == 1) {
+            Toast.makeText(getActivity().getApplicationContext(), "Please enter valid hex string to write", Toast.LENGTH_SHORT).show();
+            isIncompleteForm = true;
+        }
+
+        iDataToWriteLength = iDataToWriteLength / 2;
+
+        if (etOffset.getText().toString().length() != 0) {
             try {
-                iOffsetRecord = (parseInt(etOffsetRecord.getText().toString()));
+                iOffset = (parseInt(etOffset.getText().toString()));
             } catch (NumberFormatException e) {
                 Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in file size", Toast.LENGTH_SHORT).show();
                 isIncompleteForm = true;
             }
         }
-        if (etNumOfRecords.getText().toString().length() != 0) {
+        if (etLength.getText().toString().length() != 0) {
             try {
-                iNumOfRecords = (parseInt(etNumOfRecords.getText().toString()));
+                iLength = (parseInt(etLength.getText().toString()));
             } catch (NumberFormatException e) {
                 Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in file size", Toast.LENGTH_SHORT).show();
                 isIncompleteForm = true;
             }
         }
+
         if (isIncompleteForm)
             return;
 
 
-
-        if (etOffsetRecord.getText().toString().length() == 0) {
+        if (etOffset.getText().toString().length() == 0) {
             Toast.makeText(getActivity().getApplicationContext(), "Using Default offset of 0 ", Toast.LENGTH_SHORT).show();
-            etOffsetRecord.setText(R.string.default_readOffset);
-            iOffsetRecord= (parseInt(etOffsetRecord.getText().toString()));
+            etOffset.setText(R.string.default_readOffset);
+            iOffset= (parseInt(etOffset.getText().toString()));
         }
-        if (etNumOfRecords.getText().toString().length() == 0) {
-            Toast.makeText(getActivity().getApplicationContext(), "Using Default length of 0 ", Toast.LENGTH_SHORT).show();
-            etNumOfRecords.setText(R.string.default_readLength);
-            iNumOfRecords = (parseInt(etNumOfRecords.getText().toString()));
+
+        if (etLength.getText().toString().length() == 0) {
+            etLength.setText(R.string.default_readLength);
+            iLength = (parseInt(etLength.getText().toString()));
         }
-        Log.d("ReadRecords", "Input OK");
+
+
+
+        if (iLength != iDataToWriteLength) {
+            Toast.makeText(getActivity().getApplicationContext(), "Using input data length of " + iDataToWriteLength + " in length field", Toast.LENGTH_SHORT).show();
+            iLength= iDataToWriteLength;
+        }
+
+        byte [] bDataToWrite = ByteArray.hexStringToByteArray(etDataToWrite.getText().toString());
+
+        Log.d("WriteData", "Input OK");
         byte fileSelected = ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem());
 
-        mCallback.onReadRecordsReturn(fileSelected,
-                iOffsetRecord,
-                iNumOfRecords,
+
+
+        mCallback.onWriteDataReturn(fileSelected,
+                iOffset,
+                iLength,
+                bDataToWrite,
                 selCommMode
         );
     }

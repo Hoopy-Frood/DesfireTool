@@ -103,7 +103,7 @@ public class fWriteData extends Fragment {
 
     }
 
-
+/*
     private void populateSpinners(){
         //List<Number> https://www.mkyong.com/android/android-spinner-drop-down-list-example/
 
@@ -130,7 +130,7 @@ public class fWriteData extends Fragment {
         spinnerFileID.setSelection(0);
 
     }
-
+*/
 
     private void populateFileIDs (byte[] fileIDs) {
         List <String> list = new ArrayList<>();

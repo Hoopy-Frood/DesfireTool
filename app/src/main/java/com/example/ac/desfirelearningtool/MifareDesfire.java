@@ -380,7 +380,6 @@ public class MifareDesfire {
             dfCrypto.trackCMAC = false;
         }
 
-
         return result;
 
     }
@@ -397,11 +396,9 @@ public class MifareDesfire {
 
         byte[] response = cardCommunicator.transceive(cmd);
 
-
         DesfireResponse result = new DesfireResponse();
 
         result.status = findStatus(response[0]);
-
 
         if (result.status == statusType.SUCCESS) {
             if (curCommMode == commMode.ENCIPHERED) {
@@ -445,6 +442,65 @@ public class MifareDesfire {
         return result;
     }
 
+    public DesfireResponse  readRecords(byte fid, int offsetRecord, int numOfRecords, commMode curCommMode) throws IOException {
+        ByteArray array = new ByteArray();
+        byte[] cmd = array.append((byte) 0xBB).append(fid).append(offsetRecord, 3).append(numOfRecords, 3).toArray();
+
+
+        if ((dfCrypto.trackCMAC)) {
+            Log.d ("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            dfCrypto.calcCMAC(cmd);
+        }
+
+        byte[] response = cardCommunicator.transceive(cmd);
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+        if (result.status == statusType.SUCCESS) {
+            if (curCommMode == commMode.ENCIPHERED) {
+                dfCrypto.storeAFEncrypted(response);
+                try {
+                    result.data = dfCrypto.decryptReadData();   // Decrypt all data together
+                } catch (GeneralSecurityException e) {
+                    scrollLog.appendError(e.getMessage());
+                }
+
+            } else if (dfCrypto.trackCMAC) {
+                Log.d("readRecord", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verified");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+                if (dfCrypto.verifyD40MAC(response)) {
+                    scrollLog.appendStatus("MAC Verified");
+                } else {
+                    scrollLog.appendError("MAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,4);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else if (result.status == statusType.ADDITONAL_FRAME) {
+            if (curCommMode == commMode.ENCIPHERED) {
+                Log.d ("readRecord", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFEncrypted(response);
+            } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
+                Log.d ("readRecord", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFCMAC(response);
+            }
+            result.data = ByteArray.appendCut(null, response);
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+        return result;
+
+    }
+
 
     public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
 
@@ -464,6 +520,7 @@ public class MifareDesfire {
             try {
                 byte [] encipheredData;
                 encipheredData = dfCrypto.encryptWriteDataBlock(array.toArray(), dataToWrite);
+
                 array.append(encipheredData);
             } catch (GeneralSecurityException e) {
                 scrollLog.appendError(e.getMessage());
@@ -484,8 +541,8 @@ public class MifareDesfire {
         Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(cmdToSend));
 
         // Testing behavior when encryption is incorrect.  It still returns boundary error.  So it should be the encryption algo that is incorrect.
-        // cmdToSend[12] = (byte)0xAA;
-        // Log.d("writeData","Modified  send: " + ByteArray.byteArrayToHexString(cmdToSend));
+
+        Log.d("writeData","Modified  send: " + ByteArray.byteArrayToHexString(cmdToSend));
 
         byte[] response = cardCommunicator.transceive(cmdToSend);
 
@@ -515,7 +572,7 @@ public class MifareDesfire {
                 result.data = ByteArray.appendCut(null, response);
             }
         } else if (result.status == statusType.ADDITONAL_FRAME) {
-            if (curCommMode == commMode.ENCIPHERED) {
+            if (curCommMode == commMode.ENCIPHERED) { //TODO: This is wrong AF not handled in writing situations yet
                 Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFEncryptedSetLength(response,count);
             } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
@@ -529,6 +586,90 @@ public class MifareDesfire {
         return result;
     }
 
+
+    public DesfireResponse writeRecord(byte fid, int startRecord, int sizeToWrite, byte [] dataToWrite, commMode curCommMode) throws IOException {
+
+        if ((dfCrypto.trackCMAC) && (curCommMode != commMode.ENCIPHERED)) {
+            ByteArray array = new ByteArray();
+            byte[] cmdToCMAC = array.append((byte) 0x3B).append(fid).append(startRecord, 3).append(sizeToWrite, 3).append(dataToWrite).toArray();
+
+            Log.d ("writeDataRecord", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            dfCrypto.calcCMAC(cmdToCMAC);
+        }
+
+
+        ByteArray array = new ByteArray();
+        array.append((byte) 0x3B).append(fid).append(startRecord, 3).append(sizeToWrite, 3);
+
+        if (curCommMode == commMode.ENCIPHERED) {
+            try {
+                byte [] encipheredData;
+                encipheredData = dfCrypto.encryptWriteDataBlock(array.toArray(), dataToWrite);
+
+                array.append(encipheredData);
+            } catch (GeneralSecurityException e) {
+                scrollLog.appendError(e.getMessage());
+                DesfireResponse badResult = new DesfireResponse();
+
+                badResult.status = statusType.PCD_ENCRYPTION_ERROR;
+                badResult.data = null;
+                return badResult;
+            }
+
+
+        } else {
+            array.append(dataToWrite);
+        }
+
+        byte[] cmdToSend = array.toArray();
+
+        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(cmdToSend));
+
+        // Testing behavior when encryption is incorrect.  It still returns boundary error.  So it should be the encryption algo that is incorrect.
+
+        Log.d("writeData","Modified  send: " + ByteArray.byteArrayToHexString(cmdToSend));
+
+        byte[] response = cardCommunicator.transceive(cmdToSend);
+
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.trackCMAC) {
+                Log.d("writeData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verified");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+                if (dfCrypto.verifyD40MAC(response)) {
+                    scrollLog.appendStatus("MAC Verified");
+                } else {
+                    scrollLog.appendError("MAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,4);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else if (result.status == statusType.ADDITONAL_FRAME) {
+            if (curCommMode == commMode.ENCIPHERED) {//TODO: This is wrong AF not handled in writing situations yet
+                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFEncrypted(response);
+            } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
+                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFCMAC(response);
+            }
+            result.data = ByteArray.appendCut(null, response);
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+        return result;
+    }
 
     private void writeInternal(byte cmd, byte[] data, int file, int offset, int size) throws IOException {
         int data_size;

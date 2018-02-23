@@ -234,6 +234,11 @@ public class fCommandMenu extends Fragment{
                 mCallback.onReadRecords();
             }
         });
+        buttonWriteRecord.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onWriteRecord();
+            }
+        });
 
         buttonTestAll.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
