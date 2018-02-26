@@ -537,6 +537,7 @@ public class DesfireCrypto {
         return outMAC;
     }
 
+
     public boolean verifyD40MAC (byte [] recvData)  {
         byte [] MACToVerify = new byte[4];
         byte [] computedMACToVerify = new byte[4];
@@ -550,8 +551,8 @@ public class DesfireCrypto {
 
         //Log.d ("verifyCMAC", "Data to Verify = " + ByteArray.byteArrayToHexString(storedAFData.toArray()) );
         computedMACToVerify = calcD40MAC(storedAFData.toArray());
-        //Log.d ("verifyCMAC", "MAC to Verify = " + ByteArray.byteArrayToHexString(MACToVerify) );
-        //Log.d ("verifyCMAC", "MAC computed  = " + ByteArray.byteArrayToHexString(computedMACToVerify) );
+        Log.d ("verifyCMAC", "MAC to Verify = " + ByteArray.byteArrayToHexString(MACToVerify) );
+        Log.d ("verifyCMAC", "MAC computed  = " + ByteArray.byteArrayToHexString(computedMACToVerify) );
 
         storedAFData.clear();
 
@@ -594,9 +595,9 @@ public class DesfireCrypto {
         //Log.d("calcCMAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length );
         Log.d("calcCMAC", "encInput = " + ByteArray.byteArrayToHexString(encInput));
 
-        Log.d ("calcCMAC  ", "Encryt Input Data = " + ByteArray.byteArrayToHexString(encInput));
+        Log.d ("calcCMAC  ", "Encrypt Input Data = " + ByteArray.byteArrayToHexString(encInput));
         output = encrypt(encInput);
-        Log.d ("calcCMAC  ", "Encrytped Data    = " + ByteArray.byteArrayToHexString(output));
+        Log.d ("calcCMAC  ", "Encrypted Data    = " + ByteArray.byteArrayToHexString(output));
 
         System.arraycopy(output,output.length-blockLength,outMAC, 0,8);
 

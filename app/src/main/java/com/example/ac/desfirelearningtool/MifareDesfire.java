@@ -350,7 +350,7 @@ public class MifareDesfire {
                 }
 
             } else if (dfCrypto.trackCMAC) {
-                Log.d("readData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                Log.d("getMoreData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("CMAC Verified");
                 } else {
@@ -369,10 +369,10 @@ public class MifareDesfire {
             }
         } else if (result.status == statusType.ADDITONAL_FRAME) {
             if (curCommMode == commMode.ENCIPHERED) {
-                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("getMoreData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFEncrypted(response);
             } else if (dfCrypto.trackCMAC) {
-                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("getMoreData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
             }
             result.data = ByteArray.appendCut(null, response);
@@ -388,9 +388,8 @@ public class MifareDesfire {
         ByteArray array = new ByteArray();
         byte[] cmd = array.append((byte) 0xBD).append(fid).append(start, 3).append(count, 3).toArray();
 
-
         if ((dfCrypto.trackCMAC)) {
-            Log.d ("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            Log.d("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd));
             dfCrypto.calcCMAC(cmd);
         }
 
@@ -504,19 +503,29 @@ public class MifareDesfire {
 
     public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
 
-        if ((dfCrypto.trackCMAC) && (curCommMode != commMode.ENCIPHERED)) {
-            ByteArray array = new ByteArray();
-            byte[] cmdToCMAC = array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
-
-            Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
-            dfCrypto.calcCMAC(cmdToCMAC);
-        }
-
-
+        byte [] macToSend;
         ByteArray array = new ByteArray();
         array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3);
 
-        if (curCommMode == commMode.ENCIPHERED) {
+
+        if ((dfCrypto.trackCMAC) && (curCommMode != commMode.ENCIPHERED)) {
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToCMAC = arrayMAC.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
+
+            Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            macToSend = dfCrypto.calcCMAC(cmdToCMAC);
+            if (curCommMode == commMode.MAC) {
+                array.append(dataToWrite).append(macToSend);
+            }
+        } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToMAC = arrayMAC.append(dataToWrite).toArray();
+
+            Log.d ("writeData", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
+            macToSend = dfCrypto.calcD40MAC(cmdToMAC);
+            array.append(dataToWrite).append(macToSend);
+
+        } else if (curCommMode == commMode.ENCIPHERED) {
             try {
                 byte [] encipheredData;
                 encipheredData = dfCrypto.encryptWriteDataBlock(array.toArray(), dataToWrite);
@@ -530,7 +539,6 @@ public class MifareDesfire {
                 badResult.data = null;
                 return badResult;
             }
-
 
         } else {
             array.append(dataToWrite);
@@ -561,13 +569,6 @@ public class MifareDesfire {
                     scrollLog.appendError("CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutMAC(response,8);
-            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
-                if (dfCrypto.verifyD40MAC(response)) {
-                    scrollLog.appendStatus("MAC Verified");
-                } else {
-                    scrollLog.appendError("MAC Incorrect");
-                }
-                result.data = ByteArray.appendCutMAC(response,4);
             } else {
                 result.data = ByteArray.appendCut(null, response);
             }

@@ -1514,6 +1514,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendStatus("Write Data File Success");
             } else {
                 scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                Log.d("onWriteDataReturn", "writeData return: " + desfireCard.DesFireErrorMsg(res.status));
             }
 
         } catch (Exception e) {
@@ -1876,7 +1877,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[]{(byte) 0x0E, (byte) 0xEE}, 32);
+            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[]{(byte) 0x0E, (byte) 0x0E}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
@@ -1894,11 +1895,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onTestAll() {
 
         // Select preset app ISO DES 150DE5
-        onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
-        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.PLAIN);
+ /*        onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
         onAuthenticateTest ();
-        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-/*        onReadDataTest((byte) 0x01);  // Plain Free / Free
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+
+        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataTest((byte) 0x01);  // Plain Free / Free
         onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
         onReadDataTest((byte) 0x03);  // Enc   Free / Free
         onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
@@ -1910,13 +1912,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
 */
-/*
+
 
         onAuthISOTest ();
-        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         Log.d("TestALL", "Write Encrypted Data ");
-        onWriteDataReturn((byte) 0x06, 0, 8, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
-        /*onReadDataTest((byte) 0x01);  // Plain Free / Free
+
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
+        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+      /*onReadDataTest((byte) 0x01);  // Plain Free / Free
         onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
         onReadDataTest((byte) 0x03);  // Enc   Free / Free
         onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
@@ -1927,10 +1934,13 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 */
 
-/*
+ /*
         onAuthAESTest ();
+        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         onReadDataTest((byte) 0x01);  // Plain Free / Free
-        onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
+       onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
         onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
         onReadDataTest((byte) 0x03);  // Enc   Free / Free
         onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
