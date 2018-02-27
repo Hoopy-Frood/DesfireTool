@@ -504,33 +504,14 @@ public class MifareDesfire {
     public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
 
         byte [] macToSend;
-        ByteArray array = new ByteArray();
-        array.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3);
+        ByteArray baCmdToSend = new ByteArray();
+        baCmdToSend.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3);
 
-
-        if ((dfCrypto.trackCMAC) && (curCommMode != commMode.ENCIPHERED)) {
-            ByteArray arrayMAC = new ByteArray();
-            byte[] cmdToCMAC = arrayMAC.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
-
-            Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
-            macToSend = dfCrypto.calcCMAC(cmdToCMAC);
-            if (curCommMode == commMode.MAC) {
-                array.append(dataToWrite).append(macToSend);
-            }
-        } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
-            ByteArray arrayMAC = new ByteArray();
-            byte[] cmdToMAC = arrayMAC.append(dataToWrite).toArray();
-
-            Log.d ("writeData", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
-            macToSend = dfCrypto.calcD40MAC(cmdToMAC);
-            array.append(dataToWrite).append(macToSend);
-
-        } else if (curCommMode == commMode.ENCIPHERED) {
+        if (curCommMode == commMode.ENCIPHERED) {
             try {
-                byte [] encipheredData;
-                encipheredData = dfCrypto.encryptWriteDataBlock(array.toArray(), dataToWrite);
+                byte [] encipheredData = dfCrypto.encryptWriteDataBlock(baCmdToSend.toArray(), dataToWrite);
 
-                array.append(encipheredData);
+                baCmdToSend.append(encipheredData);
             } catch (GeneralSecurityException e) {
                 scrollLog.appendError(e.getMessage());
                 DesfireResponse badResult = new DesfireResponse();
@@ -540,19 +521,37 @@ public class MifareDesfire {
                 return badResult;
             }
 
-        } else {
-            array.append(dataToWrite);
+        } else if (curCommMode == commMode.PLAIN){
+            baCmdToSend.append(dataToWrite);
         }
 
-        byte[] cmdToSend = array.toArray();
 
-        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(cmdToSend));
+        if ((dfCrypto.trackCMAC)) {
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToCMAC = arrayMAC.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
 
-        // Testing behavior when encryption is incorrect.  It still returns boundary error.  So it should be the encryption algo that is incorrect.
+            Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            macToSend = dfCrypto.calcCMAC(cmdToCMAC);
+            if (curCommMode == commMode.MAC) {
+                baCmdToSend.append(dataToWrite).append(macToSend);
+            }
+        } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToMAC = arrayMAC.append(dataToWrite).toArray();
 
-        Log.d("writeData","Modified  send: " + ByteArray.byteArrayToHexString(cmdToSend));
+            Log.d ("writeData", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
+            macToSend = dfCrypto.calcD40MAC(cmdToMAC);
+            baCmdToSend.append(dataToWrite).append(macToSend);
 
-        byte[] response = cardCommunicator.transceive(cmdToSend);
+        }
+
+
+
+
+
+        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
+
+        byte[] response = cardCommunicator.transceive(baCmdToSend.toArray());
 
 
         DesfireResponse result = new DesfireResponse();

@@ -164,6 +164,39 @@ public class DesfireCrypto {
 
     //region Encryption Related
     /********** Encryption Related **********/
+    public byte [] encryptData(byte [] encInput) {
+
+        if (cipher == null) {
+            initCipher();
+        }
+
+        byte [] encOutput;
+
+        try {
+            switch (authMode) {
+                case MODE_AUTHD40:
+                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));  // IV is always 00..00
+                    encOutput = cipher.doFinal(encInput);
+                    break;
+                case MODE_AUTHISO:
+                case MODE_AUTHAES:
+                    cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
+                    encOutput = cipher.doFinal(encInput);
+                    // Write the first IV as the result from PICC's encryption
+                    System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
+                    break;
+                default:
+                    encOutput = null;
+                    break;
+            }
+        } catch (GeneralSecurityException e) {
+            Log.d("encrypt", "General Security Exception Error: " + e);
+            encOutput = null;
+        }
+        return encOutput;
+    }
+
+    /********** Encryption Related **********/
     public byte [] encrypt(byte [] encInput) {
 
         if (cipher == null) {
@@ -240,7 +273,7 @@ public class DesfireCrypto {
 
     //endregion
 
-    //region Authentication Related
+    //region Authentication
     /********** Authentication Related **********/
     public byte[] computeResponseAndDataToVerify(byte[] encRndB)
             throws GeneralSecurityException {
@@ -335,7 +368,7 @@ public class DesfireCrypto {
     }
     //endregion
 
-    //region Session Key Generation Related
+    //region Session Key Generation
     /********** Session Key Generation related After successful authentication **********/
     private void genSessionKey()  throws Exception{
         switch (keyType) {
@@ -569,6 +602,8 @@ public class DesfireCrypto {
 
         Log.d("calcCMAC", "Starting Init Vector  = " + ByteArray.byteArrayToHexString(currentIV));
         int extraLength = data.length % blockLength;
+
+        // CMAC if Extralength = 0, use K1 XOR
         if ((extraLength == 0) && (data.length != 0)) {
             encInput = new byte[data.length];
             System.arraycopy(data, 0, encInput, 0, data.length);
@@ -580,7 +615,7 @@ public class DesfireCrypto {
                 encInput[startIndex + i] ^= K1[i];
             }
 
-        } else {
+        } else { // use 80 padding and K2 XOR
             encInput = new byte[data.length + blockLength - extraLength];
             baEncInput.append(data).append(ByteArray.hexStringToByteArray("80000000000000000000000000000000"));
             System.arraycopy(baEncInput.toArray(), 0, encInput, 0, data.length + blockLength - extraLength);
@@ -592,20 +627,15 @@ public class DesfireCrypto {
                 encInput[startIndex + i] ^= K2[i];
             }
         }
-        //Log.d("calcCMAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length );
-        Log.d("calcCMAC", "encInput = " + ByteArray.byteArrayToHexString(encInput));
+        Log.d ("calcCMAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length );
 
-        Log.d ("calcCMAC  ", "Encrypt Input Data = " + ByteArray.byteArrayToHexString(encInput));
+        Log.d ("calcCMAC", "Encrypt Input after Padding = " + ByteArray.byteArrayToHexString(encInput));
         output = encrypt(encInput);
-        Log.d ("calcCMAC  ", "Encrypted Data    = " + ByteArray.byteArrayToHexString(output));
+        Log.d ("calcCMAC", "Encrypted Data              = " + ByteArray.byteArrayToHexString(output));
 
         System.arraycopy(output,output.length-blockLength,outMAC, 0,8);
 
-        Log.d ("calcCMAC  ", "CMAC computed     = " + ByteArray.byteArrayToHexString(outMAC) );
-
-
-
-
+        Log.d ("calcCMAC  ", "CMAC computed             = " + ByteArray.byteArrayToHexString(outMAC) );
 
         return outMAC;
     }
@@ -909,7 +939,7 @@ public class DesfireCrypto {
             baDecryptedPlainData.append(decryptedData, 0, encryptedLength);
             baCRC.append(decryptedData,encryptedLength,CRCLength);
 
-        } else {  // Count == 0, remove 80..00 padding
+        } else {  // Count == 0 (wildcard) , remove 80..00 padding
             int padCount = ByteArray.ISO9797m2PadCount(decryptedData);
             if (padCount == -1) {
                 throw new GeneralSecurityException("Decryption padding error: Decrypted data = " + ByteArray.byteArrayToHexString(decryptedData));
@@ -925,8 +955,10 @@ public class DesfireCrypto {
             baDecryptedPlainData.append((byte) 0x00);  // status must be 0x00
         }
 
-        Log.d("decryptReadData","CRC Input = " + ByteArray.byteArrayToHexString(baDecryptedPlainData.toArray()));
+        Log.d("decryptReadData", "CRC Input    : " + ByteArray.byteArrayToHexString(baDecryptedPlainData.toArray()));
         byte [] computedCRC = calcCRC(baDecryptedPlainData.toArray());
+        Log.d("decryptReadData", "Computed  CRC: " + ByteArray.byteArrayToHexString(computedCRC));
+        Log.d("decryptReadData", "CRC to verify: " + ByteArray.byteArrayToHexString(baCRC.toArray()));
         if (!Arrays.equals(baCRC.toArray(), computedCRC)) {
             Log.d("decryptReadData", "CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
             throw new GeneralSecurityException("CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
@@ -943,26 +975,31 @@ public class DesfireCrypto {
 
         // CALC CRC
         ByteArray baDataToCRC = new ByteArray();
+        byte[] computedCRC;
 
-        Log.d("encryptWriteDataBlock","CRC Input = " + ByteArray.byteArrayToHexString(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray()));
-        byte [] computedCRC = calcCRC(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray());
+        if (CRCLength == 4 ) {
+            Log.d("encryptWriteDataBlock", "CRC Input = " + ByteArray.byteArrayToHexString(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray()));
+            computedCRC = calcCRC(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray());
+        } else {
+            Log.d("encryptWriteDataBlock", "CRC Input = " + ByteArray.byteArrayToHexString(bDataToEncrypt));
+            computedCRC = calcCRC(bDataToEncrypt);
+        }
 
         // DO PADDING
-        int iPaddingLen = blockLength - ((bDataToEncrypt.length + CRCLength) % blockLength);
+        int iPaddingLen = (blockLength - (bDataToEncrypt.length + CRCLength)) % blockLength;
+
         //int iDataToEncryptLen = bDataToEncrypt.length + CRCLength + iPaddingLen;
         byte [] bPadding = new byte[iPaddingLen];
         Arrays.fill(bPadding, (byte) 0);
 
-        // ENCRYPT ALL BLOCKS
+        // Build block for encryption
         ByteArray baDataToEncrypt = new ByteArray();
 
         baDataToEncrypt.append(bDataToEncrypt).append(computedCRC).append(bPadding);
 
-      //  currentIV = Arrays.copyOf(encryptionIV, encryptionIV.length);
-        //Arrays.fill(currentIV, (byte)0);
         Log.d("encryptWriteDataBlock", "Input Data     = " + ByteArray.byteArrayToHexString(baDataToEncrypt.toArray()));
 
-        byte [] bEncryptedData = encrypt(baDataToEncrypt.toArray());
+        byte [] bEncryptedData = encryptData(baDataToEncrypt.toArray());
 
         if (bEncryptedData == null)
             throw new GeneralSecurityException("Encryption error: Encryption Input = " + ByteArray.byteArrayToHexString(bEncryptedData));
