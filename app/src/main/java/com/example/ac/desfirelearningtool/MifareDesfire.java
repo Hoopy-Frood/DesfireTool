@@ -526,7 +526,7 @@ public class MifareDesfire {
         }
 
 
-        if ((dfCrypto.trackCMAC)) {
+        /*if ((dfCrypto.trackCMAC)) {
             ByteArray arrayMAC = new ByteArray();
             byte[] cmdToCMAC = arrayMAC.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
 
@@ -543,7 +543,7 @@ public class MifareDesfire {
             macToSend = dfCrypto.calcD40MAC(cmdToMAC);
             baCmdToSend.append(dataToWrite).append(macToSend);
 
-        }
+        }*/
 
 
 
