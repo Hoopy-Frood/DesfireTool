@@ -170,6 +170,7 @@ public class MifareDesfire {
         return res.status;
     }
 
+
     /**
      * Create data file
      *
@@ -214,19 +215,36 @@ public class MifareDesfire {
         return res.status;
     }
 
-    /**
-     * Create Record file
-     *
-     * @param bFileType
-     * @param bFileID
-     * @param baISOName
-     * @param bCommSetting
-     * @param baAccessRights
-     * @param iRecordSize
-     * @param iNumOfRecords
-     * @return
-     * @throws IOException
-     */
+    public statusType createStdDataFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
+        return createDataFile((byte)0xCD, bFileID, baISOName, bCommSetting, baAccessRights, iFileSize);
+    }
+
+    public statusType createBackupDataFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
+        return createDataFile((byte)0xCB, bFileID, baISOName, bCommSetting, baAccessRights, iFileSize);
+    }
+
+    public statusType createLinearRecordFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
+        return createRecordFile((byte) 0xC1, bFileID, baISOName, bCommSetting, baAccessRights, iRecordSize, iNumOfRecords);
+    }
+
+    public statusType createCyclicRecordFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
+        return createRecordFile((byte) 0xC0, bFileID, baISOName, bCommSetting, baAccessRights, iRecordSize, iNumOfRecords);
+    }
+
+
+        /**
+         * Create Record file
+         *
+         * @param bFileType
+         * @param bFileID
+         * @param baISOName
+         * @param bCommSetting
+         * @param baAccessRights
+         * @param iRecordSize
+         * @param iNumOfRecords
+         * @return
+         * @throws IOException
+         */
     public statusType createRecordFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
         // TODO: Sanity Checks
 
@@ -752,7 +770,20 @@ public class MifareDesfire {
     public enum commMode {
         PLAIN,
         MAC,
-        ENCIPHERED
+        ENCIPHERED;
+
+        public static byte getSetting(commMode cm){
+            switch (cm) {
+                case PLAIN:
+                    return 0x00;
+                case MAC:
+                    return 0x01;
+                case ENCIPHERED:
+                    return 0x03;
+                default:
+                    return 0x00;
+            }
+        }
     }
 
 
