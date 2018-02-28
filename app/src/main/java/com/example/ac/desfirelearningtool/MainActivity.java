@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // ...
 
         try {
-            communicator = new AndroidCommunicator(IsoDep.get(tag), false,scrollLog);
+            communicator = new AndroidCommunicator(IsoDep.get(tag), true,scrollLog);
 
             desfireCard = communicator.get(tag); // we do not specify a key here!
             if (desfireCard == null) {
@@ -1929,7 +1929,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
       Log.d("TestAll", "*** Test ISO ****************************");
         onAuthISOTest ();
-        Log.d("TestALL", "Write MAC Data ");
         Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
@@ -1952,7 +1951,19 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 */
+        Log.d("TestAll", "*** Test AES ****************************");
+        onAuthAESTest ();
 
+        Log.d("TestAll", "*** Write MAC Data **************************");
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+        Log.d("TestAll", "*** Read MAC Data **************************");
+        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        Log.d("TestAll", "*** Write Encrypted Data **************************");
+        onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
  /*
         onAuthAESTest ();
         onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0

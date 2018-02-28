@@ -521,12 +521,7 @@ public class MifareDesfire {
                 return badResult;
             }
 
-        } else if (curCommMode == commMode.PLAIN){
-            baCmdToSend.append(dataToWrite);
-        }
-
-
-        if ((dfCrypto.trackCMAC)) {
+        } else if (dfCrypto.trackCMAC) {
             ByteArray arrayMAC = new ByteArray();
             byte[] cmdToCMAC = arrayMAC.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
 
@@ -543,11 +538,9 @@ public class MifareDesfire {
             macToSend = dfCrypto.calcD40MAC(cmdToMAC);
             baCmdToSend.append(dataToWrite).append(macToSend);
 
+        } else if (curCommMode == commMode.PLAIN){
+            baCmdToSend.append(dataToWrite);
         }
-
-
-
-
 
         Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
 
@@ -573,10 +566,10 @@ public class MifareDesfire {
             }
         } else if (result.status == statusType.ADDITONAL_FRAME) {
             if (curCommMode == commMode.ENCIPHERED) { //TODO: This is wrong AF not handled in writing situations yet
-                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("writeData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFEncryptedSetLength(response,count);
             } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
-                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("writeData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
             }
             result.data = ByteArray.appendCut(null, response);

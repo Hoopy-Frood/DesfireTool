@@ -883,6 +883,7 @@ public class DesfireCrypto {
     public byte [] calcCRC (byte [] data) {
         long lcrc = 0;
         byte [] returnCRC;
+        Log.d("calcCRC", "Data CRC Input      = " +  ByteArray.byteArrayToHexString(data));
         if (CRCLength == 4) {
             CRC32 crc = new CRC32();
             crc.update(data);
@@ -979,7 +980,7 @@ public class DesfireCrypto {
 
         if (CRCLength == 4 ) {
             Log.d("encryptWriteDataBlock", "CRC Input = " + ByteArray.byteArrayToHexString(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray()));
-            computedCRC = calcCRC(baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray());
+            computedCRC = calcCRC(baDataToCRC.toArray());
         } else {
             Log.d("encryptWriteDataBlock", "CRC Input = " + ByteArray.byteArrayToHexString(bDataToEncrypt));
             computedCRC = calcCRC(bDataToEncrypt);
