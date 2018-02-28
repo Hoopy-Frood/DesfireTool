@@ -170,6 +170,7 @@ public class MifareDesfire {
         return res.status;
     }
 
+
     /**
      * Create data file
      *
@@ -214,19 +215,36 @@ public class MifareDesfire {
         return res.status;
     }
 
-    /**
-     * Create Record file
-     *
-     * @param bFileType
-     * @param bFileID
-     * @param baISOName
-     * @param bCommSetting
-     * @param baAccessRights
-     * @param iRecordSize
-     * @param iNumOfRecords
-     * @return
-     * @throws IOException
-     */
+    public statusType createStdDataFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
+        return createDataFile((byte)0xCD, bFileID, baISOName, bCommSetting, baAccessRights, iFileSize);
+    }
+
+    public statusType createBackupDataFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
+        return createDataFile((byte)0xCB, bFileID, baISOName, bCommSetting, baAccessRights, iFileSize);
+    }
+
+    public statusType createLinearRecordFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
+        return createRecordFile((byte) 0xC1, bFileID, baISOName, bCommSetting, baAccessRights, iRecordSize, iNumOfRecords);
+    }
+
+    public statusType createCyclicRecordFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
+        return createRecordFile((byte) 0xC0, bFileID, baISOName, bCommSetting, baAccessRights, iRecordSize, iNumOfRecords);
+    }
+
+
+        /**
+         * Create Record file
+         *
+         * @param bFileType
+         * @param bFileID
+         * @param baISOName
+         * @param bCommSetting
+         * @param baAccessRights
+         * @param iRecordSize
+         * @param iNumOfRecords
+         * @return
+         * @throws IOException
+         */
     public statusType createRecordFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iRecordSize, int iNumOfRecords) throws IOException {
         // TODO: Sanity Checks
 
@@ -521,12 +539,7 @@ public class MifareDesfire {
                 return badResult;
             }
 
-        } else if (curCommMode == commMode.PLAIN){
-            baCmdToSend.append(dataToWrite);
-        }
-
-
-        /*if ((dfCrypto.trackCMAC)) {
+        } else if (dfCrypto.trackCMAC) {
             ByteArray arrayMAC = new ByteArray();
             byte[] cmdToCMAC = arrayMAC.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3).append(dataToWrite).toArray();
 
@@ -543,11 +556,9 @@ public class MifareDesfire {
             macToSend = dfCrypto.calcD40MAC(cmdToMAC);
             baCmdToSend.append(dataToWrite).append(macToSend);
 
-        }*/
-
-
-
-
+        } else if (curCommMode == commMode.PLAIN){
+            baCmdToSend.append(dataToWrite);
+        }
 
         Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
 
@@ -573,10 +584,10 @@ public class MifareDesfire {
             }
         } else if (result.status == statusType.ADDITONAL_FRAME) {
             if (curCommMode == commMode.ENCIPHERED) { //TODO: This is wrong AF not handled in writing situations yet
-                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("writeData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFEncryptedSetLength(response,count);
             } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
-                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("writeData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
             }
             result.data = ByteArray.appendCut(null, response);
@@ -759,7 +770,20 @@ public class MifareDesfire {
     public enum commMode {
         PLAIN,
         MAC,
-        ENCIPHERED
+        ENCIPHERED;
+
+        public static byte getSetting(commMode cm){
+            switch (cm) {
+                case PLAIN:
+                    return 0x00;
+                case MAC:
+                    return 0x01;
+                case ENCIPHERED:
+                    return 0x03;
+                default:
+                    return 0x00;
+            }
+        }
     }
 
 

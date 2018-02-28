@@ -33,6 +33,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+import static com.example.ac.desfirelearningtool.MifareDesfire.commMode.ENCIPHERED;
+import static com.example.ac.desfirelearningtool.MifareDesfire.commMode.MAC;
+import static com.example.ac.desfirelearningtool.MifareDesfire.commMode.PLAIN;
+
 
 public class MainActivity extends AppCompatActivity implements IMainActivityCallbacks{
     private AdView mAdView;
@@ -258,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // ...
 
         try {
-            communicator = new AndroidCommunicator(IsoDep.get(tag), false,scrollLog);
+            communicator = new AndroidCommunicator(IsoDep.get(tag), true,scrollLog);
 
             desfireCard = communicator.get(tag); // we do not specify a key here!
             if (desfireCard == null) {
@@ -1581,7 +1585,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.PLAIN);
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, PLAIN);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
                 baRecvData.append(res.data);
@@ -1615,11 +1619,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             int offset = 0;
-            int length = bytesToRead;
             ByteArray baRecvData = new ByteArray();
 
             scrollLog.appendTitle("Read Data Encrypted Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.ENCIPHERED);
+            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, bytesToRead, MifareDesfire.commMode.ENCIPHERED);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
                 while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
@@ -1852,32 +1855,37 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             MifareDesfire.statusType retValue;
             // Create Data File
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x01, baNull, (byte) 0x00, new byte[]{(byte) 0xEE, (byte) 0xEE}, 32);
+            retValue = desfireCard.createStdDataFile((byte) 0x01, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x02, baNull, (byte) 0x01, new byte[]{(byte) 0x00, (byte) 0x00}, 32);
+            retValue = desfireCard.createStdDataFile((byte) 0x02, baNull, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x03, baNull, (byte) 0x03, new byte[]{(byte) 0xeE, (byte) 0xeE}, 32);
+            retValue = desfireCard.createStdDataFile( (byte) 0x03, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0xeE, (byte) 0xeE}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x04, baNull, (byte) 0x03, new byte[]{(byte) 0x1E, (byte) 0xeE}, 32);
+            retValue = desfireCard.createStdDataFile((byte)0x04, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x1E, (byte) 0xeE}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x05, baNull, (byte) 0x03, new byte[]{(byte) 0x1E, (byte) 0x2E}, 32);
+            retValue = desfireCard.createStdDataFile((byte)0x05, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x1E, (byte) 0x2E}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createDataFile((byte) 0xCD, (byte) 0x06, baNull, (byte) 0x03, new byte[]{(byte) 0x0E, (byte) 0xE0}, 32);
+            retValue = desfireCard.createStdDataFile((byte) 0x06, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createLinearRecordFile((byte) 0x07, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0x00, (byte) 0x00}, 32, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
@@ -1895,7 +1903,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onTestAll() {
 
         // Select preset app ISO DES 150DE5
-        /*        Log.d("TestAll", "*** Test D40 ****************************");
+        Log.d("TestAll", "*** Test D40 ****************************");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
         onAuthenticateTest ();
         Log.d("TestAll", "*** Write MAC Data **************************");
@@ -1910,7 +1918,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataEncryptedTest((byte) 0x06, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
-
+        /*
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
 
         onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
@@ -1926,10 +1934,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
 */
-/*
+
       Log.d("TestAll", "*** Test ISO ****************************");
         onAuthISOTest ();
-        Log.d("TestALL", "Write MAC Data ");
         Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
@@ -1954,20 +1961,17 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 */
         Log.d("TestAll", "*** Test AES ****************************");
         onAuthAESTest ();
-        /* Log.d("TestAll", "*** Write MAC Data **************************");
+
+        Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
         onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        */
-
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
         Log.d("TestAll", "*** Write Encrypted Data **************************");
         onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x06, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
  /*
         onAuthAESTest ();
         onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
