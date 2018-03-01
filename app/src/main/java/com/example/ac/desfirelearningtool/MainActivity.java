@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // ...
 
         try {
-            communicator = new AndroidCommunicator(IsoDep.get(tag), true,scrollLog);
+            communicator = new AndroidCommunicator(IsoDep.get(tag), false,scrollLog);
 
             desfireCard = communicator.get(tag); // we do not specify a key here!
             if (desfireCard == null) {
@@ -1885,7 +1885,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createLinearRecordFile((byte) 0x07, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0x00, (byte) 0x00}, 32, 3);
+            retValue = desfireCard.createLinearRecordFile((byte) 0x07, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 32, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
