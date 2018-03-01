@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fReadData getReadDataFragment;
     fWriteData getWriteDataFragment;
     fReadRecords getReadRecordsFragment;
+    fWriteRecord getWriteRecordFragment;
 
 
     protected PendingIntent pendingIntent;
@@ -1424,7 +1425,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     //region Read Records
     public void onReadRecords() {
-        scrollLog.appendTitle("Read Recores");
+        scrollLog.appendTitle("Read Records");
 
         getSupportActionBar().setTitle("Read Records");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -1540,10 +1541,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
 
-        getWriteDataFragment = new fWriteData();
+        getWriteRecordFragment = new fWriteRecord();
 
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
+                .replace(R.id.fragment_container,getWriteRecordFragment).addToBackStack("commandview").commit();
     }
 
 

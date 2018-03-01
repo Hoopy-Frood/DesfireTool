@@ -28,7 +28,7 @@ public class fWriteRecord extends Fragment {
     private Button buttonGo;
     private Button buttonGetFileSettings;
     private Spinner spinnerFileID;
-    private EditText etOffset;
+    private EditText etRecordNum;
     private EditText etLength;
     private EditText etDataToWrite;
     private RadioGroup commModeGroup;
@@ -61,7 +61,7 @@ public class fWriteRecord extends Fragment {
 
         buttonGo = (Button) rootView.findViewById(R.id.button_Go);
         spinnerFileID = (Spinner) rootView.findViewById(R.id.spinner_FileID);
-        etOffset = (EditText) rootView.findViewById(R.id.et_Offset);
+        etRecordNum = (EditText) rootView.findViewById(R.id.et_RecordNumber);
         etLength = (EditText) rootView.findViewById(R.id.et_Length);
         etDataToWrite = (EditText) rootView.findViewById(R.id.et_DataToWrite);
 
@@ -254,7 +254,7 @@ public class fWriteRecord extends Fragment {
 
 
     private void onGoWriteRecord(){
-        int iOffset =0;
+        int iRecordNum =0;
         int iLength = 0;
         boolean isIncompleteForm = false;
         int iDataToWriteLength;
@@ -272,9 +272,9 @@ public class fWriteRecord extends Fragment {
 
         iDataToWriteLength = iDataToWriteLength / 2;
 
-        if (etOffset.getText().toString().length() != 0) {
+        if (etRecordNum.getText().toString().length() != 0) {
             try {
-                iOffset = (parseInt(etOffset.getText().toString()));
+                iRecordNum = (parseInt(etRecordNum.getText().toString()));
             } catch (NumberFormatException e) {
                 Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in file size", Toast.LENGTH_SHORT).show();
                 isIncompleteForm = true;
@@ -293,10 +293,10 @@ public class fWriteRecord extends Fragment {
             return;
 
 
-        if (etOffset.getText().toString().length() == 0) {
+        if (etRecordNum.getText().toString().length() == 0) {
             Toast.makeText(getActivity().getApplicationContext(), "Using Default offset of 0 ", Toast.LENGTH_SHORT).show();
-            etOffset.setText(R.string.default_readOffset);
-            iOffset= (parseInt(etOffset.getText().toString()));
+            etRecordNum.setText(R.string.default_readOffset);
+            iRecordNum= (parseInt(etRecordNum.getText().toString()));
         }
 
         if (etLength.getText().toString().length() == 0) {
@@ -318,8 +318,8 @@ public class fWriteRecord extends Fragment {
 
 
 
-        mCallback.onWriteDataReturn(fileSelected,
-                iOffset,
+        mCallback.onWriteRecordReturn(fileSelected,
+                iRecordNum,
                 iLength,
                 bDataToWrite,
                 selCommMode
