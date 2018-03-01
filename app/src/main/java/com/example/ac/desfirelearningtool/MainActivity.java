@@ -1294,13 +1294,13 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 bb.order( ByteOrder.LITTLE_ENDIAN);
                 scrollLog.appendData("- Record size          : " + bb.getShort() );
                 bundleFileSettings.putInt("recordSize",bb.getInt());
-                bb = ByteBuffer.wrap(res.data,7,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Max no of records    : " + bb.getShort() );
+                ByteBuffer bb2 = ByteBuffer.wrap(res.data,7,3);
+                bb2.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Max no of records    : " + bb2.getShort() );
                 bundleFileSettings.putInt("MaxNumOfRecords",bb.getInt());
-                bb = ByteBuffer.wrap(res.data,10,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Current no of records: " + bb.getShort() );
+                ByteBuffer bb3 = ByteBuffer.wrap(res.data,10,3);
+                bb3.order( ByteOrder.LITTLE_ENDIAN);
+                scrollLog.appendData("- Current no of records: " + bb3.getShort() );
                 bundleFileSettings.putInt("currentNumOfRecords",bb.getInt());
             }
 

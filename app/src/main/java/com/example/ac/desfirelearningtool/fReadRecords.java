@@ -182,7 +182,7 @@ public class fReadRecords extends Fragment {
 
     public void onFileSettings() {
 
-        Log.d("fReadRecords", "onGetFileIDs");
+        Log.d("fReadRecords", "onGetFileSettings");
 
         Bundle fileSettings = mCallback.onFragmentGetFileSettings(ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem()));
         if (!fileSettings.getBoolean("boolCommandSuccess")){
