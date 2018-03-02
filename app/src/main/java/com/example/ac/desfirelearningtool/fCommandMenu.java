@@ -239,12 +239,25 @@ public class fCommandMenu extends Fragment{
                 mCallback.onWriteRecord();
             }
         });
+        buttonClearRecordFile.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onClearRecordFile();
+            }
+        });
+        buttonCommitTransaction.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onCommitTransaction();
+            }
+        });
+        buttonAbortTransaction.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onAbortTransaction();
+            }
+        });
 
         buttonTestAll.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onTestAll();
-
-
             }
         });
 
@@ -346,8 +359,8 @@ public class fCommandMenu extends Fragment{
         buttonCredit.setEnabled(false);
         buttonDebit.setEnabled(false);
         buttonLimitedCredit.setEnabled(false);
-        buttonCommitTransaction.setEnabled(false);
-        buttonAbortTransaction.setEnabled(false);
+        buttonCommitTransaction.setEnabled(true);
+        buttonAbortTransaction.setEnabled(true);
         // Buttons - Perso
         buttonCreateApplication.setEnabled(true);
         buttonDeleteApplication.setEnabled(true);

@@ -722,13 +722,11 @@ public class MifareDesfire {
         writeInternal((byte)0x3D, data, file, offset, size);
     }
 
-    public void commit() throws IOException {
-        byte[] result = cardCommunicator.transceive(new byte[]{(byte)0xC7});
-        if (result == null || result.length == 0)
-            throw new IOException("Commit returned an empty response");
-
-        if (!(result[0] == 0x00 || result[0] == 0x0C))
-            throw new IOException("Commit error: " + ByteArray.byteArrayToHexString(result));
+    public DesfireResponse commitTransaction() throws IOException {
+        return sendBytes(new byte[]{(byte)0xC7});
+    }
+    public DesfireResponse abortTransaction() throws IOException {
+        return sendBytes(new byte[]{(byte)0xA7});
     }
 
 

@@ -49,6 +49,15 @@
             android:text="Copy"
             android:textAllCaps="false" />
 
+        <CheckBox
+            android:id="@+id/CheckBox_WrapAPDU"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wrap APDU"
+            android:layout_alignBaseline="@+id/button_CopyLog"
+            android:layout_alignBottom="@+id/button_CopyLog"
+            android:layout_toLeftOf="@+id/button_CopyLog"/>
+
         <ScrollView
             android:id="@+id/scrollview_TextLog"
             android:layout_width="match_parent"

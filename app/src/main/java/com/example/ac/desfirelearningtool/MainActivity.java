@@ -18,6 +18,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fWriteData getWriteDataFragment;
     fReadRecords getReadRecordsFragment;
     fWriteRecord getWriteRecordFragment;
+    fClearRecordFile getClearRecordFileFragment;
 
 
     protected PendingIntent pendingIntent;
@@ -66,6 +69,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     private Button buttonClearScreen;
     private Button buttonCopyLog;
+    private CheckBox checkboxWrapperMode;
+    private boolean boolWrapperMode;
+
     private ScrollLog scrollLog;
     public ScrollView scrollViewTextLog;
 
@@ -131,11 +137,13 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // Buttons - Log Management
         buttonClearScreen = (Button) findViewById(R.id.button_ClearScreen);
         buttonCopyLog = (Button) findViewById(R.id.button_CopyLog);
+        checkboxWrapperMode = (CheckBox) findViewById(R.id.CheckBox_WrapAPDU);
         scrollViewTextLog = findViewById(R.id.scrollview_TextLog);
         scrollLog = new ScrollLog((TextView) findViewById(R.id.textView_scrollLog),scrollViewTextLog);
 
         applicationList = null;
         baFileIDList = null;
+        boolWrapperMode = false;
 
         buttonClearScreen.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -148,7 +156,17 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 ClipData clip = ClipData.newPlainText("DESFire Tool", scrollLog.getText());
                 clipboard.setPrimaryClip(clip);
                 Toast.makeText(MainActivity.this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
-
+            }
+        });
+        checkboxWrapperMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+            @Override
+            public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
+                Log.d("MainActivity:", "Wrap APDU Check Box checked ");
+                // checkedId is the RadioButton selected
+                if (IsChecked)
+                    boolWrapperMode = true;
+                else
+                    boolWrapperMode = false;
             }
         });
 
@@ -263,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // ...
 
         try {
-            communicator = new AndroidCommunicator(IsoDep.get(tag), false,scrollLog);
+            communicator = new AndroidCommunicator(IsoDep.get(tag), boolWrapperMode,scrollLog);
 
             desfireCard = communicator.get(tag); // we do not specify a key here!
             if (desfireCard == null) {
@@ -914,6 +932,43 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
     //endregion
+
+    //region Commit Transaction
+    public void onCommitTransaction (){
+
+        try {
+            scrollLog.appendTitle("Commit Transaction");
+            MifareDesfire.DesfireResponse res = desfireCard.commitTransaction();
+
+            if (res.status  == MifareDesfire.statusType.AUTHENTICATION_ERROR)
+                scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onCommitTransaction", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+    //region Abort Transaction
+    public void onAbortTransaction (){
+
+        try {
+            scrollLog.appendTitle("Abort Transaction");
+            MifareDesfire.DesfireResponse res = desfireCard.abortTransaction();
+
+            if (res.status  == MifareDesfire.statusType.AUTHENTICATION_ERROR)
+                scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAbortTransaction", e.getMessage(), e);
+        }
+    }
+    //endregion
+
 
     //region create File
     public void onCreateFile (){
@@ -1886,7 +1941,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createLinearRecordFile((byte) 0x07, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 32, 3);
+            retValue = desfireCard.createLinearRecordFile((byte) 0x07, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 8, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
@@ -1971,8 +2026,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
         Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
+        onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadDataEncryptedTest((byte) 0x06, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+
+
+        onWriteRecordReturn((byte) 0x07, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
+        onReadRecordsReturn((byte) 0x07, 0, 0, PLAIN);
+        onCommitTransaction();
+
+
+
  /*
         onAuthAESTest ();
         onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0

@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Get Available Files"
-        android:layout_alignTop="@+id/spinner_FileID"
+        android:layout_alignBaseline="@+id/tv_FileID"
         android:layout_alignParentRight="true"
         android:textAllCaps="false"/>
 
@@ -107,7 +107,7 @@
         android:layout_alignBaseline="@+id/tv_DataToWrite"
         android:digits="0123456789ABCDEF"
         android:ems="10"
-        android:hint="0"
+        android:hint="Hexadecimal digits"
         android:inputType="textCapCharacters"
         android:maxLength="32"
         android:textAlignment="textStart"/>

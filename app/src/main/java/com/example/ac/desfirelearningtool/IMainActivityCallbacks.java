@@ -51,6 +51,12 @@ public interface IMainActivityCallbacks {
 
     public void onWriteRecord();
     public void onWriteRecordReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
+    public void onClearRecordFile();
+    public void onClearRecordFileReturn(byte bFileID);
+
+    public void onCommitTransaction ();
+    public void onAbortTransaction ();
+
 
     public void onReadDataTest(byte fileID);
     public void onReadDataMACTest(byte fileID);

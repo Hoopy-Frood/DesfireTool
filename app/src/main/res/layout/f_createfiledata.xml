@@ -70,14 +70,14 @@
                 android:id="@+id/EditText_FileID"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
+                android:layout_below="@+id/Block_StdOrBackupFile"
+                android:layout_toEndOf="@+id/TextView_ISOName"
                 android:digits="0123456789ABCDEF"
                 android:ems="10"
                 android:hint="1 Byte Hex"
                 android:inputType="textCapCharacters"
                 android:maxLength="2"
-                android:textAlignment="textStart"
-                android:layout_below="@+id/Block_StdOrBackupFile"
-                android:layout_toEndOf="@+id/TextView_ISOName" />
+                android:textAlignment="textStart" />
 
 
 

@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Get Available Files"
-        android:layout_alignTop="@+id/spinner_FileID"
+        android:layout_alignBaseline="@+id/tv_FileID"
         android:layout_alignParentRight="true"
         android:textAllCaps="false"/>
 
@@ -60,7 +60,7 @@
         android:digits="0123456789"
         android:ems="10"
         android:hint="0"
-        android:inputType="textCapCharacters"
+        android:inputType="number"
         android:maxLength="4"
         android:textAlignment="textEnd" />
 
@@ -85,7 +85,7 @@
         android:digits="0123456789"
         android:ems="10"
         android:hint="0"
-        android:inputType="textCapCharacters"
+        android:inputType="number"
         android:maxLength="32"
         android:textAlignment="textEnd"/>
 
