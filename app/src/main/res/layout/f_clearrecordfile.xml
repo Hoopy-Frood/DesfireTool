@@ -2,160 +2,47 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:focusableInTouchMode="true"
     android:background="#FFFFFF">
 
 
     <TextView
-        android:id="@+id/tv_FileID"
+        android:id="@+id/FileIDText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
-        android:layout_marginStart="5dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="28dp"
         android:text="File ID: "
         android:textColor="#000000"
-        android:textSize="16sp"/>
-
-    <Spinner
-        android:id="@+id/spinner_FileID"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:dropDownWidth="wrap_content"
-        android:layout_alignTop="@+id/tv_FileID"
-        android:layout_alignStart="@+id/et_NumOfRecords"
-        android:layout_marginStart="5dp"/>
-
-
-
-    <Button
-        android:id="@+id/button_GetFiles"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Get Available Files"
-        android:layout_alignBaseline="@+id/tv_FileID"
-        android:layout_alignParentRight="true"
-        android:textAllCaps="false"/>
-
-    <TextView
-        android:id="@+id/tv_OffsetRecord"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/spinner_FileID"
-        android:layout_marginTop="10dp"
-        android:layout_marginStart="5dp"
-        android:text="Offset Record: "
-        android:textColor="#000000"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <EditText
-        android:id="@+id/et_OffsetRecord"
+        android:id="@+id/EditText_FileID"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/tv_OffsetRecord"
-        android:layout_alignBaseline="@+id/tv_OffsetRecord"
-
-        android:layout_alignStart="@+id/et_NumOfRecords"
-        android:layout_marginTop="0dp"
-        android:digits="0123456789"
+        android:layout_toEndOf="@+id/FileIDText"
+        android:layout_marginTop="16dp"
+        android:digits="0123456789ABCDEF"
         android:ems="10"
-        android:hint="0"
-        android:inputType="number"
-        android:maxLength="4"
-        android:textAlignment="textEnd" />
-
-
-    <TextView
-        android:id="@+id/tv_NumOfRecords"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/et_OffsetRecord"
-        android:layout_marginTop="10dp"
-        android:layout_marginStart="5dp"
-        android:text="Number Of Records: "
-        android:textColor="#000000"
-        android:textSize="16sp" />
-
-    <EditText
-        android:id="@+id/et_NumOfRecords"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/tv_NumOfRecords"
-        android:layout_alignBaseline="@+id/tv_NumOfRecords"
-        android:digits="0123456789"
-        android:ems="10"
-        android:hint="0"
-        android:inputType="number"
-        android:maxLength="32"
-        android:textAlignment="textEnd"/>
-
-
-
-    <!-- Crypto method of the application -->
-    <TextView
-        android:id="@+id/Block_CommMode"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#C0C0C0"
-        android:text="Communication Mode "
-        android:gravity="top|end"
-        android:textAllCaps="true"
-        android:textColor="#F0F0F0"
-        android:textSize="14sp"
-        android:layout_below="@+id/et_NumOfRecords"
-        android:layout_marginTop="10dp"
-        android:layout_alignBottom="@+id/radioGroup_CommMode" />
-
-    <RadioGroup
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/radioGroup_CommMode"
-        android:layout_below="@+id/et_NumOfRecords"
-        android:layout_marginTop="30dp"
-        android:layout_alignParentStart="true">
-
-        <RadioButton
-            android:id="@+id/radio_PlainCommunication"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Plain text" />
-        <RadioButton android:id="@+id/radio_MACCommunication"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Plaintext + MAC"/>
-        <RadioButton android:id="@+id/radio_EncryptedCommunication"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Encrypted output"/>
-
-    </RadioGroup>
-
-    <Button
-        android:id="@+id/button_GetFileSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/Block_CommMode"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="20dp"
-        android:text="Get File Settings"
-        android:textAllCaps="false"/>
+        android:hint="00-1F Hex"
+        android:inputType="textCapCharacters"
+        android:maxLength="2"
+        android:textAlignment="textStart" />
 
     <Button
         android:id="@+id/button_Go"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
         android:text="Go"
-        android:layout_below="@+id/Block_CommMode"
-        android:layout_alignParentRight="true"
-        android:textAllCaps="false"/>
+        android:textAllCaps="false"
+        android:layout_alignBottom="@+id/EditText_FileID"
+        android:layout_toEndOf="@+id/EditText_FileID"/>
 
-    <!--TextView
-        android:id="@+id/tv_NumberOfKeys"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/spinner_NumOfKeys"
-        android:layout_toEndOf="@+id/spinner_NumOfKeys"
-        android:text="Number Of Keys" /-->
-
+    <ListView
+        android:id="@+id/lv_FileList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/EditText_FileID"/>
 </RelativeLayout>
-

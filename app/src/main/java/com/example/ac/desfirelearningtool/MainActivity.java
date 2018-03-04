@@ -1520,10 +1520,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             // Output
             if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
+                scrollLog.appendData("Read Record:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
             else {
                 if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    scrollLog.appendError("Read Record File Failed: " + desfireCard.DesFireErrorMsg(res.status));
                     return;
                 }
 
@@ -1571,7 +1571,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             // TODO: separate data blocks if too long
             MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
             if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
-                scrollLog.appendStatus("Write Data File Success");
+                scrollLog.appendStatus("Write Record File Success");
             } else {
                 scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 Log.d("onWriteDataReturn", "writeData return: " + desfireCard.DesFireErrorMsg(res.status));
@@ -1618,7 +1618,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             // TODO: separate data blocks if too long
             MifareDesfire.DesfireResponse res = desfireCard.writeRecord(bFileID, iRecordNum, iSizeToWrite, bDataToWrite, selCommMode);
             if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
-                scrollLog.appendStatus("Write Data File Success");
+                scrollLog.appendStatus("Write Record File Success");
             } else {
                 scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
             }
@@ -1630,6 +1630,50 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
     //endregion
+
+
+    //region Get File Settings
+    public void onClearRecordFile() {
+        scrollLog.appendTitle("Clear Record File");
+
+        getSupportActionBar().setTitle("Clear Record File");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getClearRecordFileFragment = new fClearRecordFile();
+
+        getClearRecordFileFragment.setArguments(bundle);
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getClearRecordFileFragment).addToBackStack("commandview").commit();
+    }
+
+    //
+    public void onClearRecordFileReturn(byte bFileID) {
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        try {
+            MifareDesfire.DesfireResponse res = desfireCard.clearRecordFile(bFileID);
+            if (res.status != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Clear Record Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                return;
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+
+
+
 
     //region Read Data Test
 
@@ -1921,27 +1965,23 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createStdDataFile( (byte) 0x03, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0xeE, (byte) 0xeE}, 32);
+
+            retValue = desfireCard.createStdDataFile((byte) 0x03, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createStdDataFile((byte)0x04, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x1E, (byte) 0xeE}, 32);
+            retValue = desfireCard.createLinearRecordFile((byte) 0x04, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 8, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createStdDataFile((byte)0x05, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x1E, (byte) 0x2E}, 32);
+            retValue = desfireCard.createLinearRecordFile((byte) 0x05, baNull, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createStdDataFile((byte) 0x06, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
-                return;
-            }
-            retValue = desfireCard.createLinearRecordFile((byte) 0x07, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 8, 3);
+            retValue = desfireCard.createLinearRecordFile((byte) 0x06, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
@@ -2023,20 +2063,25 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read MAC Data **************************");
         onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x03, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
         Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
+        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x06, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
 
-
-        onWriteRecordReturn((byte) 0x07, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
-        onReadRecordsReturn((byte) 0x07, 0, 0, PLAIN);
+        Log.d("TestAll", "*** Write Plain Record **************************");
+        onWriteRecordReturn((byte) 0x04, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
         onCommitTransaction();
+        Log.d("TestAll", "*** Write Plain Record **************************");
+        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
 
-
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x05, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onReadRecordsReturn((byte) 0x05, 0, 0, PLAIN);
 
  /*
         onAuthAESTest ();

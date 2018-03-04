@@ -283,6 +283,8 @@ public class MifareDesfire {
         return res.status;
     }
 
+
+
     public statusType createValueFile(byte bFileType, byte bFileID, byte bCommSetting, byte [] baAccessRights, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) throws IOException {
         // TODO: Sanity Checks
 
@@ -556,7 +558,7 @@ public class MifareDesfire {
             macToSend = dfCrypto.calcD40MAC(cmdToMAC);
             baCmdToSend.append(dataToWrite).append(macToSend);
 
-        } else if (curCommMode == commMode.PLAIN){
+        } else { // if (curCommMode == commMode.PLAIN){
             baCmdToSend.append(dataToWrite);
         }
 
@@ -600,24 +602,15 @@ public class MifareDesfire {
 
     public DesfireResponse writeRecord(byte fid, int startRecord, int sizeToWrite, byte [] dataToWrite, commMode curCommMode) throws IOException {
 
-        if ((dfCrypto.trackCMAC) && (curCommMode != commMode.ENCIPHERED)) {
-            ByteArray array = new ByteArray();
-            byte[] cmdToCMAC = array.append((byte) 0x3B).append(fid).append(startRecord, 3).append(sizeToWrite, 3).append(dataToWrite).toArray();
-
-            Log.d ("writeDataRecord", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
-            dfCrypto.calcCMAC(cmdToCMAC);
-        }
-
-
-        ByteArray array = new ByteArray();
-        array.append((byte) 0x3B).append(fid).append(startRecord, 3).append(sizeToWrite, 3);
+        byte [] macToSend;
+        ByteArray baCmdToSend = new ByteArray();
+        baCmdToSend.append((byte) 0x3B).append(fid).append(startRecord, 3).append(sizeToWrite, 3);
 
         if (curCommMode == commMode.ENCIPHERED) {
             try {
-                byte [] encipheredData;
-                encipheredData = dfCrypto.encryptWriteDataBlock(array.toArray(), dataToWrite);
+                byte [] encipheredData = dfCrypto.encryptWriteDataBlock(baCmdToSend.toArray(), dataToWrite);
 
-                array.append(encipheredData);
+                baCmdToSend.append(encipheredData);
             } catch (GeneralSecurityException e) {
                 scrollLog.appendError(e.getMessage());
                 DesfireResponse badResult = new DesfireResponse();
@@ -627,20 +620,30 @@ public class MifareDesfire {
                 return badResult;
             }
 
+        } else if (dfCrypto.trackCMAC) {
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToCMAC = arrayMAC.append((byte) 0x3B).append(fid).append(startRecord, 3).append(sizeToWrite, 3).append(dataToWrite).toArray();
 
-        } else {
-            array.append(dataToWrite);
+            Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            macToSend = dfCrypto.calcCMAC(cmdToCMAC);
+            if (curCommMode == commMode.MAC) {
+                baCmdToSend.append(dataToWrite).append(macToSend);
+            }
+        } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToMAC = arrayMAC.append(dataToWrite).toArray();
+
+            Log.d ("writeData", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
+            macToSend = dfCrypto.calcD40MAC(cmdToMAC);
+            baCmdToSend.append(dataToWrite).append(macToSend);
+
+        } else { // if (curCommMode == commMode.PLAIN){
+            baCmdToSend.append(dataToWrite);
         }
 
-        byte[] cmdToSend = array.toArray();
+        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
 
-        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(cmdToSend));
-
-        // Testing behavior when encryption is incorrect.  It still returns boundary error.  So it should be the encryption algo that is incorrect.
-
-        Log.d("writeData","Modified  send: " + ByteArray.byteArrayToHexString(cmdToSend));
-
-        byte[] response = cardCommunicator.transceive(cmdToSend);
+        byte[] response = cardCommunicator.transceive(baCmdToSend.toArray());
 
 
         DesfireResponse result = new DesfireResponse();
@@ -721,6 +724,11 @@ public class MifareDesfire {
     public void writeFile(byte[] data, int file, int offset, int size) throws IOException {
         writeInternal((byte)0x3D, data, file, offset, size);
     }
+
+    public DesfireResponse clearRecordFile(byte fid) throws IOException {
+        return sendBytes(new byte[]{(byte)0xEB, fid});
+    }
+
 
     public DesfireResponse commitTransaction() throws IOException {
         return sendBytes(new byte[]{(byte)0xC7});

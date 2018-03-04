@@ -101,37 +101,11 @@ public class fReadRecords extends Fragment {
 
     }
 
-/*
-    private void populateSpinners(){
-        //List<Number> https://www.mkyong.com/android/android-spinner-drop-down-list-example/
-
-        List<String> list = new ArrayList<String>();  // There must be at least 1 key
-        list.add("00");
-        list.add("01");
-        list.add("02");
-        list.add("03");
-        list.add("04");
-        list.add("05");
-        list.add("06");
-        list.add("07");
-        list.add("08");
-        list.add("09");
-        list.add("10");
-        list.add("11");
-        list.add("12");
-        list.add("13");
-        list.add("14");
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(getActivity(),
-                android.R.layout.simple_spinner_item, list);
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerFileID.setAdapter(dataAdapter);
-        spinnerFileID.setSelection(0);
-
-    }
-*/
 
     private void populateFileIDs (byte[] fileIDs) {
         List <String> list = new ArrayList<>();
+
+        list.add("--");
 
         for (int i = 0; i < fileIDs.length; i++) {
             list.add(ByteArray.byteToHexString(fileIDs[i]));
@@ -184,14 +158,19 @@ public class fReadRecords extends Fragment {
 
         Log.d("fReadRecords", "onGetFileSettings");
 
+        if (spinnerFileID.getSelectedItemPosition() == 0) {
+            Toast.makeText(getActivity().getApplicationContext(), "Please select a file", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Bundle fileSettings = mCallback.onFragmentGetFileSettings(ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem()));
         if (!fileSettings.getBoolean("boolCommandSuccess")){
             return;
         }
 
         byte fileType = fileSettings.getByte("fileType");
-        if ((fileType != (byte) 0x00) && (fileType != (byte) 0x01)) {
-            scrollLog.appendWarning("Warning: Selected file ID is not Data File type");
+        if ((fileType != (byte) 0x03) && (fileType != (byte) 0x04)) {
+            scrollLog.appendWarning("Warning: Selected file ID is not record file type");
             return;
         }
         byte fileCommSetting = fileSettings.getByte("commSetting");
@@ -250,6 +229,12 @@ public class fReadRecords extends Fragment {
 
     private void onGoReadRecords(){
         boolean isIncompleteForm = false;
+
+        if (spinnerFileID.getSelectedItemPosition() == 0) {
+            Toast.makeText(getActivity().getApplicationContext(), "Please select a file", Toast.LENGTH_SHORT).show();
+            isIncompleteForm = true;
+        }
+
 
         if (commModeGroup.getCheckedRadioButtonId() == -1) {
             Toast.makeText(getActivity().getApplicationContext(), "Please select a communication method", Toast.LENGTH_SHORT).show();

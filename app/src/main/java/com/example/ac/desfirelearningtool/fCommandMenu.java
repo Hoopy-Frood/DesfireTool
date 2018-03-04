@@ -354,7 +354,7 @@ public class fCommandMenu extends Fragment{
         buttonWriteData.setEnabled(true);
         buttonReadRecords.setEnabled(true);
         buttonWriteRecord.setEnabled(true);
-        buttonClearRecordFile.setEnabled(false);
+        buttonClearRecordFile.setEnabled(true);
         buttonGetValue.setEnabled(false);
         buttonCredit.setEnabled(false);
         buttonDebit.setEnabled(false);
