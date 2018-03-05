@@ -682,8 +682,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     public void onAuthISOTest (){
 
-        // Select preset app ISO DES 150DE5
-        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
         byte[] zeroKey = new byte[24];
         Arrays.fill(zeroKey, (byte)0);
 
@@ -706,8 +704,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     public void onAuthAESTest (){
 
-        // Select preset app ISO DES 150DE5
-        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0A, (byte) 0xE5});
         byte[] zeroKey = new byte[16];
         Arrays.fill(zeroKey, (byte)0);
 
@@ -1399,8 +1395,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
-
         try {
             MifareDesfire.DesfireResponse res = desfireCard.deleteFile(bFileID);
             if (res.status != MifareDesfire.statusType.SUCCESS) {
@@ -1443,8 +1437,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
-
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
 
         try {
             ByteArray baRecvData = new ByteArray();
@@ -1504,8 +1496,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
-
         try {
             ByteArray baRecvData = new ByteArray();
 
@@ -1564,14 +1554,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
-
         try {
 
             // TODO: separate data blocks if too long
             MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
             if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
-                scrollLog.appendStatus("Write Record File Success");
+                scrollLog.appendStatus("Write Data File Success");
             } else {
                 scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 Log.d("onWriteDataReturn", "writeData return: " + desfireCard.DesFireErrorMsg(res.status));
@@ -1610,8 +1598,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
-
-        scrollLog.appendTitle("File ID returned = " + ByteArray.byteToHexString(bFileID));
 
         try {
 
@@ -2000,65 +1986,59 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         // Select preset app ISO DES 150DE5
         Log.d("TestAll", "*** Test D40 ****************************");
+        scrollLog.appendTitle("***** TEST D40 ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
         onAuthenticateTest ();
+        scrollLog.appendTitle("***** TEST MAC DATA");
         Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x02,0, 6, MAC);
+
+
+        scrollLog.appendTitle("***** TEST Encrypted Record");
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadRecordsReturn((byte) 0x06,0,0, ENCIPHERED);
+
+        Log.d("TestAll", "*** Write Encrypted Data **************************");
+        onWriteRecordReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc, (byte) 0xdd}, MifareDesfire.commMode.ENCIPHERED);
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadRecordsReturn((byte) 0x06,0,0,  ENCIPHERED);
+
+
+/*
+        Log.d("TestAll", "*** Test ISO DES ****************************");
+        scrollLog.appendTitle("***** TEST ISO DES");
+        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
+        onAuthISOTest ();
+        scrollLog.appendTitle("***** TEST MAC DATA");
+        Log.d("TestAll", "*** Write MAC Data **************************");
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+        Log.d("TestAll", "*** Read MAC Data **************************");
+        onReadDataReturn((byte) 0x02,0, 3, MAC);
+
+        scrollLog.appendTitle("***** TEST Encrypted Data");
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadRecordsReturn((byte) 0x06,0,0, ENCIPHERED);
 
         Log.d("TestAll", "*** Write Encrypted Data **************************");
         onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc, (byte) 0xdd}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x06, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadRecordsReturn((byte) 0x06,0,0,  ENCIPHERED);
 
-        /*
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
 
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataTest((byte) 0x01);  // Plain Free / Free
-        onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
-        onReadDataTest((byte) 0x03);  // Enc   Free / Free
-        onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
-        // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 1);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
-*/
-
-      Log.d("TestAll", "*** Test ISO ****************************");
-        onAuthISOTest ();
-        Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x06, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
- /*
-      /*onReadDataTest((byte) 0x01);  // Plain Free / Free
-        onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
-        onReadDataTest((byte) 0x03);  // Enc   Free / Free
-        onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
-        // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 1);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-*/
         Log.d("TestAll", "*** Test AES ****************************");
+        scrollLog.appendTitle("***** TEST ISO AES ");
+        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0A, (byte) 0xE5});
         onAuthAESTest ();
 
-        Log.d("TestAll", "*** Write MAC Data **************************");
+        scrollLog.appendTitle("***** TEST Plain Data");
+        Log.d("TestAll", "*** Write Plain Data **************************");
+        onWriteDataReturn((byte) 0x01, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
+        Log.d("TestAll", "*** Read Plain Data **************************");
+        onReadDataReturn((byte) 0x01,0,0,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        /*Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
         onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
@@ -2072,34 +2052,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
         Log.d("TestAll", "*** Write Plain Record **************************");
-        onWriteRecordReturn((byte) 0x04, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
+        onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
         onCommitTransaction();
-        Log.d("TestAll", "*** Write Plain Record **************************");
+        Log.d("TestAll", "*** Read Plain Record **************************");
         onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
 
         Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x05, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
+        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
         onCommitTransaction();
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x05, 0, 0, PLAIN);
+*/
 
- /*
-        onAuthAESTest ();
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        onReadDataTest((byte) 0x01);  // Plain Free / Free
-       onReadDataMACTest((byte) 0x02);  // Mac   Key 0 / Key 0 (cannot access unless auth with key 0
-        onWriteDataReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.ENCIPHERED);
-        onReadDataTest((byte) 0x03);  // Enc   Free / Free
-        onReadDataTest((byte) 0x04);  // Enc   Key 1 / Free (result plain + MAC
-        // mCallback.onReadDataTest((byte) 0x05);  // Enc   Key 2 / 1 (No access after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 1);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 2);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 8);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        onReadDataEncryptedTest((byte) 0x06, 0);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-  */
     }
 
 

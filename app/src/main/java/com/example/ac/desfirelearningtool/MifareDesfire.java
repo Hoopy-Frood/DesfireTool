@@ -467,7 +467,7 @@ public class MifareDesfire {
 
 
         if ((dfCrypto.trackCMAC)) {
-            Log.d ("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            Log.d ("readRecords", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
             dfCrypto.calcCMAC(cmd);
         }
 
@@ -547,9 +547,8 @@ public class MifareDesfire {
 
             Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
             macToSend = dfCrypto.calcCMAC(cmdToCMAC);
-            if (curCommMode == commMode.MAC) {
-                baCmdToSend.append(dataToWrite).append(macToSend);
-            }
+            baCmdToSend.append(dataToWrite).append(macToSend);
+
         } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
             ByteArray arrayMAC = new ByteArray();
             byte[] cmdToMAC = arrayMAC.append(dataToWrite).toArray();
@@ -624,7 +623,7 @@ public class MifareDesfire {
             ByteArray arrayMAC = new ByteArray();
             byte[] cmdToCMAC = arrayMAC.append((byte) 0x3B).append(fid).append(startRecord, 3).append(sizeToWrite, 3).append(dataToWrite).toArray();
 
-            Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            Log.d ("writeRecord", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
             macToSend = dfCrypto.calcCMAC(cmdToCMAC);
             if (curCommMode == commMode.MAC) {
                 baCmdToSend.append(dataToWrite).append(macToSend);
@@ -633,7 +632,7 @@ public class MifareDesfire {
             ByteArray arrayMAC = new ByteArray();
             byte[] cmdToMAC = arrayMAC.append(dataToWrite).toArray();
 
-            Log.d ("writeData", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
+            Log.d ("writeRecord", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
             macToSend = dfCrypto.calcD40MAC(cmdToMAC);
             baCmdToSend.append(dataToWrite).append(macToSend);
 
@@ -641,7 +640,7 @@ public class MifareDesfire {
             baCmdToSend.append(dataToWrite);
         }
 
-        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
+        Log.d("writeRecord","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
 
         byte[] response = cardCommunicator.transceive(baCmdToSend.toArray());
 
@@ -653,7 +652,7 @@ public class MifareDesfire {
 
         if (result.status == statusType.SUCCESS) {
             if (dfCrypto.trackCMAC) {
-                Log.d("writeData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                Log.d("writeRecord", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("CMAC Verified");
                 } else {
@@ -672,10 +671,10 @@ public class MifareDesfire {
             }
         } else if (result.status == statusType.ADDITONAL_FRAME) {
             if (curCommMode == commMode.ENCIPHERED) {//TODO: This is wrong AF not handled in writing situations yet
-                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("writeRecord", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFEncrypted(response);
             } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
-                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
+                Log.d ("writeRecord", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
             }
             result.data = ByteArray.appendCut(null, response);
