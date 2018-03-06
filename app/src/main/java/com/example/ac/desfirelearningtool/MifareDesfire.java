@@ -376,7 +376,7 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutMAC(response,8);
+                result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
                 if (dfCrypto.verifyD40MAC(response)) {
                     scrollLog.appendStatus("MAC Verified");
@@ -435,7 +435,7 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutMAC(response,8);
+                result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
                 if (dfCrypto.verifyD40MAC(response)) {
                     scrollLog.appendStatus("MAC Verified");
@@ -493,7 +493,7 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutMAC(response,8);
+                result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
                 if (dfCrypto.verifyD40MAC(response)) {
                     scrollLog.appendStatus("MAC Verified");
@@ -658,7 +658,7 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutMAC(response,8);
+                result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
                 if (dfCrypto.verifyD40MAC(response)) {
                     scrollLog.appendStatus("MAC Verified");
@@ -815,7 +815,7 @@ public class MifareDesfire {
                 } else {
                     scrollLog.appendError("CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutMAC(response,8);
+                result.data = ByteArray.appendCutCMAC(response,8);
             } else {
                 result.data = ByteArray.appendCut(null, response);
             }

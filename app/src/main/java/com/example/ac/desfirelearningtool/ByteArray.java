@@ -44,6 +44,16 @@ public class ByteArray {
 
     public static byte[] appendCutMAC ( byte[] data, int macLength) {
         byte[] ret;
+        if (data == null || data.length < 5) {
+            return null;
+        }
+
+        ret = new byte[data.length - macLength - 1];
+        System.arraycopy(data, 1, ret, 0, data.length - macLength - 1);
+        return ret;
+    }
+    public static byte[] appendCutCMAC ( byte[] data, int macLength) {
+        byte[] ret;
         if (data == null || data.length < 9) {
             return null;
         }
@@ -52,6 +62,7 @@ public class ByteArray {
         System.arraycopy(data, 1, ret, 0, data.length - macLength - 1);
         return ret;
     }
+
 
 
     public static String byteArrayToHexString(byte[] array) {

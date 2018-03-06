@@ -574,7 +574,7 @@ public class DesfireCrypto {
     public boolean verifyD40MAC (byte [] recvData)  {
         byte [] MACToVerify = new byte[4];
         byte [] computedMACToVerify = new byte[4];
-        if (recvData.length < 9)  // No CMAC
+        if (recvData.length < 5)  // No MAC
             return false;
 
 
@@ -582,10 +582,10 @@ public class DesfireCrypto {
 
         System.arraycopy(recvData, recvData.length-4, MACToVerify, 0,4 );
 
-        //Log.d ("verifyCMAC", "Data to Verify = " + ByteArray.byteArrayToHexString(storedAFData.toArray()) );
+        Log.d ("verifyD40MAC", "Data to Verify = " + ByteArray.byteArrayToHexString(storedAFData.toArray()) );
         computedMACToVerify = calcD40MAC(storedAFData.toArray());
-        Log.d ("verifyCMAC", "MAC to Verify = " + ByteArray.byteArrayToHexString(MACToVerify) );
-        Log.d ("verifyCMAC", "MAC computed  = " + ByteArray.byteArrayToHexString(computedMACToVerify) );
+        Log.d ("verifyD40MAC", "MAC to Verify = " + ByteArray.byteArrayToHexString(MACToVerify) );
+        Log.d ("verifyD40MAC", "MAC computed  = " + ByteArray.byteArrayToHexString(computedMACToVerify) );
 
         storedAFData.clear();
 

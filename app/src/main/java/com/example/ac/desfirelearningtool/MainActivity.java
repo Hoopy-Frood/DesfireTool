@@ -1984,7 +1984,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     public void onTestAll() {
 
-        // Select preset app ISO DES 150DE5
+/*        // Select preset app ISO DES 150DE5
         Log.d("TestAll", "*** Test D40 ****************************");
         scrollLog.appendTitle("***** TEST D40 ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
@@ -2005,7 +2005,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadRecordsReturn((byte) 0x06,0,0,  ENCIPHERED);
 
-
+*/
 /*
         Log.d("TestAll", "*** Test ISO DES ****************************");
         scrollLog.appendTitle("***** TEST ISO DES");
@@ -2025,12 +2025,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onWriteDataReturn((byte) 0x06, 0, 4, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc, (byte) 0xdd}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadRecordsReturn((byte) 0x06,0,0,  ENCIPHERED);
-
+*/
 
         Log.d("TestAll", "*** Test AES ****************************");
         scrollLog.appendTitle("***** TEST ISO AES ");
         onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0A, (byte) 0xE5});
-        onAuthAESTest ();
 
         scrollLog.appendTitle("***** TEST Plain Data");
         Log.d("TestAll", "*** Write Plain Data **************************");
@@ -2038,31 +2037,41 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Plain Data **************************");
         onReadDataReturn((byte) 0x01,0,0,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
-        /*Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-
+        scrollLog.appendTitle("***** TEST Plain Record");
         Log.d("TestAll", "*** Write Plain Record **************************");
         onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
         onCommitTransaction();
         Log.d("TestAll", "*** Read Plain Record **************************");
         onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
 
+
+        onAuthAESTest ();
+
+
+        scrollLog.appendTitle("***** TEST MAC Data");
+        Log.d("TestAll", "*** Write MAC Data **************************");
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+        Log.d("TestAll", "*** Read MAC Data **************************");
+        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        scrollLog.appendTitle("***** TEST Encrypted Data");
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadDataEncryptedTest((byte) 0x03, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        Log.d("TestAll", "*** Write Encrypted Data **************************");
+        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+
+
+
+        scrollLog.appendTitle("***** TEST MAC Record");
         Log.d("TestAll", "*** Write MAC Record **************************");
         onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
         onCommitTransaction();
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x05, 0, 0, PLAIN);
-*/
+
 
     }
 
