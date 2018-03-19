@@ -125,6 +125,7 @@ public class fCommandMenu extends Fragment{
 
         buttonAuthISO = (Button) rootView.findViewById(R.id.button_AuthISOTest);
         buttonAuthAES = (Button) rootView.findViewById(R.id.button_AuthAESTest);
+        buttonSetConfiguration = (Button) rootView.findViewById(R.id.button_SetConfiguration);
 
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
@@ -137,6 +138,7 @@ public class fCommandMenu extends Fragment{
         }
 
         //Log.d("fCommandMenu Create", "4");
+        // Buttons - Informational
         buttonGetVersion.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                mCallback.onGetVersion();
@@ -160,6 +162,7 @@ public class fCommandMenu extends Fragment{
                 mCallback.onGetFreeMem();
             }
         });
+        // Buttons - Security
         buttonAuthenticate.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthenticate();
             }
@@ -168,6 +171,7 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {mCallback.onGetKeySettings();
             }
         });
+        // Buttons - Application
         buttonSelect.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onSelectApplication();
             }
@@ -185,6 +189,7 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {mCallback.onGetFileSettings();
             }
         });
+        // Buttons - Perso
         buttonCreateApplication.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onCreateApplication();
             }
@@ -205,19 +210,13 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonGetKeyVersion.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onGetKeyVersion();
+            public void onClick(View v) { mCallback.onGetKeyVersion();
             }
         });
         buttonDeleteApplication.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onDeleteApplication();
-            }
+            public void onClick(View v) { mCallback.onDeleteApplication(); }
         });
-        buttonCreateTestPerso.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onCreateTestPerso();
-            }
-        });
+        // Buttons - Data Manipulation
         buttonReadData.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onReadData();
@@ -228,7 +227,6 @@ public class fCommandMenu extends Fragment{
                 mCallback.onWriteData();
             }
         });
-
         buttonReadRecords.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onReadRecords();
@@ -240,33 +238,35 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonClearRecordFile.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onClearRecordFile();
-            }
+            public void onClick(View v) { mCallback.onClearRecordFile(); }
         });
         buttonCommitTransaction.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onCommitTransaction();
+            public void onClick(View v) { mCallback.onCommitTransaction();
             }
         });
         buttonAbortTransaction.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mCallback.onAbortTransaction();
-            }
+            public void onClick(View v) {  mCallback.onAbortTransaction(); }
         });
 
+        // Buttons - Tests
         buttonTestAll.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mCallback.onTestAll();
             }
         });
-
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthISOTest();
             }
         });
         buttonAuthAES.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthAESTest();
+            }
+        });
+        buttonCreateTestPerso.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { mCallback.onCreateTestPerso(); }
+        });
+        buttonSetConfiguration.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { mCallback.onSetConfiguration();
             }
         });
         //Log.d("fCommandMenu Create", "5");
@@ -366,7 +366,7 @@ public class fCommandMenu extends Fragment{
         buttonDeleteApplication.setEnabled(true);
         buttonFormatPICC.setEnabled(true);
         // Buttons - Key Management
-        buttonSetConfiguration.setEnabled(false);
+        buttonSetConfiguration.setEnabled(true);
         buttonChangeKey.setEnabled(false);
         buttonChangeKeySettings.setEnabled(false);
         // Buttons - File Management

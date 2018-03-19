@@ -1,6 +1,5 @@
 package com.example.ac.desfirelearningtool;
 
-
 import android.os.Bundle;
 
 /**
@@ -8,62 +7,73 @@ import android.os.Bundle;
  */
 
 public interface IMainActivityCallbacks {
-    public void onGetVersion ();
-    public void onGetCardUID();
-    public void onGetApplicationIDs();
-    public Bundle onFragmentGetApplicationIDs();
-    public void onGetDFNames();
-    public void onGetFreeMem();
-    public void onGetKeyVersion();
-    public void onGoGetKeyVersionReturn(byte iKeyToInquire);
-    public void onGetKeySettings();
-    public void onSelectApplication();
-    public void onSelectApplicationReturn(byte [] appId);
-    public void onCreateApplication();
-    public void onCreateApplicationReturn(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] DFName);
-    public void onDeleteApplication();
-    public void onDeleteApplicationReturn(byte [] appId);
-    public void onFormatPICC ();
-    public void onCreateFile ();
-    public void onCreateFileDataReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize);
-    public void onCreateFileRecordReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iRecordSize, int iNumOfRecords);
-    public void onCreateFileValueReturn (byte bFileType, byte bFileId, byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte);
-    public void onAuthenticate();
-    public void onAuthenticateReturn (byte bAuthCmd, byte bKeyNo, byte[] key);
-    public void onDeleteFile();
-    public void onDeleteFileReturn(byte bFileID);
-    public void onGetFileIDs();
-    public Bundle onFragmentGetFileIDs();
-    public void onGetISOFileIDs();
-    public void onGetFileSettings();
-    public void onGetFileSettingsReturn(byte bFileID);
-    public Bundle onFragmentGetFileSettings (byte bFileID);
+    // Informational
+    void onGetVersion ();
+    void onGetCardUID();
+    void onGetApplicationIDs();
+    Bundle onFragmentGetApplicationIDs();
+    Bundle onFragmentGetFileIDs();
+    void onGetDFNames();
+    void onGetFreeMem();
 
-    public void onReadData();
-    public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
-    public void onCreateTestPerso();
+    // Security
+    void onAuthenticate();
+    void onAuthenticateReturn (byte bAuthCmd, byte bKeyNo, byte[] key);
+    void onGetKeyVersion();
+    void onGoGetKeyVersionReturn(byte iKeyToInquire);
+    void onGetKeySettings();
 
-    public void onWriteData();
-    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
+    // Application
+    void onSelectApplication();
+    void onSelectApplicationReturn(byte [] appId);
+    void onGetFileIDs();
+    void onGetISOFileIDs();
+    void onGetFileSettings();
+    void onGetFileSettingsReturn(byte bFileID);
+    Bundle onFragmentGetFileSettings (byte bFileID);
 
-    public void onReadRecords();
-    public void onReadRecordsReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
+    // Card Management
+    void onCreateApplication();
+    void onCreateApplicationReturn(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] DFName);
+    void onDeleteApplication();
+    void onDeleteApplicationReturn(byte [] appId);
+    void onFormatPICC ();
 
-    public void onWriteRecord();
-    public void onWriteRecordReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
-    public void onClearRecordFile();
-    public void onClearRecordFileReturn(byte bFileID);
+    // File Management
+    void onCreateFile ();
+    void onCreateFileDataReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize);
+    void onCreateFileRecordReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iRecordSize, int iNumOfRecords);
+    void onCreateFileValueReturn (byte bFileType, byte bFileId, byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte);
+    void onDeleteFile();
+    void onDeleteFileReturn(byte bFileID);
 
-    public void onCommitTransaction ();
-    public void onAbortTransaction ();
+    // Data Manipulation - DATA File
+    void onReadData();
+    void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
+    void onWriteData();
+    void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
 
+    // Data Manipulation - RECORD File
+    void onReadRecords();
+    void onReadRecordsReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
+    void onWriteRecord();
+    void onWriteRecordReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
+    void onClearRecordFile();
+    void onClearRecordFileReturn(byte bFileID);
 
-    public void onReadDataTest(byte fileID);
-    public void onReadDataMACTest(byte fileID);
-    public void onReadDataEncryptedTest(byte fileID, int bytesToRead);
-    public void onAuthISOTest();
-    public void onAuthAESTest();
-    public void onTestAll();
+    // Data Manipulation - Commit
+    void onCommitTransaction ();
+    void onAbortTransaction ();
 
-     public ScrollLog getScrollLogObject ();
+    // Testing
+    void onCreateTestPerso();
+    void onReadDataTest(byte fileID);
+    void onReadDataMACTest(byte fileID);
+    void onReadDataEncryptedTest(byte fileID, int bytesToRead);
+    void onAuthISOTest();
+    void onAuthAESTest();
+    void onTestAll();
+    void onSetConfiguration();
+    
+    ScrollLog getScrollLogObject ();
 }

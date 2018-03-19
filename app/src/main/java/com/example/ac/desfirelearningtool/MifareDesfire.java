@@ -659,13 +659,14 @@ public class MifareDesfire {
                     scrollLog.appendError("CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
-            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+            /*} else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
                 if (dfCrypto.verifyD40MAC(response)) {
                     scrollLog.appendStatus("MAC Verified");
                 } else {
                     scrollLog.appendError("MAC Incorrect");
                 }
                 result.data = ByteArray.appendCutMAC(response,4);
+            */
             } else {
                 result.data = ByteArray.appendCut(null, response);
             }
