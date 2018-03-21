@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fWriteRecord getWriteRecordFragment;
     fClearRecordFile getClearRecordFileFragment;
     fGetValue getValueFragment;
-
+    fCredit creditFragment;
 
     protected PendingIntent pendingIntent;
     protected IntentFilter[] intentFiltersArray;
@@ -1691,6 +1691,50 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
+    //region Credit
+    public void onCredit() {
+        scrollLog.appendTitle("Credit");
+
+        getSupportActionBar().setTitle("Credit");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        creditFragment = new fCredit();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,creditFragment).addToBackStack("commandview").commit();
+    }
+
+
+
+    public void onCreditReturn(byte bFileID, int iCreditValue, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        try {
+
+            // TODO: separate data blocks if too long
+            MifareDesfire.DesfireResponse res = desfireCard.credit(bFileID, iCreditValue, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
+                scrollLog.appendStatus("Credit Success");
+            } else {
+                scrollLog.appendError("Credit Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                Log.d("onCreditReturn", "Error returned: " + desfireCard.DesFireErrorMsg(res.status));
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
 
 
 

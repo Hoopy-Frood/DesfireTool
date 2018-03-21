@@ -243,7 +243,9 @@ public class fCommandMenu extends Fragment{
         buttonGetValue.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { mCallback.onGetValue(); }
         });
-
+        buttonCredit.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { mCallback.onCredit(); }
+        });
 
         buttonCommitTransaction.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { mCallback.onCommitTransaction();
