@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fReadRecords getReadRecordsFragment;
     fWriteRecord getWriteRecordFragment;
     fClearRecordFile getClearRecordFileFragment;
+    fGetValue getValueFragment;
 
 
     protected PendingIntent pendingIntent;
@@ -1048,13 +1049,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
 
-    public void onCreateFileValueReturn (byte bFileType, byte bFileId,byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) {
+    public void onCreateFileValueReturn (byte bFileId,byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) {
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
-        Log.d("MainActivity", "bFileType " + ByteArray.byteArrayToHexString(new byte[]{bFileType}));
         Log.d("MainActivity", "bFileID " + ByteArray.byteArrayToHexString(new byte[]{bFileId}));
         Log.d("MainActivity", "bCommSetting " + ByteArray.byteArrayToHexString(new byte[]{bCommSetting}));
         Log.d("MainActivity", "AccessRights " + ByteArray.byteArrayToHexString(baAccessBytes));
@@ -1064,7 +1064,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("MainActivity", "bOptionByte " + ByteArray.byteArrayToHexString(new byte[]{bOptionByte}));
 
         try {
-            MifareDesfire.statusType retValue = desfireCard.createValueFile(bFileType, bFileId, bCommSetting, baAccessBytes, iLowerLimit, iUpperLimit, iValue, bOptionByte);
+            MifareDesfire.statusType retValue = desfireCard.createValueFile(bFileId, bCommSetting, baAccessBytes, iLowerLimit, iUpperLimit, iValue, bOptionByte);
             if (retValue != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
@@ -1143,6 +1143,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
     //endregion
+
+
 
     //region Get File Settings
     public void onGetFileSettings() {
@@ -1236,30 +1238,22 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 parseAccessRight("Write Access        ", (byte)(res.data[2] & (byte) 0x0F));
                 parseAccessRight("Read & Write Access ", (byte)((res.data[3] >> 4) & (byte) 0x0F));
                 parseAccessRight("Change Access Rights", (byte)(res.data[3] & (byte) 0x0F));
-                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- File size           : " + bb.getShort() + " B");
+                scrollLog.appendData("- File size           : " + ByteBuffer.wrap(res.data,4,3).order(ByteOrder.LITTLE_ENDIAN).getShort() + " B");
 
             } else if ((res.data[0] == (byte) 0x02) ) {
                 parseAccessRight("GetValue/Debit Access          ", (byte)((res.data[2] >> 4) & (byte) 0x0F));
                 parseAccessRight("GetValue/Debit/LtdCredit Access", (byte)(res.data[2] & (byte) 0x0F));
                 parseAccessRight("GetValue/Debit/LtdCredit/Credit", (byte)((res.data[3] >> 4) & (byte) 0x0F));
                 parseAccessRight("Change Access Rights           ", (byte)(res.data[3] & (byte) 0x0F));
-                ByteBuffer bb = ByteBuffer.wrap(res.data,4,4);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Lower Limit              : " + bb.getShort());
-                bb = ByteBuffer.wrap(res.data,8,4);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Upper Limit              : " + bb.getShort());
-                bb = ByteBuffer.wrap(res.data,12,4);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Limited Credit Value     : " + bb.getShort());
+                scrollLog.appendData("- Lower Limit              : " + ByteBuffer.wrap(res.data,4,4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+                scrollLog.appendData("- Upper Limit              : " + ByteBuffer.wrap(res.data,8,4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+                scrollLog.appendData("- Limited Credit Value     : " + ByteBuffer.wrap(res.data,12,4).order(ByteOrder.LITTLE_ENDIAN).getInt());
                 if ((res.data[16] & 0x01) == 1) {
                     scrollLog.appendData("- Limited Credit enabled    ");
                 } else {
                     scrollLog.appendData("- Limited Credit disabled   ");
                 }
-                if ((res.data[16] & 0x02) == 1) {
+                if ((res.data[16] & 0x02) == 2) {
                     scrollLog.appendData("- Free GetValue    ");
                 } else {
                     scrollLog.appendData("- Free GetValue disabled   ");
@@ -1270,15 +1264,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 parseAccessRight("Write Access         ", (byte)(res.data[2] & (byte) 0x0F));
                 parseAccessRight("Read & Write Access  ", (byte)((res.data[3] >> 4) & (byte) 0x0F));
                 parseAccessRight("Change Access Rights ", (byte)(res.data[3] & (byte) 0x0F));
-                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Record size          : " + bb.getShort() );
-                bb = ByteBuffer.wrap(res.data,7,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Max no of records    : " + bb.getShort() );
-                bb = ByteBuffer.wrap(res.data,10,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Current no of records: " + bb.getShort() );
+
+                scrollLog.appendData("- Record size          : " + ByteBuffer.wrap(res.data, 4,3).order(ByteOrder.LITTLE_ENDIAN).getShort());
+                scrollLog.appendData("- Max no of records    : " + ByteBuffer.wrap(res.data, 7,3).order(ByteOrder.LITTLE_ENDIAN).getShort());
+                scrollLog.appendData("- Current no of records: " + ByteBuffer.wrap(res.data,10,3).order(ByteOrder.LITTLE_ENDIAN).getShort());
             }
 
 
@@ -1291,6 +1280,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public Bundle onFragmentGetFileSettings (byte bFileID){
+        Log.d("onFragmentGetFileSet", "on FragementGetFileSettings Start");
+
         Bundle bundleFileSettings = new Bundle();
         try {
 
@@ -1318,10 +1309,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 bundleFileSettings.putByte("readWriteAccess", (byte)((res.data[3] >>> 4) & (byte) 0x0F));
                 bundleFileSettings.putByte("changeAccessRights", (byte)(res.data[3] & (byte) 0x0F));
 
-                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                int iFileSize = bb.getShort();
-                bundleFileSettings.putInt("fileSize", iFileSize);
+                bundleFileSettings.putInt("fileSize", ByteBuffer.wrap(res.data,4,3).order(ByteOrder.LITTLE_ENDIAN).getInt());
 
             } else if ((res.data[0] == (byte) 0x02) ) {
                 bundleFileSettings.putByte("GVD", (byte)((res.data[2] >> 4) & (byte) 0x0F));
@@ -1329,23 +1317,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 bundleFileSettings.putByte("GVDLCC", (byte)((res.data[3] >> 4) & (byte) 0x0F));
                 bundleFileSettings.putByte("changeAccessRights", (byte)(res.data[3] & (byte) 0x0F));
 
-                ByteBuffer bb = ByteBuffer.wrap(res.data,4,4);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                bundleFileSettings.putInt("lowerLimit",bb.getInt());
-                scrollLog.appendData("- Lower Limit              : " + bb.getInt());
+                bundleFileSettings.putInt("lowerLimit",         ByteBuffer.wrap(res.data,4,4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+                bundleFileSettings.putInt("upperLimit",         ByteBuffer.wrap(res.data,8,4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+                bundleFileSettings.putInt("limitedCreditValue", ByteBuffer.wrap(res.data,12,4).order(ByteOrder.LITTLE_ENDIAN).getInt());
 
-                bb = ByteBuffer.wrap(res.data,8,4);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                bundleFileSettings.putInt("upperLimit",bb.getInt());
-                scrollLog.appendData("- Upper Limit              : " + bb.getInt());
-
-                bb = ByteBuffer.wrap(res.data,12,4);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                bundleFileSettings.putInt("limitedCreditValue",bb.getInt());
-                scrollLog.appendData("- Limited Credit Value     : " + bb.getInt());
-
-
-                bundleFileSettings.putByte("limitedCreditValue",(res.data[16]));
+                bundleFileSettings.putByte("LC_FreeGV_Flag",(res.data[16]));
 
 
             } else if ((res.data[0] == (byte) 0x03) || (res.data[0] == (byte) 0x04)) {
@@ -1355,18 +1331,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 bundleFileSettings.putByte("readWriteAccess ", (byte)((res.data[3] >> 4) & (byte) 0x0F));
                 bundleFileSettings.putByte("changeAccessRights", (byte)(res.data[3] & (byte) 0x0F));
 
-                ByteBuffer bb = ByteBuffer.wrap(res.data,4,3);
-                bb.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Record size          : " + bb.getShort() );
-                bundleFileSettings.putInt("recordSize",bb.getInt());
-                ByteBuffer bb2 = ByteBuffer.wrap(res.data,7,3);
-                bb2.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Max no of records    : " + bb2.getShort() );
-                bundleFileSettings.putInt("MaxNumOfRecords",bb.getInt());
-                ByteBuffer bb3 = ByteBuffer.wrap(res.data,10,3);
-                bb3.order( ByteOrder.LITTLE_ENDIAN);
-                scrollLog.appendData("- Current no of records: " + bb3.getShort() );
-                bundleFileSettings.putInt("currentNumOfRecords",bb.getInt());
+                bundleFileSettings.putInt("recordSize",         ByteBuffer.wrap(res.data,4,3).order(ByteOrder.LITTLE_ENDIAN).getShort());
+                bundleFileSettings.putInt("MaxNumOfRecords",    ByteBuffer.wrap(res.data,7,3).order(ByteOrder.LITTLE_ENDIAN).getShort());
+                bundleFileSettings.putInt("currentNumOfRecords",ByteBuffer.wrap(res.data,10,3).order(ByteOrder.LITTLE_ENDIAN).getShort());
             }
 
 
@@ -1464,7 +1431,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 baRecvData.append(res.data);
             }
 
-            // Output
+            //
             if (baRecvData.toArray().length > 0)
                 scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
             else {
@@ -1631,8 +1598,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
-
-    //region Get File Settings
+    //region Clear Record File
     public void onClearRecordFile() {
         scrollLog.appendTitle("Clear Record File");
 
@@ -1671,6 +1637,59 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onActivityResult", e.getMessage(), e);
         }
     }
+    //endregion
+
+    //region Get Value
+    public void onGetValue() {
+        scrollLog.appendTitle("Get Value");
+
+        getSupportActionBar().setTitle("Get Value");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+
+        getValueFragment = new fGetValue();
+
+        getValueFragment.setArguments(bundle);
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getValueFragment).addToBackStack("commandview").commit();
+    }
+
+    //
+    public void onGetValueReturn(byte bFileID, MifareDesfire.commMode curCommMode) {
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        try {
+            MifareDesfire.DesfireResponse res = desfireCard.getValue(bFileID, curCommMode);
+            if (res.status != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get File Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                return;
+            }
+
+            if (res.data.length > 0){
+                Log.d("onGetValueReturn", "Value Byte: " + ByteArray.byteArrayToHexString(res.data));
+                scrollLog.appendData("Value:" + ByteBuffer.wrap(res.data).order(ByteOrder.LITTLE_ENDIAN).getInt());
+            } else {
+                if (res.status != MifareDesfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Get Value Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                    return;
+                }
+                scrollLog.appendData("No data returned");
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
 
 
 
@@ -1784,12 +1803,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
-
-    //region Write Data Test
-
-
-
-    //endregion
 
 
     //region Write Data Test
@@ -1973,17 +1986,32 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             }
             retValue = desfireCard.createLinearRecordFile((byte) 0x04, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 8, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
             retValue = desfireCard.createLinearRecordFile((byte) 0x05, baNull, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
             retValue = desfireCard.createLinearRecordFile((byte) 0x06, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createValueFile((byte) 0x07, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 0, 1000, 0, (byte) 0x00);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createValueFile((byte) 0x08, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x00);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+                return;
+            }
+            retValue = desfireCard.createValueFile((byte) 0x09, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x00);
+            if (retValue != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
             scrollLog.appendTitle("Create Data File OK");
@@ -2046,6 +2074,22 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
 
 
+        scrollLog.appendTitle("***** TEST Encrypted Record");
+        onClearRecordFileReturn((byte) 0x06);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
+
+        scrollLog.appendTitle("***** TEST Get Value - Plain");
+        onGetValueReturn((byte) 0x07, PLAIN);
+        scrollLog.appendTitle("***** TEST Get Value - MAC");
+        onGetValueReturn((byte) 0x08, MAC);
+        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
+
 
 
         // Test ISO DES
@@ -2068,10 +2112,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Plain Record **************************");
         onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
 
-
-
         onAuthISOTest ();
-
 
         scrollLog.appendTitle("***** TEST MAC Data");
         Log.d("TestAll", "*** Write MAC Data **************************");
@@ -2087,9 +2128,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
-
-
-
         scrollLog.appendTitle("***** TEST MAC Record");
         onClearRecordFileReturn((byte) 0x05);
         onCommitTransaction();
@@ -2098,6 +2136,25 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onCommitTransaction();
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
+
+        scrollLog.appendTitle("***** TEST Encrypted Record");
+        onClearRecordFileReturn((byte) 0x06);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
+
+        scrollLog.appendTitle("***** TEST Get Value - Plain");
+        onGetValueReturn((byte) 0x07, PLAIN);
+        scrollLog.appendTitle("***** TEST Get Value - MAC");
+        onGetValueReturn((byte) 0x08, MAC);
+        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
+
+
+
 
         Log.d("TestAll", "*** Test AES ****************************");
         scrollLog.appendTitle("***** TEST ISO AES ");
@@ -2118,10 +2175,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Plain Record **************************");
         onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
 
-
-
         onAuthAESTest ();
-
 
         scrollLog.appendTitle("***** TEST MAC Data");
         Log.d("TestAll", "*** Write MAC Data **************************");
@@ -2137,9 +2191,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
 
-
-
-
         scrollLog.appendTitle("***** TEST MAC Record");
         onClearRecordFileReturn((byte) 0x05);
         onCommitTransaction();
@@ -2149,7 +2200,26 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
 
+        scrollLog.appendTitle("***** TEST Encrypted Record");
+        onClearRecordFileReturn((byte) 0x06);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
 
+        scrollLog.appendTitle("***** TEST Get Value - Plain");
+        onGetValueReturn((byte) 0x07, PLAIN);
+        scrollLog.appendTitle("***** TEST Get Value - MAC");
+        onGetValueReturn((byte) 0x08, MAC);
+        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
+
+
+
+                /*
+*/
     }
 
 

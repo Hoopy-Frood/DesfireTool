@@ -283,14 +283,12 @@ public class MifareDesfire {
         return res.status;
     }
 
-
-
-    public statusType createValueFile(byte bFileType, byte bFileID, byte bCommSetting, byte [] baAccessRights, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) throws IOException {
+    public statusType createValueFile(byte bFileID, byte bCommSetting, byte [] baAccessRights, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) throws IOException {
         // TODO: Sanity Checks
 
         ByteArray baCreateDataFileArray = new ByteArray();
 
-        baCreateDataFileArray.append(bFileType)
+        baCreateDataFileArray.append((byte)0xcc)
                 .append(bFileID);
 
         baCreateDataFileArray.append(bCommSetting).append(baAccessRights);
@@ -729,6 +727,64 @@ public class MifareDesfire {
         return sendBytes(new byte[]{(byte)0xEB, fid});
     }
 
+
+    public DesfireResponse getValue(byte bFileID,commMode curCommMode) throws IOException {
+        byte [] macToSend;
+        ByteArray baCmdToSend = new ByteArray();
+        baCmdToSend.append((byte) 0x6C).append(bFileID);
+
+        if (dfCrypto.trackCMAC) {
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToCMAC = arrayMAC.append((byte) 0x6C).append(bFileID).toArray();
+
+            Log.d ("getValue", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            dfCrypto.calcCMAC(cmdToCMAC);
+
+        }
+
+        Log.d("getValue","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
+
+        byte[] response = cardCommunicator.transceive(baCmdToSend.toArray());
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+
+        if (result.status == statusType.SUCCESS) {
+            if (curCommMode == commMode.ENCIPHERED) {
+                dfCrypto.storeAFEncrypted(response);
+                dfCrypto.encryptedLength = 4;
+                try {
+                    result.data = dfCrypto.decryptReadData();   // Decrypt all data together
+                } catch (GeneralSecurityException e) {
+                    scrollLog.appendError(e.getMessage());
+                }
+
+            } else if (dfCrypto.trackCMAC) {
+                Log.d("getValue", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verified");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutCMAC(response,8);
+            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+                if (dfCrypto.verifyD40MAC(response)) {
+                    scrollLog.appendStatus("MAC Verified");
+                } else {
+                    scrollLog.appendError("MAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,4);
+
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+        return result;
+    }
 
     public DesfireResponse commitTransaction() throws IOException {
         return sendBytes(new byte[]{(byte)0xC7});

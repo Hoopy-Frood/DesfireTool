@@ -43,7 +43,7 @@ public interface IMainActivityCallbacks {
     void onCreateFile ();
     void onCreateFileDataReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize);
     void onCreateFileRecordReturn (byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iRecordSize, int iNumOfRecords);
-    void onCreateFileValueReturn (byte bFileType, byte bFileId, byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte);
+    void onCreateFileValueReturn (byte bFileId, byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte);
     void onDeleteFile();
     void onDeleteFileReturn(byte bFileID);
 
@@ -60,6 +60,12 @@ public interface IMainActivityCallbacks {
     void onWriteRecordReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
     void onClearRecordFile();
     void onClearRecordFileReturn(byte bFileID);
+
+    // Data Manipulation - VALUE File
+    void onGetValue();
+    void onGetValueReturn(byte bFileID, MifareDesfire.commMode iCommMode);
+    void onCredit();
+    void onCreditReturn(byte bFileID, int iCreditValue, MifareDesfire.commMode iCommMode);
 
     // Data Manipulation - Commit
     void onCommitTransaction ();

@@ -240,6 +240,11 @@ public class fCommandMenu extends Fragment{
         buttonClearRecordFile.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { mCallback.onClearRecordFile(); }
         });
+        buttonGetValue.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { mCallback.onGetValue(); }
+        });
+
+
         buttonCommitTransaction.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { mCallback.onCommitTransaction();
             }
@@ -355,10 +360,10 @@ public class fCommandMenu extends Fragment{
         buttonReadRecords.setEnabled(true);
         buttonWriteRecord.setEnabled(true);
         buttonClearRecordFile.setEnabled(true);
-        buttonGetValue.setEnabled(false);
-        buttonCredit.setEnabled(false);
-        buttonDebit.setEnabled(false);
-        buttonLimitedCredit.setEnabled(false);
+        buttonGetValue.setEnabled(true);
+        buttonCredit.setEnabled(true);
+        buttonDebit.setEnabled(true);
+        buttonLimitedCredit.setEnabled(true);
         buttonCommitTransaction.setEnabled(true);
         buttonAbortTransaction.setEnabled(true);
         // Buttons - Perso

@@ -244,7 +244,6 @@ public class fCreateFileValue extends Fragment {
             Log.v("bOptionByte", ByteArray.byteArrayToHexString(new byte[]{ bOptionByte}));
 
             mCallback.onCreateFileValueReturn(
-                    (byte) 0xCC,
                     ByteArray.hexStringToByteArray(etFileID.getText().toString())[0],
                     bCommSetting,
                     new byte[]{(byte) ACByte1, (byte) ACByte2 },
