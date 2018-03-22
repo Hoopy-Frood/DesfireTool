@@ -66,7 +66,8 @@ public interface IMainActivityCallbacks {
     void onGetValueReturn(byte bFileID, MifareDesfire.commMode iCommMode);
     void onCredit();
     void onCreditReturn(byte bFileID, int iCreditValue, MifareDesfire.commMode iCommMode);
-
+    void onDebit();
+    void onDebitReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode iCommMode);
     // Data Manipulation - Commit
     void onCommitTransaction ();
     void onAbortTransaction ();

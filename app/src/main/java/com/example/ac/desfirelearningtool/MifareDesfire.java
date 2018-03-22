@@ -545,7 +545,9 @@ public class MifareDesfire {
 
             Log.d ("writeData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
             macToSend = dfCrypto.calcCMAC(cmdToCMAC);
-            baCmdToSend.append(dataToWrite).append(macToSend);
+            baCmdToSend.append(dataToWrite);
+            if (curCommMode == commMode.MAC)
+                baCmdToSend.append(macToSend);
 
         } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
             ByteArray arrayMAC = new ByteArray();
@@ -623,9 +625,9 @@ public class MifareDesfire {
 
             Log.d ("writeRecord", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
             macToSend = dfCrypto.calcCMAC(cmdToCMAC);
-            if (curCommMode == commMode.MAC) {
-                baCmdToSend.append(dataToWrite).append(macToSend);
-            }
+            baCmdToSend.append(dataToWrite);
+            if (curCommMode == commMode.MAC)
+                baCmdToSend.append(macToSend);
         } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
             ByteArray arrayMAC = new ByteArray();
             byte[] cmdToMAC = arrayMAC.append(dataToWrite).toArray();
@@ -727,7 +729,7 @@ public class MifareDesfire {
         return sendBytes(new byte[]{(byte)0xEB, fid});
     }
 
-
+    //region Manuipulation - Value
     public DesfireResponse getValue(byte bFileID,commMode curCommMode) throws IOException {
         byte [] macToSend;
         ByteArray baCmdToSend = new ByteArray();
@@ -785,6 +787,155 @@ public class MifareDesfire {
         }
         return result;
     }
+
+    public DesfireResponse credit(byte fid, int value, commMode curCommMode) throws IOException {
+
+        byte [] macToSend;
+        ByteArray baCmdToSend = new ByteArray();
+        baCmdToSend.append((byte) 0x0C).append(fid);
+        ByteArray baValue = new ByteArray();
+        baValue.append(value, 4);
+
+        if (curCommMode == commMode.ENCIPHERED) {
+            try {
+                byte [] encipheredData = dfCrypto.encryptWriteDataBlock(baCmdToSend.toArray(), baValue.toArray());
+
+                baCmdToSend.append(encipheredData);
+            } catch (GeneralSecurityException e) {
+                scrollLog.appendError(e.getMessage());
+                DesfireResponse badResult = new DesfireResponse();
+
+                badResult.status = statusType.PCD_ENCRYPTION_ERROR;
+                badResult.data = null;
+                return badResult;
+            }
+
+        } else if (dfCrypto.trackCMAC) {
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToCMAC = arrayMAC.append((byte) 0x0C).append(fid).append(value,4).toArray();
+
+            Log.d ("credit", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            macToSend = dfCrypto.calcCMAC(cmdToCMAC);
+            baCmdToSend.append(value,4);
+            if (curCommMode == commMode.MAC)
+                baCmdToSend.append(macToSend);
+
+        } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToMAC = arrayMAC.append(value,4).toArray();
+
+            Log.d ("credit", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
+            macToSend = dfCrypto.calcD40MAC(cmdToMAC);
+            baCmdToSend.append(value,4).append(macToSend);
+
+        } else { // if (curCommMode == commMode.PLAIN){
+            baCmdToSend.append(value,4);
+        }
+
+        Log.d("credit","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
+
+        byte[] response = cardCommunicator.transceive(baCmdToSend.toArray());
+
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.trackCMAC) {
+                Log.d("credit", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verified");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+        return result;
+    }
+
+    public DesfireResponse debit(byte fid, int value, commMode curCommMode) throws IOException {
+
+        byte [] macToSend;
+        ByteArray baCmdToSend = new ByteArray();
+        baCmdToSend.append((byte) 0xDC).append(fid);
+        ByteArray baValue = new ByteArray();
+        baValue.append(value, 4);
+
+        if (curCommMode == commMode.ENCIPHERED) {
+            try {
+                byte [] encipheredData = dfCrypto.encryptWriteDataBlock(baCmdToSend.toArray(), baValue.toArray());
+
+                baCmdToSend.append(encipheredData);
+            } catch (GeneralSecurityException e) {
+                scrollLog.appendError(e.getMessage());
+                DesfireResponse badResult = new DesfireResponse();
+
+                badResult.status = statusType.PCD_ENCRYPTION_ERROR;
+                badResult.data = null;
+                return badResult;
+            }
+
+        } else if (dfCrypto.trackCMAC) {
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToCMAC = arrayMAC.append((byte) 0xDC).append(fid).append(value,4).toArray();
+
+            Log.d ("debit", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToCMAC) );
+            macToSend = dfCrypto.calcCMAC(cmdToCMAC);
+            baCmdToSend.append(value,4);
+            if (curCommMode == commMode.MAC)
+                baCmdToSend.append(macToSend);
+
+        } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToMAC = arrayMAC.append(value,4).toArray();
+
+            Log.d ("debit", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
+            macToSend = dfCrypto.calcD40MAC(cmdToMAC);
+            baCmdToSend.append(value,4).append(macToSend);
+
+        } else { // if (curCommMode == commMode.PLAIN){
+            baCmdToSend.append(value,4);
+        }
+
+        Log.d("debit","Command to send: " + ByteArray.byteArrayToHexString(baCmdToSend.toArray()));
+
+        byte[] response = cardCommunicator.transceive(baCmdToSend.toArray());
+
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.trackCMAC) {
+                Log.d("debit", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("CMAC Verified");
+                } else {
+                    scrollLog.appendError("CMAC Incorrect");
+                }
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+        return result;
+    }
+
+    //endregion
+
+
+
 
     public DesfireResponse commitTransaction() throws IOException {
         return sendBytes(new byte[]{(byte)0xC7});

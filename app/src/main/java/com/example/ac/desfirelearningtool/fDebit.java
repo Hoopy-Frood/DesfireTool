@@ -19,16 +19,16 @@ import java.util.List;
 import static java.lang.Integer.parseInt;
 
 /**
- * Created by andrew on 2018/03/21.
+ * Created by Ac on 3/22/2018.
  */
 
-public class fCredit extends Fragment {
+public class fDebit extends Fragment {
     View rootView;
     IMainActivityCallbacks mCallback;
     private Button buttonGo;
     private Button buttonGetFileSettings;
     private Spinner spinnerFileID;
-    private EditText etCreditValue;
+    private EditText etDebitValue;
     private RadioGroup commModeGroup;
     private Button buttonGetFileID;
     private MifareDesfire.commMode selCommMode;
@@ -44,7 +44,7 @@ public class fCredit extends Fragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.f_credit, container, false);
+        rootView = inflater.inflate(R.layout.f_debit, container, false);
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
@@ -59,7 +59,7 @@ public class fCredit extends Fragment {
 
         buttonGo = (Button) rootView.findViewById(R.id.button_Go);
         spinnerFileID = (Spinner) rootView.findViewById(R.id.spinner_FileID);
-        etCreditValue = (EditText) rootView.findViewById(R.id.et_CreditValue);
+        etDebitValue = (EditText) rootView.findViewById(R.id.et_DebitValue);
 
         commModeGroup = (RadioGroup) rootView.findViewById(R.id.radioGroup_CommMode);
         commModeGroup.check(R.id.radio_PlainCommunication);
@@ -82,7 +82,7 @@ public class fCredit extends Fragment {
 
         buttonGo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                onGoCredit();
+                onGoDebit();
             }
         });
         buttonGetFileID.setOnClickListener(new View.OnClickListener() {
@@ -227,8 +227,8 @@ public class fCredit extends Fragment {
 
 
 
-    private void onGoCredit(){
-        int iCreditValue =0;
+    private void onGoDebit(){
+        int iDebitValue =0;
         boolean isIncompleteForm = false;
 
         if (spinnerFileID.getSelectedItemPosition() == 0) {
@@ -241,16 +241,16 @@ public class fCredit extends Fragment {
             isIncompleteForm = true;
         }
 
-        if (etCreditValue.getText().toString().length() != 0) {
+        if (etDebitValue.getText().toString().length() != 0) {
             try {
-                iCreditValue = (parseInt(etCreditValue.getText().toString()));
+                iDebitValue = (parseInt(etDebitValue.getText().toString()));
             } catch (NumberFormatException e) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please enter a credit value", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity().getApplicationContext(), "Please enter a debit value", Toast.LENGTH_SHORT).show();
                 isIncompleteForm = true;
             }
         }
-        if (etCreditValue.getText().toString().length() == 0) {
-            Toast.makeText(getActivity().getApplicationContext(), "Please enter a credit value", Toast.LENGTH_SHORT).show();
+        if (etDebitValue.getText().toString().length() == 0) {
+            Toast.makeText(getActivity().getApplicationContext(), "Please enter a debit value", Toast.LENGTH_SHORT).show();
             isIncompleteForm = true;
         }
 
@@ -262,8 +262,8 @@ public class fCredit extends Fragment {
 
 
 
-        mCallback.onCreditReturn(fileSelected,
-                iCreditValue,
+        mCallback.onDebitReturn(fileSelected,
+                iDebitValue,
                 selCommMode
         );
     }
