@@ -19,18 +19,16 @@ import java.util.List;
 import static java.lang.Integer.parseInt;
 
 /**
- * Created by Ac on 10/2/2017.
+ * Created by Ac on 3/22/2018.
  */
 
-public class fWriteData extends Fragment {
+public class fLimitedCredit extends Fragment {
     View rootView;
     IMainActivityCallbacks mCallback;
     private Button buttonGo;
     private Button buttonGetFileSettings;
     private Spinner spinnerFileID;
-    private EditText etOffset;
-    private EditText etLength;
-    private EditText etDataToWrite;
+    private EditText etLimitedCreditValue;
     private RadioGroup commModeGroup;
     private Button buttonGetFileID;
     private MifareDesfire.commMode selCommMode;
@@ -46,7 +44,7 @@ public class fWriteData extends Fragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.f_writedata, container, false);
+        rootView = inflater.inflate(R.layout.f_limitedcredit, container, false);
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
@@ -61,9 +59,7 @@ public class fWriteData extends Fragment {
 
         buttonGo = (Button) rootView.findViewById(R.id.button_Go);
         spinnerFileID = (Spinner) rootView.findViewById(R.id.spinner_FileID);
-        etOffset = (EditText) rootView.findViewById(R.id.et_Offset);
-        etLength = (EditText) rootView.findViewById(R.id.et_Length);
-        etDataToWrite = (EditText) rootView.findViewById(R.id.et_DataToWrite);
+        etLimitedCreditValue = (EditText) rootView.findViewById(R.id.et_LimitedCreditValue);
 
         commModeGroup = (RadioGroup) rootView.findViewById(R.id.radioGroup_CommMode);
         commModeGroup.check(R.id.radio_PlainCommunication);
@@ -95,7 +91,7 @@ public class fWriteData extends Fragment {
 
         buttonGo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                onGoWriteData();
+                onGoDebit();
             }
         });
         buttonGetFileID.setOnClickListener(new View.OnClickListener() {
@@ -113,7 +109,7 @@ public class fWriteData extends Fragment {
     }
 
     private void populateFileIDs (byte[] fileIDs) {
-        List <String> list = new ArrayList<>();
+        List<String> list = new ArrayList<>();
 
         list.add("--");
         for (int i = 0; i < fileIDs.length; i++) {
@@ -168,7 +164,7 @@ public class fWriteData extends Fragment {
 
     public void onFileSettings() {
 
-        Log.d("fWriteData", "onGetFileIDs");
+        Log.d("fCredit", "onFileSettings with item: " + spinnerFileID.getSelectedItem());
 
         if (spinnerFileID.getSelectedItemPosition() == 0) {
             Toast.makeText(getActivity().getApplicationContext(), "Please select a file", Toast.LENGTH_SHORT).show();
@@ -182,36 +178,36 @@ public class fWriteData extends Fragment {
         }
 
         byte fileType = fileSettings.getByte("fileType");
-        if ((fileType != (byte) 0x00) && (fileType != (byte) 0x01)) {
-            scrollLog.appendWarning("Warning: Selected file ID is not Data File type");
+        if (fileType != (byte) 0x02) {
+            scrollLog.appendWarning("Warning: Selected file ID is not Value type");
             return;
         }
         byte fileCommSetting = fileSettings.getByte("commSetting");
         int currentAuthenticatedKey = fileSettings.getInt("currentAuthenticatedKey");
 
-        byte readAccess = fileSettings.getByte("readAccess");
-        byte readWriteAccess = fileSettings.getByte("readWriteAccess");
 
-        int ifileSize = fileSettings.getByte("fileSize");
-        scrollLog.appendData("File size = " + ifileSize);
+        byte GVDAccess = fileSettings.getByte("GVD");
+        byte GVDLCAccess = fileSettings.getByte("GVDLC");
+        byte GVDLCCAccess = fileSettings.getByte("GVDLCC");
+        byte LC_FreeGV_Flag = fileSettings.getByte("LC_FreeGV_Flag");
 
         // If Free Access
-        if ((readAccess == (byte)0x0E) || (readWriteAccess == (byte)0x0E)) {
-            Log.d("onFileSettings", "Setting to plain text");
-            scrollLog.appendData("Free read access");
+        if ((GVDLCCAccess == (byte)0x0E)) {
+            Log.d("fCredit", "Free Credit Access enabled, Setting to plain text");
+            scrollLog.appendData("Free Credit access");
             commModeGroup.check(R.id.radio_PlainCommunication);
             return;
         }
 
         // If No Access
-        if ((readAccess == (byte)0x0F) && (readWriteAccess == (byte)0x0F)) {
-            Log.d("onFileSettings", "Setting to plain text");
-            scrollLog.appendWarning("Warning: No read access");
+        if ((GVDLCCAccess == (byte)0x0F)) {
+            Log.d("fCredit", "Credit access set to never");
+            scrollLog.appendWarning("Warning: Credit access set to NEVER");
             return;
         }
 
         if (currentAuthenticatedKey != -1) {
-            if ((currentAuthenticatedKey == (int) readAccess) || (currentAuthenticatedKey == (int) readWriteAccess)) {
+            if (currentAuthenticatedKey == (int) GVDLCCAccess) {
                 switch (fileCommSetting) {
                     case (byte) 0x00:
                         scrollLog.appendData("Key required authenticated; Plaintext communication");
@@ -231,20 +227,18 @@ public class fWriteData extends Fragment {
                 }
                 return;
             }
-            scrollLog.appendWarning("Warning: Read Access: " + readAccess +" and Read/Write Access: " + readWriteAccess + " but current authenticated key is " + currentAuthenticatedKey);
+            scrollLog.appendWarning("Warning: Correct key is not authenticated.  GV/D/LC/Credit Access: " + GVDLCCAccess +  " but current authenticated key is " + currentAuthenticatedKey);
         } else {
-            scrollLog.appendWarning("Warning: Read Access: " + readAccess +" and Read/Write Access: " + readWriteAccess + " but no key currently authenticated");
+            scrollLog.appendWarning("Warning: No key is authenticated.  GV/D/LC/Credit Access: " + GVDLCCAccess);
         }
 
     }
 
 
 
-    private void onGoWriteData(){
-        int iOffset =0;
-        int iLength = 0;
+    private void onGoDebit(){
+        int iDebitValue =0;
         boolean isIncompleteForm = false;
-        int iDataToWriteLength;
 
         if (spinnerFileID.getSelectedItemPosition() == 0) {
             Toast.makeText(getActivity().getApplicationContext(), "Please select a file", Toast.LENGTH_SHORT).show();
@@ -256,64 +250,29 @@ public class fWriteData extends Fragment {
             isIncompleteForm = true;
         }
 
-        iDataToWriteLength = etDataToWrite.getText().toString().length();
-        if (iDataToWriteLength %2 == 1) {
-            Toast.makeText(getActivity().getApplicationContext(), "Please enter valid hex string to write", Toast.LENGTH_SHORT).show();
+        if (etLimitedCreditValue.getText().toString().length() != 0) {
+            try {
+                iDebitValue = (parseInt(etLimitedCreditValue.getText().toString()));
+            } catch (NumberFormatException e) {
+                Toast.makeText(getActivity().getApplicationContext(), "Please enter a debit value", Toast.LENGTH_SHORT).show();
+                isIncompleteForm = true;
+            }
+        }
+        if (etLimitedCreditValue.getText().toString().length() == 0) {
+            Toast.makeText(getActivity().getApplicationContext(), "Please enter a debit value", Toast.LENGTH_SHORT).show();
             isIncompleteForm = true;
-        }
-
-        iDataToWriteLength = iDataToWriteLength / 2;
-
-        if (etOffset.getText().toString().length() != 0) {
-            try {
-                iOffset = (parseInt(etOffset.getText().toString()));
-            } catch (NumberFormatException e) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in file size", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
-            }
-        }
-        if (etLength.getText().toString().length() != 0) {
-            try {
-                iLength = (parseInt(etLength.getText().toString()));
-            } catch (NumberFormatException e) {
-                Toast.makeText(getActivity().getApplicationContext(), "Please ensure a number is entered in file size", Toast.LENGTH_SHORT).show();
-                isIncompleteForm = true;
-            }
         }
 
         if (isIncompleteForm)
             return;
 
-
-        if (etOffset.getText().toString().length() == 0) {
-            Toast.makeText(getActivity().getApplicationContext(), "Using Default offset of 0 ", Toast.LENGTH_SHORT).show();
-            etOffset.setText(R.string.default_readOffset);
-            iOffset= (parseInt(etOffset.getText().toString()));
-        }
-
-        if (etLength.getText().toString().length() == 0) {
-            etLength.setText(R.string.default_readLength);
-            iLength = (parseInt(etLength.getText().toString()));
-        }
-
-
-
-        if (iLength != iDataToWriteLength) {
-            Toast.makeText(getActivity().getApplicationContext(), "Using input data length of " + iDataToWriteLength + " in length field", Toast.LENGTH_SHORT).show();
-            iLength= iDataToWriteLength;
-        }
-
-        byte [] bDataToWrite = ByteArray.hexStringToByteArray(etDataToWrite.getText().toString());
-
-        Log.d("WriteData", "Input OK");
+        Log.d("Limited Credit", "Input OK");
         byte fileSelected = ByteArray.hexStringToByte( (String) spinnerFileID.getSelectedItem());
 
 
 
-        mCallback.onWriteDataReturn(fileSelected,
-                iOffset,
-                iLength,
-                bDataToWrite,
+        mCallback.onLimitedCreditReturn(fileSelected,
+                iDebitValue,
                 selCommMode
         );
     }

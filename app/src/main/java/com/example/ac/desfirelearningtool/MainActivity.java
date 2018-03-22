@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fGetValue getValueFragment;
     fCredit creditFragment;
     fDebit debitFragment;
+    fLimitedCredit limitedCreditFragment;
 
     protected PendingIntent pendingIntent;
     protected IntentFilter[] intentFiltersArray;
@@ -771,6 +772,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         baFileIDList = null;
+        bFileIDListPopulated = false;
 
         scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
         if (baAppId.length != 3) {
@@ -1404,9 +1406,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
 
         getReadDataFragment = new fReadData();
-
+        getReadDataFragment.setArguments(bundle);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container,getReadDataFragment).addToBackStack("commandview").commit();
     }
@@ -1462,9 +1465,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
 
         getReadRecordsFragment = new fReadRecords();
-
+        getReadRecordsFragment.setArguments(bundle);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container,getReadRecordsFragment).addToBackStack("commandview").commit();
     }
@@ -1520,8 +1524,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
-
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
         getWriteDataFragment = new fWriteData();
+        getWriteDataFragment.setArguments(bundle);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
@@ -1565,8 +1570,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
-
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
         getWriteRecordFragment = new fWriteRecord();
+        getWriteRecordFragment.setArguments(bundle);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container,getWriteRecordFragment).addToBackStack("commandview").commit();
@@ -1609,10 +1615,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
 
         getClearRecordFileFragment = new fClearRecordFile();
-
         getClearRecordFileFragment.setArguments(bundle);
+
         //getSupportFragmentManager().addToBackStack(null);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container,getClearRecordFileFragment).addToBackStack("commandview").commit();
@@ -1650,6 +1657,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
 
         getValueFragment = new fGetValue();
 
@@ -1702,8 +1710,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
-
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
         creditFragment = new fCredit();
+        creditFragment.setArguments(bundle);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container,creditFragment).addToBackStack("commandview").commit();
@@ -1745,8 +1754,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
 
         debitFragment = new fDebit();
+        debitFragment.setArguments(bundle);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container,debitFragment).addToBackStack("commandview").commit();
@@ -1778,118 +1789,50 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
-    //region Read Data Test
+    //region Limited Credit
+    public void onLimitedCredit() {
+        scrollLog.appendTitle("Limited Credit");
 
-    public void onReadDataTest(byte fileID) {
-        try {
+        getSupportActionBar().setTitle("Limited Credit");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-            int offset = 0;
-            int length = 3;
-            ByteArray baRecvData = new ByteArray();
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
 
-            scrollLog.appendTitle("Read Data Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, PLAIN);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+        limitedCreditFragment = new fLimitedCredit();
+        limitedCreditFragment.setArguments(bundle);
 
-                baRecvData.append(res.data);
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData();
-                    baRecvData.append(res.data);
-                }
-            }
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-
-                scrollLog.appendData("No data returned");
-            }
-
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
-        }
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,limitedCreditFragment).addToBackStack("commandview").commit();
     }
 
-    public void onReadDataEncryptedTest(byte fileID, int bytesToRead) {
+
+
+    public void onLimitedCreditReturn(byte bFileID, int iLCValue, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
         try {
-
-            int offset = 0;
-            ByteArray baRecvData = new ByteArray();
-
-            scrollLog.appendTitle("Read Data Encrypted Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, bytesToRead, MifareDesfire.commMode.ENCIPHERED);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
-                }
-                baRecvData.append(res.data);
-            }
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-
-                scrollLog.appendData("No data returned");
+            MifareDesfire.DesfireResponse res = desfireCard.limitedCredit(bFileID, iLCValue, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
+                scrollLog.appendStatus("Limited Credit Success");
+            } else {
+                scrollLog.appendError("Limited Credit Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                Log.d("onLimitedCreditReturn", "Error returned: " + desfireCard.DesFireErrorMsg(res.status));
             }
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
-        }
-    }
-
-    public void onReadDataMACTest(byte fileID) {
-        try {
-
-            int offset = 0;
-            int length = 8;
-            ByteArray baRecvData = new ByteArray();
-
-            scrollLog.appendTitle("Read Data MAC Test");
-            MifareDesfire.DesfireResponse res = desfireCard.readData(fileID, offset, length, MifareDesfire.commMode.MAC);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
-
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
-                    res = desfireCard.getMoreData(MifareDesfire.commMode.ENCIPHERED);
-                }
-                baRecvData.append(res.data);
-            }
-            if (baRecvData.toArray().length > 0)
-                scrollLog.appendData("Read Data MAC Test:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
-            else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                    return;
-                }
-                scrollLog.appendData("No data returned");
-            }
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onReadDataMACTest", e.getMessage(), e);
+            Log.e("onActivityResult", e.getMessage(), e);
         }
     }
     //endregion
-
-
-
-    //region Write Data Test
 
     //region Create Test Perso
     public void onCreateTestPerso() {
@@ -2090,17 +2033,17 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createValueFile((byte) 0x07, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 0, 1000, 0, (byte) 0x00);
+            retValue = desfireCard.createValueFile((byte) 0x07, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 0, 1000, 0, (byte) 0x01);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createValueFile((byte) 0x08, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x00);
+            retValue = desfireCard.createValueFile((byte) 0x08, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x01);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createValueFile((byte) 0x09, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x00);
+            retValue = desfireCard.createValueFile((byte) 0x09, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x01);
             if (retValue != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
@@ -2143,15 +2086,15 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x02, 0, 0, MAC);
 
         scrollLog.appendTitle("***** TEST Encrypted Data");
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
         Log.d("TestAll", "*** Write Encrypted Data **************************");
         onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
 
 
         scrollLog.appendTitle("***** TEST MAC Record");
@@ -2181,12 +2124,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onDebitReturn((byte)0x07,80,PLAIN);
         onCommitTransaction();
         onGetValueReturn((byte) 0x07, PLAIN);
+        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x07, PLAIN);
         scrollLog.appendTitle("***** TEST Get Value - MAC");
         onGetValueReturn((byte) 0x08, MAC);
         onCreditReturn((byte)0x08,90,MAC);
         onCommitTransaction();
         onGetValueReturn((byte) 0x08, MAC);
         onDebitReturn((byte)0x08,90,MAC);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x08, MAC);
+        onLimitedCreditReturn((byte)0x08, 20, MAC);
         onCommitTransaction();
         onGetValueReturn((byte) 0x08, MAC);
         scrollLog.appendTitle("***** TEST Get Value - Enciphered");
@@ -2197,7 +2146,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onDebitReturn((byte)0x09,100,ENCIPHERED);
         onCommitTransaction();
         onGetValueReturn((byte) 0x09, ENCIPHERED);
-
+        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
 
 
         // Test ISO DES
@@ -2226,15 +2177,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x02, 0, 0, MAC);
 
         scrollLog.appendTitle("***** TEST Encrypted Data");
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
         Log.d("TestAll", "*** Write Encrypted Data **************************");
         onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
+
 
         scrollLog.appendTitle("***** TEST MAC Record");
         onClearRecordFileReturn((byte) 0x05);
@@ -2244,6 +2196,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onCommitTransaction();
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
+
 
         scrollLog.appendTitle("***** TEST Encrypted Record");
         onClearRecordFileReturn((byte) 0x06);
@@ -2262,6 +2215,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onDebitReturn((byte)0x07,80,PLAIN);
         onCommitTransaction();
         onGetValueReturn((byte) 0x07, PLAIN);
+        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x07, PLAIN);
         scrollLog.appendTitle("***** TEST Get Value - MAC");
         onGetValueReturn((byte) 0x08, MAC);
         onCreditReturn((byte)0x08,90,MAC);
@@ -2270,12 +2226,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onDebitReturn((byte)0x08,90,MAC);
         onCommitTransaction();
         onGetValueReturn((byte) 0x08, MAC);
+        onLimitedCreditReturn((byte)0x08, 20, MAC);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x08, MAC);
         scrollLog.appendTitle("***** TEST Get Value - Enciphered");
         onGetValueReturn((byte) 0x09, ENCIPHERED);
         onCreditReturn((byte)0x09,100,ENCIPHERED);
         onCommitTransaction();
         onGetValueReturn((byte) 0x09, ENCIPHERED);
         onDebitReturn((byte)0x09,100,ENCIPHERED);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
+        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
         onCommitTransaction();
         onGetValueReturn((byte) 0x09, ENCIPHERED);
 
@@ -2303,21 +2265,20 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Plain Record **************************");
         onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
 
-
-
         scrollLog.appendTitle("***** TEST MAC Data");
         Log.d("TestAll", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataMACTest((byte) 0x02);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x02, 0, 0, MAC);
 
         scrollLog.appendTitle("***** TEST Encrypted Data");
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 10);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
         Log.d("TestAll", "*** Write Encrypted Data **************************");
         onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataEncryptedTest((byte) 0x03, 4);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
+
 
         scrollLog.appendTitle("***** TEST MAC Record");
         onClearRecordFileReturn((byte) 0x05);
@@ -2327,6 +2288,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onCommitTransaction();
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
+
 
         scrollLog.appendTitle("***** TEST Encrypted Record");
         onClearRecordFileReturn((byte) 0x06);
@@ -2345,12 +2307,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onDebitReturn((byte)0x07,80,PLAIN);
         onCommitTransaction();
         onGetValueReturn((byte) 0x07, PLAIN);
+        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x07, PLAIN);
         scrollLog.appendTitle("***** TEST Get Value - MAC");
         onGetValueReturn((byte) 0x08, MAC);
         onCreditReturn((byte)0x08,90,MAC);
         onCommitTransaction();
         onGetValueReturn((byte) 0x08, MAC);
         onDebitReturn((byte)0x08,90,MAC);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x08, MAC);
+        onLimitedCreditReturn((byte)0x08, 20, MAC);
         onCommitTransaction();
         onGetValueReturn((byte) 0x08, MAC);
         scrollLog.appendTitle("***** TEST Get Value - Enciphered");
@@ -2361,7 +2329,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onDebitReturn((byte)0x09,100,ENCIPHERED);
         onCommitTransaction();
         onGetValueReturn((byte) 0x09, ENCIPHERED);
-
+        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
 
                 /*
 */

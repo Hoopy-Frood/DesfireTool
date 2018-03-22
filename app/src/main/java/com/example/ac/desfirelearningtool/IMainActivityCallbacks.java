@@ -68,15 +68,19 @@ public interface IMainActivityCallbacks {
     void onCreditReturn(byte bFileID, int iCreditValue, MifareDesfire.commMode iCommMode);
     void onDebit();
     void onDebitReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode iCommMode);
+    void onLimitedCredit();
+    void onLimitedCreditReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode iCommMode);
+
+
     // Data Manipulation - Commit
     void onCommitTransaction ();
     void onAbortTransaction ();
 
     // Testing
     void onCreateTestPerso();
-    void onReadDataTest(byte fileID);
+/*    void onReadDataTest(byte fileID);
     void onReadDataMACTest(byte fileID);
-    void onReadDataEncryptedTest(byte fileID, int bytesToRead);
+    void onReadDataEncryptedTest(byte fileID, int bytesToRead);*/
     void onAuthISOTest();
     void onAuthAESTest();
     void onTestAll();
