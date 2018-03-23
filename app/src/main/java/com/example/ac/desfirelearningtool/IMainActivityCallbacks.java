@@ -22,6 +22,10 @@ public interface IMainActivityCallbacks {
     void onGetKeyVersion();
     void onGoGetKeyVersionReturn(byte iKeyToInquire);
     void onGetKeySettings();
+    byte[] onFragmentGetKeySettings ();
+    void onChangeKey();
+    void onChangeKeyReturn(byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey);
+
 
     // Application
     void onSelectApplication();
@@ -70,7 +74,6 @@ public interface IMainActivityCallbacks {
     void onDebitReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode iCommMode);
     void onLimitedCredit();
     void onLimitedCreditReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode iCommMode);
-
 
     // Data Manipulation - Commit
     void onCommitTransaction ();

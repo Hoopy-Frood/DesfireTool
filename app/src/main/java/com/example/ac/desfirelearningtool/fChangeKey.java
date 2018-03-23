@@ -1,6 +1,5 @@
 package com.example.ac.desfirelearningtool;
 
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -12,76 +11,92 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.ac.desfirelearningtool.ByteArray.hexStringToByteArray;
+
 /**
- * Created by andrew on 2017/09/20.
+ * Created by andrew on 2018/03/23.
  */
 
-
-public class fAuthenticate extends Fragment {
+public class fChangeKey  extends Fragment {
     View rootView;
     IMainActivityCallbacks mCallback;
-    private Button buttonGo;
-    private Spinner spKeyNo;
-    private RadioGroup rgAuthenticateGroup;
-    private EditText etKey;
+    private Button buttonGoChangeKey;
+    private Button buttonGetKeySettings;
+
+    private Spinner spKeyToChange;
+    private Spinner spChangeKeyKey;
+    private TextView tvCurrentAuthenticatedKey;
+    private EditText etNewKey;
     private ListView lvKeyList;
-    byte bAuthCmd;
+    private int currAuthKey;
+    private byte currAuthMode;
+
+
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.f_authenticate, container, false);
+        rootView = inflater.inflate(R.layout.f_changekey, container, false);
         try {
             mCallback = (IMainActivityCallbacks) getActivity();
             if (mCallback == null){
-                Log.d("onCreateView", "Cannot initialize callback interface");
+                Log.d("fGetKeyVersion", "Cannot initialize callback interface");
             }
         } catch (ClassCastException e) {
             throw new ClassCastException(getActivity().toString()
                     + " must implement IMainActivityCallbacks");
         }
 
-        bAuthCmd = (byte)0x00;
 
-        buttonGo = (Button) rootView.findViewById(R.id.button_Go);
-        spKeyNo = (Spinner) rootView.findViewById(R.id.spinner_KeyID);
-        etKey = rootView.findViewById(R.id.EditText_Key);
+        currAuthKey = getArguments().getInt("currentAuthenticatedKey");
+        currAuthMode = getArguments().getByte("currentAuthenticationMode");
+
+        buttonGoChangeKey = (Button) rootView.findViewById(R.id.button_Go);
+        buttonGetKeySettings = (Button) rootView.findViewById(R.id.button_GetKeySettings);
+
+        spKeyToChange = (Spinner) rootView.findViewById(R.id.spinner_KeyToChange);
+        spChangeKeyKey = (Spinner) rootView.findViewById(R.id.spinner_ChangeKeyKey);
+
+        etNewKey = (EditText) rootView.findViewById(R.id.EditText_NewKey);
+
+        tvCurrentAuthenticatedKey = (TextView) rootView.findViewById(R.id.tv_CurrentAuthenticatedKey);
         lvKeyList = rootView.findViewById(R.id.lv_KeyList);
-        rgAuthenticateGroup = rootView.findViewById(R.id.radioGroup_Authentication);
 
-        rgAuthenticateGroup.check(R.id.radio_authD40);
-        populateSpinners ();
-        rgAuthenticateGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener(){
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                Log.d("rgRuthenticateGroup:", "Radio button clicked");
-                // checkedId is the RadioButton selected
-                onRadioButtonClicked(group, checkedId);
-            }
-        });
+        populateSpinners (spKeyToChange,new String[] {"0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"});
+        populateSpinners (spChangeKeyKey,new String[] {"0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","Same","Never"});
+
         populateListView ();
-        //lvFileIDList.setOnItemClickListener();
+        if (currAuthKey == -1)
+            tvCurrentAuthenticatedKey.setText("None");
+        else
+            tvCurrentAuthenticatedKey.setText(String.valueOf(currAuthKey));
 
-        lvKeyList.setClickable(true);
         lvKeyList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
             public void onItemClick(AdapterView<?> arg0,View arg1, int position, long arg3)
             {
-                etKey.setText((String)lvKeyList.getItemAtPosition(position));
+                etNewKey.setText((String)lvKeyList.getItemAtPosition(position));
             }
         });
 
-        buttonGo.setOnClickListener(new View.OnClickListener() {
+
+
+        buttonGoChangeKey.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                onGoAuthenticate();
+                onGoChangeKey();
+            }
+        });
+        buttonGetKeySettings.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                onGoGetKeySettings();
             }
         });
 
@@ -90,30 +105,20 @@ public class fAuthenticate extends Fragment {
     }
 
 
-    private void populateSpinners(){
-        //List<Number> https://www.mkyong.com/android/android-spinner-drop-down-list-example/
 
-        List<String> list = new ArrayList<String>();  // There must be at least 1 key
-        list.add("0");
-        list.add("1");
-        list.add("2");
-        list.add("3");
-        list.add("4");
-        list.add("5");
-        list.add("6");
-        list.add("7");
-        list.add("8");
-        list.add("9");
-        list.add("10");
-        list.add("11");
-        list.add("12");
-        list.add("13");
+    private void populateSpinners (Spinner targetSpinner, String[] sKeyIDs) {
+        List <String> list = new ArrayList<>();
 
+        list.add("--");
+
+        for (int i = 0; i < sKeyIDs.length; i++) {
+            list.add(sKeyIDs[i]);
+        }
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(getActivity(),
                 android.R.layout.simple_spinner_item, list);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spKeyNo.setAdapter(dataAdapter);
-        spKeyNo.setSelection(0);
+        targetSpinner.setAdapter(dataAdapter);
+        targetSpinner.setSelection(0);
 
     }
 
@@ -132,60 +137,56 @@ public class fAuthenticate extends Fragment {
                 ListKeyText);
 
         lvKeyList.setAdapter(arrayAdapter);
-
+        lvKeyList.setClickable(true);
     }
 
-    public void onRadioButtonClicked(RadioGroup group, int checkedId) {
-        // Is the button now checked?
-        Log.d("onRadioButtonClicked", "initiated");
+    private void onGoGetKeySettings () {
 
-        // Check which radio button was clicked
-        switch(checkedId) {
-            case R.id.radio_authD40:
-                bAuthCmd = (byte)0x0A;
-                break;
-            case R.id.radio_authISO:
-                bAuthCmd = (byte)0x1A;
-                break;
-            case R.id.radio_authAES:
-                bAuthCmd = (byte)0xAA;
-                break;
+        Log.d("fChangeKey", "onGoGetKeySettings");
+
+        byte[] bKeySettings = mCallback.onFragmentGetKeySettings();
+        if (bKeySettings == null){
+            return;
         }
+
+        spChangeKeyKey.setSelection((bKeySettings[0] >> 4)+1);
+        Log.d("onGoGetKeySettings", "Change Key Key = " + ByteArray.byteToHexString((byte)(bKeySettings[0] >> 4)));
+
     }
 
-
-    private void onGoAuthenticate(){
+    private void onGoChangeKey(){
         boolean isIncompleteForm = false;
 
-        int inputKeyLength = etKey.getText().toString().length();
+        int inputKeyLength = etNewKey.getText().toString().length();
         if (inputKeyLength%2 == 1) {
             Toast.makeText(getActivity().getApplicationContext(), "Please ensure Key is hexadecimal", Toast.LENGTH_SHORT).show();
             isIncompleteForm = true;
         }
 
         if (inputKeyLength == 0) {
-            switch(bAuthCmd) {
+            switch(currAuthMode) {
                 case (byte) 0x0A:
-                    etKey.setText("0000000000000000");
+                    etNewKey.setText("0000000000000000");
                     inputKeyLength = 16;
                     break;
                 case (byte) 0x1A:
-                    etKey.setText("000000000000000000000000000000000000000000000000");
+                    etNewKey.setText("000000000000000000000000000000000000000000000000");
                     inputKeyLength = 48;
                     break;
                 case (byte) 0xAA:
-                    etKey.setText("00000000000000000000000000000000");
+                    etNewKey.setText("00000000000000000000000000000000");
                     inputKeyLength = 32;
                     break;
                 default:
-                    etKey.setText("0000000000000000");
+                    etNewKey.setText("0000000000000000");
                     inputKeyLength = 16;
                     break;
             }
             Toast.makeText(getActivity().getApplicationContext(), "Using Default Key of 0x00 bytes", Toast.LENGTH_SHORT).show();
         }
 
-        switch (bAuthCmd){
+
+        switch (currAuthMode){
             case (byte)0x0A:
                 if ((inputKeyLength != 16) && (inputKeyLength != 32) && (inputKeyLength != 48)) {
                     Toast.makeText(getActivity().getApplicationContext(), "Please ensure Key 8, 16 or 24 bytes", Toast.LENGTH_SHORT).show();
@@ -209,7 +210,6 @@ public class fAuthenticate extends Fragment {
                     Toast.makeText(getActivity().getApplicationContext(), "Please ensure Key 8, 16 or 24 bytes", Toast.LENGTH_SHORT).show();
                     isIncompleteForm = true;
                 }
-                bAuthCmd = (byte) 0x0A;
                 break;
         }
 
@@ -218,13 +218,13 @@ public class fAuthenticate extends Fragment {
         if (isIncompleteForm)
             return;
 
-        Log.d("CreateApplication", "Input OK");
-        byte bKeyChosen = (byte) (spKeyNo.getSelectedItemPosition());
+        Log.d("ChangeKey", "Input OK");
+        byte bKeyChosen = (byte) (spKeyToChange.getSelectedItemPosition());
 
-        mCallback.onAuthenticateReturn(
-                bAuthCmd,
-                bKeyChosen,
-                ByteArray.hexStringToByteArray(etKey.getText().toString())
-        );
+        byte [] baNewKey = ByteArray.hexStringToByteArray(etNewKey.getText().toString());
+        byte [] baOldKey = null;
+
+        mCallback.onChangeKeyReturn(bKeyChosen,(byte)0x00, baNewKey, baOldKey);
+
     }
 }

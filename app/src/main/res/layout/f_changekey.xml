@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/popupGetKeyVersion"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+
+    <TextView
+        android:id="@+id/tv_KeyToChange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:layout_marginLeft="10dp"
+        android:text="Key to Change: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+
+    <Spinner
+        android:id="@+id/spinner_KeyToChange"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/tv_KeyToChange"
+        android:layout_alignRight="@id/tv_CurrentAuthenticatedKey"
+        android:gravity="center"
+        android:layout_marginTop="28dp"
+        android:dropDownWidth="wrap_content"/>
+
+    <Button
+        android:id="@+id/button_Go"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go"
+        android:textAllCaps="false"
+        android:layout_alignBaseline="@+id/tv_KeyToChange"
+        android:layout_alignParentRight="true"/>
+
+
+
+    <TextView
+        android:id="@+id/CurrentAuthKey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/spinner_KeyToChange"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:text="Current Authenticated Key: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_CurrentAuthenticatedKey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/CurrentAuthKey"
+        android:layout_alignBaseline="@id/CurrentAuthKey"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:text="0 "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:gravity="right"
+        android:textStyle="" />
+
+    <!-- Authentication Type application -->
+    <TextView
+        android:id="@+id/Block_KeySettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#C0C0C0"
+        android:text="Application Key Settings"
+        android:gravity="top|end"
+        android:textAllCaps="true"
+        android:textColor="#F0F0F0"
+        android:textSize="14sp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/CurrentAuthKey"
+        android:layout_alignBottom="@id/tv_ChangeKeyKey" />
+
+    <!--RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/radioGroup_Authentication"
+        android:layout_below="@+id/CurrentAuthKey"
+        android:layout_marginTop="30dp">
+
+        <RadioButton
+            android:id="@+id/radio_authD40"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Authenticate "/>
+        <RadioButton android:id="@+id/radio_authISO"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Authenticate ISO"/>
+        <RadioButton android:id="@+id/radio_authAES"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Authenticate AES"/>
+
+    </RadioGroup-->
+
+    <TextView
+        android:id="@+id/tv_ChangeKeyKey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/CurrentAuthKey"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="10dp"
+        android:text="ChangeKey Key: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+
+    <Spinner
+        android:id="@+id/spinner_ChangeKeyKey"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/tv_ChangeKeyKey"
+        android:layout_alignRight="@id/tv_CurrentAuthenticatedKey"
+        android:layout_alignBottom="@id/tv_ChangeKeyKey"
+        android:gravity="center"
+        android:layout_marginTop="28dp"
+        android:dropDownWidth="wrap_content"/>
+    <TextView
+        android:id="@+id/tv_AllowChangeMaseter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/CurrentAuthKey"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="10dp"
+        android:text="ChangeKey Key: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+
+    <Button
+        android:id="@+id/button_GetKeySettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/Block_KeySettings"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="20dp"
+        android:text="Get Key Settings"
+        android:textAllCaps="false"/>
+
+    <TextView
+        android:id="@+id/tv_NewKeyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_GetKeySettings"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
+        android:text="New Key: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <EditText
+        android:id="@+id/EditText_NewKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/tv_NewKeyText"
+        android:layout_alignBaseline="@+id/tv_NewKeyText"
+        android:digits="0123456789ABCDEF"
+        android:ems="20"
+        android:hint="8, 16, 24 byte Hex"
+        android:inputType="textCapCharacters"
+        android:maxLength="48"
+        android:textAlignment="textStart" />
+
+    <TextView
+        android:id="@+id/tv_NewKeyVersion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_NewKeyText"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
+        android:text="Key Version: "
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <EditText
+        android:id="@+id/EditText_NewKeyVersion"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/tv_NewKeyVersion"
+        android:layout_alignBaseline="@+id/tv_NewKeyVersion"
+        android:digits="0123456789ABCDEF"
+        android:ems="20"
+        android:hint="1 byte Hex"
+        android:inputType="textCapCharacters"
+        android:maxLength="2"
+        android:textAlignment="textStart" />
+
+    <ListView
+        android:id="@+id/lv_KeyList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_NewKeyVersion"
+        android:layout_marginTop="10dp"/>
+
+</RelativeLayout>

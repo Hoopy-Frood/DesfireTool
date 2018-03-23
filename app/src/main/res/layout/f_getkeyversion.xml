@@ -11,6 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
+        android:layout_marginLeft="10dp"
         android:text="Key to Inquire: "
         android:textColor="#000000"
         android:textSize="16sp"
@@ -33,9 +34,8 @@
         android:id="@+id/button_Go"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
         android:text="Go"
         android:textAllCaps="false"
-        android:layout_alignBottom="@+id/spinner_KeyToInquire"
-        android:layout_toEndOf="@+id/spinner_KeyToInquire"/>
+        android:layout_alignBaseline="@+id/KeyText"
+        android:layout_alignParentRight="true"/>
 </RelativeLayout>

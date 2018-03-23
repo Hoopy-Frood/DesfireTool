@@ -171,6 +171,10 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {mCallback.onGetKeySettings();
             }
         });
+        buttonChangeKey.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onChangeKey();
+            }
+        });
         // Buttons - Application
         buttonSelect.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onSelectApplication();
@@ -380,7 +384,7 @@ public class fCommandMenu extends Fragment{
         buttonFormatPICC.setEnabled(true);
         // Buttons - Key Management
         buttonSetConfiguration.setEnabled(true);
-        buttonChangeKey.setEnabled(false);
+        buttonChangeKey.setEnabled(true);
         buttonChangeKeySettings.setEnabled(false);
         // Buttons - File Management
         buttonCreateFile.setEnabled(true);

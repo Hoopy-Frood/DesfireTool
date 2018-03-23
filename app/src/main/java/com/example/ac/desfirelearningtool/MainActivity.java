@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fCredit creditFragment;
     fDebit debitFragment;
     fLimitedCredit limitedCreditFragment;
+    fChangeKey changeKeyFragment;
 
     protected PendingIntent pendingIntent;
     protected IntentFilter[] intentFiltersArray;
@@ -541,11 +542,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onGetKeySettings (){
 
         try {
-            scrollLog.appendTitle("Get Get Key Settings");
+            scrollLog.appendTitle("Get Key Settings");
             MifareDesfire.DesfireResponse res = desfireCard.getKeySettings();
 
             if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get Key Settins Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("Get Key Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 return;
             }
             scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
@@ -587,8 +588,62 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onGetKeySettings", e.getMessage(), e);
         }
+    }
+
+    public byte[] onFragmentGetKeySettings (){
+        MifareDesfire.DesfireResponse res;
+        try {
+            scrollLog.appendTitle("Get Key Settings");
+            res = desfireCard.getKeySettings();
+
+            if (res.status != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get Key Settins Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                return null;
+            }
+            scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
+
+            if ((res.data[0] & (byte) 0xF0) == (byte) 0x00) {
+                scrollLog.appendData("- Change key access: Master Key");
+            } else if ((res.data[0] & (byte) 0xF0) == (byte) 0xE0) {
+                scrollLog.appendData("- Change key access right: Same Key");
+            } else if ((res.data[0] & (byte) 0xF0) == (byte) 0xF0) {
+                scrollLog.appendData("- Change key access right: Frozen");
+            } else {
+                scrollLog.appendData("Change key access right: Key " + ByteArray.byteToHexString((byte) (res.data[0] >> 4)));
+            }
+            if ((res.data[0] & (byte) 0x08) != (byte) 0x00) {
+                scrollLog.appendData("- Configuration changeable");
+            }
+            if ((res.data[0] & (byte) 0x04) != (byte) 0x00) {
+                scrollLog.appendData("- Master key not required for create/delete");
+            }
+            if ((res.data[0] & (byte) 0x02) != (byte) 0x00) {
+                scrollLog.appendData("- Free directory list access");
+            }
+            if ((res.data[0] & (byte) 0x01) != (byte) 0x00) {
+                scrollLog.appendData("- Allow change of master key");
+            }
+            if ((res.data[1] & (byte) 0xC0) == (byte) 0x00) {
+                scrollLog.appendData("- Crypto method = DES/3DES");
+            } else if ((res.data[1] & (byte) 0xC0) == (byte) 0x40) {
+                scrollLog.appendData("- Crypto method = 3K3DES");
+            } else if ((res.data[1] & (byte) 0xC0) == (byte) 0x80) {
+                scrollLog.appendData("- Crypto method = AES");
+            }
+            if ((res.data[1] & (byte) 0x20) != (byte) 0x00) {
+                scrollLog.appendData("- Support 2 byte file identifiers");
+            }
+            scrollLog.appendData("- No. of keys: " + ByteArray.byteToHexString( (byte) (res.data[1] & (byte) 0x07)));
+
+        }
+        catch (Exception e) {
+            Log.e("onGetKeySettings", e.getMessage(), e);
+            scrollLog.appendError("Get Key Settigns Error");
+            return null;
+        }
+        return res.data;
     }
     //endregion
 
@@ -632,6 +687,49 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
+    //region Change Key
+    public void onChangeKey (){
+        scrollLog.appendTitle("Change Key");
+
+        getSupportActionBar().setTitle("Get Key Version");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        changeKeyFragment = new fChangeKey();
+
+        Bundle bundle = new Bundle();
+        bundle.putInt("currentAuthenticatedKey", desfireCard.currentAuthenticatedKey());
+        bundle.putByte("currentAuthenticationMode", desfireCard.currentAuthenticationMode());
+
+        //changeKeyFragment.setArguments(getIntent().getExtras());
+        changeKeyFragment.setArguments(bundle);
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,changeKeyFragment).addToBackStack("commandview").commit();
+
+    }
+
+    public void onChangeKeyReturn(byte bKeyToChange, byte KeyVersion, byte[] baNewKey, byte[] baOldKey) {
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        try {
+            MifareDesfire.DesfireResponse retValue = desfireCard.getKeyVersion(bKeyToChange);
+            if (retValue.status != MifareDesfire.statusType.SUCCESS)
+                scrollLog.appendError("Get Key Version Failed: " + desfireCard.DesFireErrorMsg(retValue.status));
+            else
+                scrollLog.appendTitle("Key " + bKeyToChange + " is version: " + ByteArray.byteArrayToHexString(retValue.data));
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
     //region Authenticate
     public void onAuthenticate (){
         getSupportActionBar().setTitle("Authenticate");
@@ -663,76 +761,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendStatus("Authentication Successful");
 
             }
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
-        }
-    }
-    //endregion
-
-    //region Authentication Test
-    public void onAuthenticateTest (){
-
-        byte[] zeroKey = new byte[8];
-        Arrays.fill(zeroKey, (byte)0);
-
-        try {
-            scrollLog.appendTitle("Authentication");
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte) 0, zeroKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
-            } else{
-
-                scrollLog.appendStatus("Authentication Successful");
-            }
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
-        }
-    }
-
-    public void onAuthISOTest (){
-
-        byte[] zeroKey = new byte[24];
-        Arrays.fill(zeroKey, (byte)0);
-
-        try {
-            scrollLog.appendTitle("Authentication");
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x1A, (byte) 0, zeroKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
-            } else {
-                scrollLog.appendStatus("Authentication Successful");
-            }
-
-        }
-        catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
-        }
-    }
-
-    public void onAuthAESTest (){
-
-        byte[] zeroKey = new byte[16];
-        Arrays.fill(zeroKey, (byte)0);
-
-        try {
-            scrollLog.appendTitle("Authentication");
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0xAA, (byte) 0, zeroKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
-            } else {
-                scrollLog.appendStatus("Authentication Successful");
-            }
-
 
         }
         catch (Exception e) {
@@ -904,23 +932,19 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onGoGetKeyVersionReturn(byte iKeyToInquire) {
-        scrollLog.appendTitle("Get Key Version Return");
-
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
         commandFragment.enableAllButtons();
-        
-
-        scrollLog.appendTitle("Key to inquire = " + iKeyToInquire);
 
         try {
             MifareDesfire.DesfireResponse retValue = desfireCard.getKeyVersion(iKeyToInquire);
             if (retValue.status != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Get Key Version Failed: " + desfireCard.DesFireErrorMsg(retValue.status));
             else
-                scrollLog.appendTitle("Key Version: " + ByteArray.byteArrayToHexString(retValue.data));
+                scrollLog.appendTitle("Key " + iKeyToInquire + " is version: " + ByteArray.byteArrayToHexString(retValue.data));
+
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1825,6 +1849,76 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
             Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+    //region Authentication Tests
+    public void onAuthenticateTest (){
+
+        byte[] zeroKey = new byte[8];
+        Arrays.fill(zeroKey, (byte)0);
+
+        try {
+            scrollLog.appendTitle("Authentication");
+            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte) 0, zeroKey);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else{
+
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
+        }
+    }
+
+    public void onAuthISOTest (){
+
+        byte[] zeroKey = new byte[24];
+        Arrays.fill(zeroKey, (byte)0);
+
+        try {
+            scrollLog.appendTitle("Authentication");
+            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x1A, (byte) 0, zeroKey);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
+        }
+    }
+
+    public void onAuthAESTest (){
+
+        byte[] zeroKey = new byte[16];
+        Arrays.fill(zeroKey, (byte)0);
+
+        try {
+            scrollLog.appendTitle("Authentication");
+            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0xAA, (byte) 0, zeroKey);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthenticate", e.getMessage(), e);
         }
     }
     //endregion
