@@ -709,18 +709,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     }
 
-    public void onChangeKeyReturn(byte bKeyToChange, byte KeyVersion, byte[] baNewKey, byte[] baOldKey) {
+    public void onChangeKeyReturn(byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey) {
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse retValue = desfireCard.getKeyVersion(bKeyToChange);
-            if (retValue.status != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Get Key Version Failed: " + desfireCard.DesFireErrorMsg(retValue.status));
+            MifareDesfire.statusType retValue = desfireCard.changeKey (bKeyToChange,bKeyVersion, baNewKey, baOldKey);
+            if (retValue != MifareDesfire.statusType.SUCCESS)
+                scrollLog.appendError("Change Key Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
-                scrollLog.appendTitle("Key " + bKeyToChange + " is version: " + ByteArray.byteArrayToHexString(retValue.data));
+                scrollLog.appendStatus("Change Key Success");
 
         } catch (Exception e) {
             commandFragment.disableAllButtons();

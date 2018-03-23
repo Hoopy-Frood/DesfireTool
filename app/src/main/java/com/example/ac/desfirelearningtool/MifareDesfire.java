@@ -304,7 +304,7 @@ public class MifareDesfire {
         return result.status;
     }
 
-    public statusType changeKey (byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey) {
+    public statusType changeKey (byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey) throws GeneralSecurityException, IOException{
         ByteArray keyBlockBuilder = new ByteArray();
 
         // Ensure it is currently authenticated
@@ -317,6 +317,8 @@ public class MifareDesfire {
         // Case 2
         // Append NewKey
         keyBlockBuilder.append(baNewKey);
+
+        // Append / Modify to include key version;
         if (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHAES) {
             keyBlockBuilder.append(bKeyVersion);
         } else {  // TODO: Set key version into last bit of each byte
@@ -325,9 +327,42 @@ public class MifareDesfire {
 
         // Common
         // Append CRC (New Key)
-        byte [] bCRC = dfCrypto.calcCRC(baNewKey);
+        keyBlockBuilder.append(dfCrypto.calcCRC(baNewKey));
+
+        //
+        byte [] cipheredKeyData = dfCrypto.encryptDataBlock (keyBlockBuilder.toArray());
+
+        //Send to card
+        ByteArray commandBuilder = new ByteArray();
+
+        commandBuilder.append((byte) 0xC4).append(bKeyToChange).append(cipheredKeyData);
 
 
+        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(commandBuilder.toArray()));
+
+        byte[] response = cardCommunicator.transceive(commandBuilder.toArray());
+
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.trackCMAC) {
+                Log.d("writeData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                if (dfCrypto.verifyCMAC(response)) {
+                    scrollLog.appendStatus("OK: CMAC Verified");
+                } else {
+                    scrollLog.appendError("Failed: CMAC Verified");
+                }
+                result.data = ByteArray.appendCutMAC(response,8);
+            } else {
+                result.data = ByteArray.appendCut(null, response);
+            }
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+        return result.status;
 
     }
 
