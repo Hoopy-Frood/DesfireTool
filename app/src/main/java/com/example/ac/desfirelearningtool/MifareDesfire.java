@@ -74,14 +74,34 @@ public class MifareDesfire {
      * @throws IOException
      */
     public DesfireResponse getCardUID() throws Exception {
-        DesfireResponse res = sendBytes(new byte[]{(byte)0x51});
-        
-        if (res.status != statusType.SUCCESS ) {
-            return res;
+
+        ByteArray array = new ByteArray();
+        byte[] cmd = array.append((byte) 0x51).toArray();
+
+        if ((dfCrypto.trackCMAC)) {
+            Log.d("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd));
+            dfCrypto.calcCMAC(cmd);
         }
 
-        res.data = dfCrypto.decrypt(res.data);
-        return res;
+        byte[] response = cardCommunicator.transceive(cmd);
+
+        DesfireResponse result = new DesfireResponse();
+
+        result.status = findStatus(response[0]);
+
+        if (result.status == statusType.SUCCESS) {
+            // Result is always encrypted
+            dfCrypto.storeAFEncrypted(response);
+            dfCrypto.encryptedLength = 7;
+            try {
+                result.data = dfCrypto.decryptReadData();
+            } catch (GeneralSecurityException e) {
+                scrollLog.appendError(e.getMessage());
+            }
+
+        }
+
+        return result;
     }
 
     /**
@@ -347,7 +367,6 @@ public class MifareDesfire {
 
 
     public DesfireResponse getMoreData(commMode curCommMode) throws IOException {
-        ByteArray array = new ByteArray();
         byte[] cmd = new byte[] {(byte)0xAF};
 
 
@@ -1093,7 +1112,7 @@ public class MifareDesfire {
             if (dfCrypto.trackCMAC) {
                 Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
                 if (dfCrypto.verifyCMAC(response)) {
-                    scrollLog.appendStatus("CMAC Verfied");
+                    scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
                     scrollLog.appendError("Failed: CMAC Verified");
                 }

@@ -459,9 +459,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     //region Get Card UID
     public void onGetCardUID (){
-
+        scrollLog.appendTitle("Get Card UID");
         try {
-            scrollLog.appendTitle("Get Card UID");
+
             MifareDesfire.DesfireResponse res = desfireCard.getCardUID();
             if (res.status != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Get Card UID Failed: " + desfireCard.DesFireErrorMsg(res.status));
@@ -983,8 +983,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
-
-    //region create File
+    //region Create File
     public void onCreateFile (){
         scrollLog.appendTitle("Create File");
 
@@ -1146,8 +1145,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
     }
     //endregion
-
-
 
     //region Get File Settings
     public void onGetFileSettings() {
@@ -1455,6 +1452,50 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
+    //region Write Data
+    public void onWriteData() {
+        scrollLog.appendTitle("Write Data");
+
+        getSupportActionBar().setTitle("Write Data");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baFileIDList", baFileIDList);
+        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
+        getWriteDataFragment = new fWriteData();
+        getWriteDataFragment.setArguments(bundle);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
+    }
+
+    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode selCommMode) {
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        try {
+
+            // TODO: separate data blocks if too long
+            MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
+            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
+                scrollLog.appendStatus("Write Data File Success");
+            } else {
+                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                Log.d("onWriteDataReturn", "writeData return: " + desfireCard.DesFireErrorMsg(res.status));
+            }
+
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
     //region Read Records
     public void onReadRecords() {
         scrollLog.appendTitle("Read Records");
@@ -1504,52 +1545,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 }
 
                 scrollLog.appendData("No data returned");
-            }
-
-        } catch (Exception e) {
-            commandFragment.disableAllButtons();
-            scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onActivityResult", e.getMessage(), e);
-        }
-    }
-    //endregion
-
-    //region Write Data
-    public void onWriteData() {
-        scrollLog.appendTitle("Write Data");
-
-        getSupportActionBar().setTitle("Write Data");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        Bundle bundle = new Bundle();
-        bundle.putByteArray("baFileIDList", baFileIDList);
-        bundle.putBoolean("bFileIDListPopulated", bFileIDListPopulated);
-        getWriteDataFragment = new fWriteData();
-        getWriteDataFragment.setArguments(bundle);
-
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container,getWriteDataFragment).addToBackStack("commandview").commit();
-    }
-
-
-
-    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
-        try {
-
-            // TODO: separate data blocks if too long
-            MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) ) {
-                scrollLog.appendStatus("Write Data File Success");
-            } else {
-                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                Log.d("onWriteDataReturn", "writeData return: " + desfireCard.DesFireErrorMsg(res.status));
             }
 
         } catch (Exception e) {
@@ -1995,7 +1990,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
-
+    //region Testing
     public void createTestPersoFiles () {
         try {
             byte[] baNull = new byte[]{};
@@ -2055,8 +2050,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("createTestPersoFiles", e.getMessage(), e);
         }
     }
-
-
 
     public void onTestAll() {
 
@@ -2337,6 +2330,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 */
     }
 
+    //endregion
 
 
 

@@ -78,9 +78,6 @@ public interface IMainActivityCallbacks {
 
     // Testing
     void onCreateTestPerso();
-/*    void onReadDataTest(byte fileID);
-    void onReadDataMACTest(byte fileID);
-    void onReadDataEncryptedTest(byte fileID, int bytesToRead);*/
     void onAuthISOTest();
     void onAuthAESTest();
     void onTestAll();
