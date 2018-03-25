@@ -306,62 +306,93 @@ public class MifareDesfire {
 
     public statusType changeKey (byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey) throws GeneralSecurityException, IOException{
         ByteArray keyBlockBuilder = new ByteArray();
-
+        ByteArray commandBuilder = new ByteArray();
         // Ensure it is currently authenticated
 
         // Case 1
-        // If oldKey != null,
-        // Append (OldKey XOR NewKey)
-        // Append CRC ( Oldkey XOR NewKey)
+        // If oldKey != null, AND bKeyToChange != currAuthKey
+        if (bKeyToChange != dfCrypto.currentAuthenticatedKey) {
+            if (baOldKey == null) {
+                throw new GeneralSecurityException("Previous Key not specified");
+            }
+            if (baOldKey.length != baNewKey.length) {
+                throw new GeneralSecurityException("Previous and New Keys are not the same length");
+            }
+            keyBlockBuilder.append(ByteArray.xor(baOldKey, baNewKey));
 
-        // Case 2
-        // Append NewKey
-        keyBlockBuilder.append(baNewKey);
+            // Append / Modify to include key version;
+            if (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHAES) {
+                keyBlockBuilder.append(bKeyVersion);
+            } else {  // TODO: Set key version into last bit of each byte
 
-        // Append / Modify to include key version;
-        if (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHAES) {
-            keyBlockBuilder.append(bKeyVersion);
-        } else {  // TODO: Set key version into last bit of each byte
+            }
+            commandBuilder.append((byte) 0xC4).append(bKeyToChange);
 
+
+            // CALC CRC
+
+            byte[] computedCRC;
+
+            if (dfCrypto.CRCLength == 4) {
+                ByteArray baDataToCRC = new ByteArray();
+                baDataToCRC.append(commandBuilder.toArray()).append(keyBlockBuilder.toArray());
+                Log.d("changeKey", "CRC Input = " + ByteArray.byteArrayToHexString(baDataToCRC.toArray()));
+                computedCRC = dfCrypto.calcCRC(baDataToCRC.toArray());
+            } else {
+                Log.d("changeKey", "CRC Input = " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
+                computedCRC = dfCrypto.calcCRC(keyBlockBuilder.toArray());
+            }
+
+            keyBlockBuilder.append(computedCRC);
+            keyBlockBuilder.append(dfCrypto.calcCRC(baNewKey));
+            Log.d("changeKey", "Case 1 Input = " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
+
+            commandBuilder.append(dfCrypto.encryptDataBlock (keyBlockBuilder.toArray()));
+
+        } else {
+            // Case 2
+            // Append NewKey
+            keyBlockBuilder.append(baNewKey);
+
+            // Append / Modify to include key version;
+            if (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHAES) {
+                keyBlockBuilder.append(bKeyVersion);
+            } else {  // TODO: Set key version into last bit of each byte
+
+            }
+
+            commandBuilder.append((byte) 0xC4).append(bKeyToChange);
+
+            commandBuilder.append(dfCrypto.encryptWriteDataBlock (commandBuilder.toArray(), keyBlockBuilder.toArray()));
         }
 
-        // Common
-        // Append CRC (New Key)
-        keyBlockBuilder.append(dfCrypto.calcCRC(baNewKey));
 
-        //
-        byte [] cipheredKeyData = dfCrypto.encryptDataBlock (keyBlockBuilder.toArray());
+        Log.d("changeKey","Command to send: " + ByteArray.byteArrayToHexString(commandBuilder.toArray()));
 
-        //Send to card
-        ByteArray commandBuilder = new ByteArray();
-
-        commandBuilder.append((byte) 0xC4).append(bKeyToChange).append(cipheredKeyData);
-
-
-        Log.d("writeData","Command to send: " + ByteArray.byteArrayToHexString(commandBuilder.toArray()));
 
         byte[] response = cardCommunicator.transceive(commandBuilder.toArray());
-
 
         DesfireResponse result = new DesfireResponse();
 
         result.status = findStatus(response[0]);
 
+        if (bKeyToChange == dfCrypto.currentAuthenticatedKey)
+            dfCrypto.reset();
+
         if (result.status == statusType.SUCCESS) {
             if (dfCrypto.trackCMAC) {
-                Log.d("writeData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                Log.d("changeKey", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
-                result.data = ByteArray.appendCutMAC(response,8);
-            } else {
-                result.data = ByteArray.appendCut(null, response);
             }
+
         } else {
-            dfCrypto.trackCMAC = false;
+            dfCrypto.reset();
         }
+
         return result.status;
 
     }
@@ -391,7 +422,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
@@ -450,7 +481,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
@@ -508,14 +539,14 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
                 if (dfCrypto.verifyD40MAC(response)) {
-                    scrollLog.appendStatus("MAC Verified");
+                    scrollLog.appendStatus("OK: MAC Verified");
                 } else {
-                    scrollLog.appendError("MAC Incorrect");
+                    scrollLog.appendError("Failed: MAC Incorrect");
                 }
                 result.data = ByteArray.appendCutMAC(response,4);
             } else {
@@ -595,7 +626,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutMAC(response,8);
             } else {
@@ -673,7 +704,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             /*} else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
@@ -744,7 +775,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
@@ -824,7 +855,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutMAC(response,8);
             } else {
@@ -896,7 +927,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutMAC(response,8);
             } else {
@@ -968,7 +999,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutMAC(response,8);
             } else {
@@ -1059,7 +1090,7 @@ public class MifareDesfire {
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Verified");
+                    scrollLog.appendError("Failed: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else {

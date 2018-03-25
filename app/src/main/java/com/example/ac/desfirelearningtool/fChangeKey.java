@@ -18,8 +18,6 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.ac.desfirelearningtool.ByteArray.hexStringToByteArray;
-
 /**
  * Created by andrew on 2018/03/23.
  */
@@ -219,7 +217,7 @@ public class fChangeKey  extends Fragment {
             return;
 
         Log.d("ChangeKey", "Input OK");
-        byte bKeyChosen = (byte) (spKeyToChange.getSelectedItemPosition());
+        byte bKeyChosen = (byte) (spKeyToChange.getSelectedItemPosition()-1);
 
         byte [] baNewKey = ByteArray.hexStringToByteArray(etNewKey.getText().toString());
         byte [] baOldKey = null;

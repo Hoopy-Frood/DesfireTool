@@ -175,6 +175,7 @@ public class DesfireCrypto {
         try {
             switch (authMode) {
                 case MODE_AUTHD40:
+                    Arrays.fill(currentIV, (byte) 0);
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));  // IV is always 00..00
                     encOutput = cipher.doFinal(encInput);
                     break;
@@ -983,10 +984,10 @@ public class DesfireCrypto {
 
         if (CRCLength == 4) {
             baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray();
-            Log.d("encryptWriteDataBlock", "CRC Input = " + ByteArray.byteArrayToHexString(baDataToCRC.toArray()));
+            Log.d("encryptWriteDataBlock", "CRC32 Input = " + ByteArray.byteArrayToHexString(baDataToCRC.toArray()));
             computedCRC = calcCRC(baDataToCRC.toArray());
         } else {
-            Log.d("encryptWriteDataBlock", "CRC Input = " + ByteArray.byteArrayToHexString(bDataToEncrypt));
+            Log.d("encryptWriteDataBlock", "CRC16 Input = " + ByteArray.byteArrayToHexString(bDataToEncrypt));
             computedCRC = calcCRC(bDataToEncrypt);
         }
 
@@ -998,7 +999,7 @@ public class DesfireCrypto {
     // encrypt Data Block - encrypts bDataToEncrypt + padding only.  CRC not included
     public byte[] encryptDataBlock(byte[] bDataToEncrypt) throws IOException, GeneralSecurityException {
         // DO PADDING
-        int iPaddingLen = (blockLength - (bDataToEncrypt.length % blockLength) % blockLength;
+        int iPaddingLen = (blockLength - (bDataToEncrypt.length % blockLength)) % blockLength;
 
         //int iDataToEncryptLen = bDataToEncrypt.length + CRCLength + iPaddingLen;
         byte[] bPadding = new byte[iPaddingLen];
@@ -1013,7 +1014,7 @@ public class DesfireCrypto {
         byte[] bEncryptedData = encryptData(baDataToEncrypt.toArray());
 
         if (bEncryptedData == null)
-            throw new GeneralSecurityException("Encryption error: Encryption Input = " + ByteArray.byteArrayToHexString(bEncryptedData));
+            throw new GeneralSecurityException("Encryption error");
 
         Log.d("encryptDataBlock", "Encrypted Data = " + ByteArray.byteArrayToHexString(bEncryptedData));
 
