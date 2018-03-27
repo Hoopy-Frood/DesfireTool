@@ -1011,7 +1011,7 @@ public class DesfireCrypto {
 
         Log.d("encryptDataBlock", "Input Data     = " + ByteArray.byteArrayToHexString(baDataToEncrypt.toArray()));
 
-        byte[] bEncryptedData = encryptData(baDataToEncrypt.toArray());
+        byte[] bEncryptedData = encrypt(baDataToEncrypt.toArray());
 
         if (bEncryptedData == null)
             throw new GeneralSecurityException("Encryption error");

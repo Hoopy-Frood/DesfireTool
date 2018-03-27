@@ -674,6 +674,14 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //region Set Configuration
     public void onSetConfiguration (){
 
+        byte [] key00_16 = new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00};
+        byte [] key01_16 = new byte [] {(byte) 0x12, (byte) 0x22,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00};
+        byte [] key0A_16 = new byte [] {(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A};
+        byte [] key0B_16 = new byte [] {(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B};
+        byte [] key00_24 = new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00};
+        byte [] key0A_24 = new byte [] {(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A};
+        byte [] key0B_24 = new byte [] {(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B};
+
         Log.d("TestAll", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
@@ -682,26 +690,26 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
-        onChangeKeyReturn((byte) 0x00, (byte) 0xEE, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, null);
+        onChangeKeyReturn((byte) 0x00, (byte) 0x00, key01_16, null);
 
 
         onAuthenticateTest ();
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, new byte [] {(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00});
+        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key0A_16, key00_16);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, new byte [] {(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A});
+        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_16, key0A_16);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, new byte [] {(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00});
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key0B_16, key00_16);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, new byte [] {(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B});
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_16, key0B_16);
         Log.d("TestAll", "*** Test Change Key ****************************");
 /*
 /*
@@ -713,26 +721,26 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
-        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, null);
+        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, key00_24, null);
 
 
         onAuthISOTest ();
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00});
+        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key0A_24, key00_24);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A});
+        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_24, key0A_24);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00});
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key0B_24, key00_24);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B});
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_24, key0B_24);
         Log.d("TestAll", "*** Test Change Key ****************************");
 
 /*
@@ -743,26 +751,25 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, null);
+        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, key00_16, null);
 
 
         onAuthAESTest ();
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x1A, new byte [] {(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00});
+        onChangeKeyReturn((byte) 0x01, (byte) 0x1A, key0A_16, key00_16);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x2A, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, new byte [] {(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A});
+        onChangeKeyReturn((byte) 0x01, (byte) 0x1A, key00_16, key0B_16);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x1A, new byte [] {(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B}, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00});
-
+        onChangeKeyReturn((byte) 0x02, (byte) 0x2A, key0B_16, key00_16);
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x2A, new byte [] {(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00,(byte) 0x00, (byte) 0x00}, new byte [] {(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B});
+        onChangeKeyReturn((byte) 0x02, (byte) 0x2A, key00_16, key0B_16);
 */
     }
     //endregion
@@ -1022,7 +1029,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (retValue.status != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Get Key Version Failed: " + desfireCard.DesFireErrorMsg(retValue.status));
             else
-                scrollLog.appendTitle("Key " + iKeyToInquire + " version is " + ByteArray.byteArrayToHexString(retValue.data));
+                scrollLog.appendData("Key " + iKeyToInquire + " version is " + ByteArray.byteArrayToHexString(retValue.data));
 
         } catch (Exception e) {
             commandFragment.disableAllButtons();
