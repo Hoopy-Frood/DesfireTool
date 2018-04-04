@@ -83,11 +83,13 @@ public class MifareDesfire {
             try {
                 result.data = dfCrypto.decryptReadData();
             } catch (GeneralSecurityException e) {
+                result.status = statusType.PCD_ENCRYPTION_ERROR;
+                Log.d("getCardUID", "Result.status is: " + DesFireErrorMsg(result.status) );
                 scrollLog.appendError(e.getMessage());
             }
 
         }
-
+        Log.d("getCardUID", "Success Result.status is: " +DesFireErrorMsg(result.status) );
         return result;
     }
 
@@ -1260,6 +1262,7 @@ public class MifareDesfire {
                 break;
             case PCD_ENCRYPTION_ERROR:
                 returnString = "PCD encryption error";
+                break;
             default:
                 returnString = "Unknown error";
         }

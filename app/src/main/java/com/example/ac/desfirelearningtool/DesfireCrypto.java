@@ -967,6 +967,7 @@ public class DesfireCrypto {
         if (!Arrays.equals(baCRC.toArray(), computedCRC)) {
             Log.d("decryptReadData", "CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
             throw new GeneralSecurityException("CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
+            //return null;
         }
         // Reset
         encryptedLength = 0;

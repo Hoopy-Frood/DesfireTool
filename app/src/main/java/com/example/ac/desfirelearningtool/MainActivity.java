@@ -690,7 +690,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
-        onChangeKeyReturn((byte) 0x00, (byte) 0x00, key01_16, null);
+        onChangeKeyReturn((byte) 0x00, (byte) 0x00, key00_16, null);
 
 
         onAuthenticateTest ();
@@ -1942,7 +1942,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //region Authentication Tests
     public void onAuthenticateTest (){
 
-        byte[] zeroKey = new byte[8];
+        byte[] zeroKey = new byte[16];
         Arrays.fill(zeroKey, (byte)0);
 
         try {
@@ -2288,7 +2288,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onCommitTransaction();
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
-
+/*
         scrollLog.appendTitle("***** TEST Get Value - Plain");
         onGetValueReturn((byte) 0x07, PLAIN);
         onCreditReturn((byte)0x07,80,PLAIN);
