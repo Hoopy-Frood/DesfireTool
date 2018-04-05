@@ -692,7 +692,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
         onChangeKeyReturn((byte) 0x00, (byte) 0x00, key00_16, null);
 
-
+/*
         onAuthenticateTest ();
 
         scrollLog.appendTitle("***** TEST Change different key Data");
@@ -711,7 +711,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** TEST Change different key Data **************************");
         onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_16, key0B_16);
         Log.d("TestAll", "*** Test Change Key ****************************");
-/*
+
 /*
         Log.d("TestAll", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST ISO DES CHANGE KEY ");
@@ -2264,7 +2264,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         scrollLog.appendTitle("***** TEST Encrypted Data");
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-        Log.d("TestAll", "*** Write Encrypted Data **************************");
+       Log.d("TestAll", "*** Write Encrypted Data **************************");
         onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
@@ -2288,7 +2288,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onCommitTransaction();
         Log.d("TestAll", "*** Write MAC Record **************************");
         onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
-/*
+
         scrollLog.appendTitle("***** TEST Get Value - Plain");
         onGetValueReturn((byte) 0x07, PLAIN);
         onCreditReturn((byte)0x07,80,PLAIN);
@@ -2506,7 +2506,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onCommitTransaction();
         onGetValueReturn((byte) 0x09, ENCIPHERED);
 
-                /*
+  /*               /*
 */
     }
 

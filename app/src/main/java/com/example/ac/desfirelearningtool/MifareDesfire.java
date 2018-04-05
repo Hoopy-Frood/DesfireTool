@@ -81,15 +81,13 @@ public class MifareDesfire {
             dfCrypto.storeAFEncrypted(response);
             dfCrypto.encryptedLength = 7;
             try {
-                result.data = dfCrypto.decryptReadData();
+                result.data = dfCrypto.decryptWithIV();
             } catch (GeneralSecurityException e) {
                 result.status = statusType.PCD_ENCRYPTION_ERROR;
-                Log.d("getCardUID", "Result.status is: " + DesFireErrorMsg(result.status) );
                 scrollLog.appendError(e.getMessage());
             }
 
         }
-        Log.d("getCardUID", "Success Result.status is: " +DesFireErrorMsg(result.status) );
         return result;
     }
 
@@ -365,7 +363,7 @@ public class MifareDesfire {
 
             commandBuilder.append((byte) 0xC4).append(bKeyToChange);
 
-            commandBuilder.append(dfCrypto.encryptWriteDataBlock (commandBuilder.toArray(), keyBlockBuilder.toArray()));
+            commandBuilder.append(dfCrypto.encryptDataWithIV (commandBuilder.toArray(), keyBlockBuilder.toArray()));
         }
 
 
@@ -388,6 +386,7 @@ public class MifareDesfire {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
                     scrollLog.appendError("Failed: CMAC Incorrect");
+                    result.status=statusType.PCD_ENCRYPTION_ERROR;
                 }
             }
 
@@ -476,6 +475,7 @@ public class MifareDesfire {
                     result.data = dfCrypto.decryptReadData();
                 } catch (GeneralSecurityException e) {
                     scrollLog.appendError(e.getMessage());
+                    result.status = statusType.PCD_ENCRYPTION_ERROR;
                 }
 
             } else if (dfCrypto.trackCMAC) {
@@ -484,6 +484,7 @@ public class MifareDesfire {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
                     scrollLog.appendError("Failed: CMAC Incorrect");
+                    result.status = statusType.PCD_ENCRYPTION_ERROR;
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
@@ -491,6 +492,7 @@ public class MifareDesfire {
                     scrollLog.appendStatus("MAC Verified");
                 } else {
                     scrollLog.appendError("MAC Incorrect");
+                    result.status = statusType.PCD_ENCRYPTION_ERROR;
                 }
                 result.data = ByteArray.appendCutMAC(response,4);
             } else {
