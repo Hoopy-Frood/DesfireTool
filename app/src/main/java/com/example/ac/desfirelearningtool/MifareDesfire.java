@@ -85,6 +85,9 @@ public class MifareDesfire {
             } catch (GeneralSecurityException e) {
                 result.status = statusType.PCD_ENCRYPTION_ERROR;
                 scrollLog.appendError(e.getMessage());
+            } finally {
+                dfCrypto.storedAFData.clear();
+                dfCrypto.encryptedLength = 0;
             }
 
         }

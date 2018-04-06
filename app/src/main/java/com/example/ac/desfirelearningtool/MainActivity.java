@@ -1942,7 +1942,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //region Authentication Tests
     public void onAuthenticateTest (){
 
-        byte[] zeroKey = new byte[16];
+        byte[] zeroKey = new byte[8];
         Arrays.fill(zeroKey, (byte)0);
 
         try {

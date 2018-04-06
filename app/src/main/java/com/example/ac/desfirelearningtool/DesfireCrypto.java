@@ -1062,8 +1062,9 @@ public class DesfireCrypto {
 
         decryptedData = decrypt(storedAFData.toArray());
 
-        if (decryptedData == null)
+        if (decryptedData == null) {
             throw new GeneralSecurityException("Decryption error: Encryption Input = " + ByteArray.byteArrayToHexString(storedAFData.toArray()));
+        }
 
         Log.d("decryptWithIV", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
 
@@ -1095,8 +1096,6 @@ public class DesfireCrypto {
         Log.d("decryptWithIV", "CRC to verify: " + ByteArray.byteArrayToHexString(baCRC.toArray()));
         if (!Arrays.equals(baCRC.toArray(), computedCRC)) {
             Log.d("decryptWithIV", "CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
-            encryptedLength = 0;
-            storedAFData.clear();
             throw new GeneralSecurityException("CRC Error: Card Returned: " + ByteArray.byteArrayToHexString(baCRC.toArray()) + " Calculated: " + ByteArray.byteArrayToHexString(computedCRC));
             //return null;
         }
@@ -1166,7 +1165,7 @@ public class DesfireCrypto {
             baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray();
             Log.d("encryptDataWithIV", "CRC32 Input = " + ByteArray.byteArrayToHexString(baDataToCRC.toArray()));
             computedCRC = calcCRC(baDataToCRC.toArray());
-        } else {
+        } else {  // CRC16 does not CRC the header
             Log.d("encryptDataWithIV", "CRC16 Input = " + ByteArray.byteArrayToHexString(bDataToEncrypt));
             computedCRC = calcCRC(bDataToEncrypt);
         }
@@ -1191,7 +1190,7 @@ public class DesfireCrypto {
 
         Log.d("encryptDataWithIVBlock", "Input Data     = " + ByteArray.byteArrayToHexString(baDataToEncrypt.toArray()));
 
-        byte[] bEncryptedData = encrypt(baDataToEncrypt.toArray());
+        byte[] bEncryptedData = encryptData(baDataToEncrypt.toArray());
 
         if (bEncryptedData == null)
             throw new GeneralSecurityException("Encryption error");
