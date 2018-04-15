@@ -682,11 +682,15 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         byte [] key0A_24 = new byte [] {(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A,(byte) 0x0A, (byte) 0x0A};
         byte [] key0B_24 = new byte [] {(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B,(byte) 0x0B, (byte) 0x0B};
 
+
+
         Log.d("TestAll", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
 
         onAuthenticateTest ();
+
+        onGetCardUID();
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** TEST Change Same key Data **************************");

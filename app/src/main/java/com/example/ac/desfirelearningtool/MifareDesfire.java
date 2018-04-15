@@ -315,6 +315,7 @@ public class MifareDesfire {
         // Case 1
         // If oldKey != null, AND bKeyToChange != currAuthKey
         if (bKeyToChange != dfCrypto.currentAuthenticatedKey) {
+            Log.d("changeKey","Change Key Case 1");
             if (baOldKey == null) {
                 throw new GeneralSecurityException("Previous Key not specified");
             }
@@ -350,9 +351,10 @@ public class MifareDesfire {
             keyBlockBuilder.append(dfCrypto.calcCRC(baNewKey));
             Log.d("changeKey", "Case 1 Input = " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
 
-            commandBuilder.append(dfCrypto.encryptDataBlock (keyBlockBuilder.toArray()));
+            commandBuilder.append(dfCrypto.encryptDataWithIVBlock (keyBlockBuilder.toArray()));
 
         } else {
+            Log.d("changeKey","Change Key Case 2");
             // Case 2
             // Append NewKey
             keyBlockBuilder.append(baNewKey);

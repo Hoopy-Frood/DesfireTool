@@ -94,6 +94,7 @@ public class DesfireCrypto {
             throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
         ByteArray tripleDesKey = new ByteArray();
         if (origKey.length == 8) {
+            //tripleDesKey.append(origKey).append(origKey).append(origKey);
             tripleDesKey.append(origKey).append(origKey).append(origKey);
             keyType = KEYTYPE_DES;
         } else if (origKey.length == 16) {
@@ -110,7 +111,7 @@ public class DesfireCrypto {
         }
 
         keySpec = new SecretKeySpec(tripleDesKey.toArray(), "DESede");
-        ;
+
         return true;
     }
 
@@ -179,7 +180,7 @@ public class DesfireCrypto {
                     Arrays.fill(nullIV, (byte) 0);
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(nullIV));  // IV is always 00..00
                     encOutput = cipher.doFinal(encInput);
-                    System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
+                    System.arraycopy(encInput, encInput.length - blockLength, currentIV, 0, blockLength);
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
@@ -280,9 +281,10 @@ public class DesfireCrypto {
         try {
             switch (authMode) {
                 case MODE_AUTHD40:
+                    Log.d("encrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));  // IV is always 00..00
                     encOutput = cipher.doFinal(encInput);
-                    System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
+                    System.arraycopy(encInput, encInput.length - blockLength, currentIV, 0, blockLength);
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
@@ -310,6 +312,7 @@ public class DesfireCrypto {
         try {
             switch (authMode) {
                 case MODE_AUTHD40:
+                    Log.d("decrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     decOutput = cipher.doFinal(decInput);
                     System.arraycopy(decInput, decInput.length - blockLength, currentIV, 0, blockLength);
@@ -478,7 +481,7 @@ public class DesfireCrypto {
                 blockLength = 8;
                 break;
             case KEYTYPE_AES:
-                // TEST
+                /*// TEST
                 sessionKey = new byte[]{(byte) 0x2b, (byte) 0x7e, (byte) 0x15, (byte) 0x16, (byte) 0x28, (byte) 0xae, (byte) 0xd2, (byte) 0xa6, (byte) 0xab, (byte) 0xf7, (byte) 0x15, (byte) 0x88, (byte) 0x09, (byte) 0xcf, (byte) 0x4f, (byte) 0x3c};
                 Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
                 getKeySpecAES(sessionKey);
@@ -492,7 +495,7 @@ public class DesfireCrypto {
                 Log.d("800-38B", "CalcMac Ex3  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte[]{(byte) 0x6b, (byte) 0xc1, (byte) 0xbe, (byte) 0xe2, (byte) 0x2e, (byte) 0x40, (byte) 0x9f, (byte) 0x96, (byte) 0xe9, (byte) 0x3d, (byte) 0x7e, (byte) 0x11, (byte) 0x73, (byte) 0x93, (byte) 0x17, (byte) 0x2a, (byte) 0xae, (byte) 0x2d, (byte) 0x8a, (byte) 0x57, (byte) 0x1e, (byte) 0x03, (byte) 0xac, (byte) 0x9c, (byte) 0x9e, (byte) 0xb7, (byte) 0x6f, (byte) 0xac, (byte) 0x45, (byte) 0xaf, (byte) 0x8e, (byte) 0x51, (byte) 0x30, (byte) 0xc8, (byte) 0x1c, (byte) 0x46, (byte) 0xa3, (byte) 0x5c, (byte) 0xe4, (byte) 0x11})));
                 Arrays.fill(currentIV, (byte) 0x00);
                 Log.d("800-38B", "CalcMac Ex4  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte[]{(byte) 0x6b, (byte) 0xc1, (byte) 0xbe, (byte) 0xe2, (byte) 0x2e, (byte) 0x40, (byte) 0x9f, (byte) 0x96, (byte) 0xe9, (byte) 0x3d, (byte) 0x7e, (byte) 0x11, (byte) 0x73, (byte) 0x93, (byte) 0x17, (byte) 0x2a, (byte) 0xae, (byte) 0x2d, (byte) 0x8a, (byte) 0x57, (byte) 0x1e, (byte) 0x03, (byte) 0xac, (byte) 0x9c, (byte) 0x9e, (byte) 0xb7, (byte) 0x6f, (byte) 0xac, (byte) 0x45, (byte) 0xaf, (byte) 0x8e, (byte) 0x51, (byte) 0x30, (byte) 0xc8, (byte) 0x1c, (byte) 0x46, (byte) 0xa3, (byte) 0x5c, (byte) 0xe4, (byte) 0x11, (byte) 0xe5, (byte) 0xfb, (byte) 0xc1, (byte) 0x19, (byte) 0x1a, (byte) 0x0a, (byte) 0x52, (byte) 0xef, (byte) 0xf6, (byte) 0x9f, (byte) 0x24, (byte) 0x45, (byte) 0xdf, (byte) 0x4f, (byte) 0x9b, (byte) 0x17, (byte) 0xad, (byte) 0x2b, (byte) 0x41, (byte) 0x7b, (byte) 0xe6, (byte) 0x6c, (byte) 0x37, (byte) 0x10})));
-
+                */
 
                 // Actual
                 sessionKey = new byte[16];
@@ -1189,8 +1192,7 @@ public class DesfireCrypto {
         baDataToEncrypt.append(bDataToEncrypt).append(bPadding);
 
         Log.d("encryptDataWithIVBlock", "Input Data     = " + ByteArray.byteArrayToHexString(baDataToEncrypt.toArray()));
-
-        byte[] bEncryptedData = encryptData(baDataToEncrypt.toArray());
+        byte[] bEncryptedData = encrypt(baDataToEncrypt.toArray());
 
         if (bEncryptedData == null)
             throw new GeneralSecurityException("Encryption error");
