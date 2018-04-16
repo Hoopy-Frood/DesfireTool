@@ -368,7 +368,7 @@ public class MifareDesfire {
 
             commandBuilder.append((byte) 0xC4).append(bKeyToChange);
 
-            commandBuilder.append(dfCrypto.encryptDataWithIV (commandBuilder.toArray(), keyBlockBuilder.toArray()));
+            commandBuilder.append(dfCrypto.encryptWriteDataBlock(commandBuilder.toArray(), keyBlockBuilder.toArray()));
         }
 
 

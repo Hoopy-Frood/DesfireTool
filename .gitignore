@@ -7,3 +7,9 @@
 /build
 /captures
 .externalNativeBuild
+/app/local.properties
+.idea/caches/
+app/.idea/workspace.xml
+app/build/
+app/local.properties
+projectFilesBackup/
