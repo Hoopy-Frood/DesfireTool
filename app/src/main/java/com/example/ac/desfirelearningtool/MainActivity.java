@@ -689,7 +689,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
 
-        onAuthISOTest (16);
+        onAuthenticateTest();
 
         onGetCardUID();
 
@@ -2240,7 +2240,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         // Select preset app D40
         Log.d("TestAll", "*** Test D40 ****************************");
-        scrollLog.appendTitle("***** TEST D40 ");
+        scrollLog.appendTitle("***** TEST D40 ***** ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
 
         onAuthenticateTest ();
@@ -2331,7 +2331,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         // Test ISO DES
         Log.d("TestAll", "*** Test ISO DES ****************************");
-        scrollLog.appendTitle("***** TEST ISO AES ");
+        scrollLog.appendTitle("***** TEST ISO DES ***** ");
         onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
 
         onAuthISOTest (24);
@@ -2423,7 +2423,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
         Log.d("TestAll", "*** Test AES ****************************");
-        scrollLog.appendTitle("***** TEST ISO AES ");
+        scrollLog.appendTitle("***** TEST ISO AES ***** ");
         onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0A, (byte) 0xE5});
 
         onAuthAESTest ();

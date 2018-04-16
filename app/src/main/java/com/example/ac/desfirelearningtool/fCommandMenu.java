@@ -272,7 +272,7 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onAuthISOTest();
+            public void onClick(View v) {mCallback.onAuthISOTest(24);
             }
         });
         buttonAuthAES.setOnClickListener(new View.OnClickListener() {

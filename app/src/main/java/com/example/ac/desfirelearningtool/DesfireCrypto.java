@@ -282,7 +282,7 @@ public class DesfireCrypto {
             switch (authMode) {
                 case MODE_AUTHD40:
                     Log.d("encrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
-                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));  // IV is always 00..00
+                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     System.arraycopy(encInput, encInput.length - blockLength, currentIV, 0, blockLength);
                     break;
@@ -510,9 +510,6 @@ public class DesfireCrypto {
         }
 
         //encryptionIV = Arrays.copyOf(currentIV, currentIV.length);
-
-        currentIV = new byte[blockLength];
-        Arrays.fill(currentIV, (byte) 0);
 
         switch (authMode) {
             case MODE_AUTHD40:
