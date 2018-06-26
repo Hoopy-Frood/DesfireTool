@@ -640,7 +640,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
         catch (Exception e) {
             Log.e("onGetKeySettings", e.getMessage(), e);
-            scrollLog.appendError("Get Key Settigns Error");
+            scrollLog.appendError("Get Key Setting  s Error");
             return null;
         }
         return res.data;
@@ -685,7 +685,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
 
-        Log.d("TestAll", "*** Test Change Key ****************************");
+        Log.d("onSetConfiguration", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
 
@@ -2511,11 +2511,49 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onCommitTransaction();
         onGetValueReturn((byte) 0x09, ENCIPHERED);
 
-  /*               /*
-*/
     }
 
-    //endregion
+    public void onTestCurrent() {
+
+        // Select preset app D40
+        Log.d("testCurrent", "*** Test D40 ****************************");
+        scrollLog.appendTitle("***** TEST D40 ***** ");
+        onSelectApplicationReturn(new byte[]{(byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
+
+        onAuthenticateTest();
+
+        scrollLog.appendTitle("***** TEST Plain Data");
+        Log.d("testCurrent", "*** Write Plain Data **************************");
+        onWriteDataReturn((byte) 0x01, 0, 3, new byte[]{(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
+        Log.d("testCurrent", "*** Read Plain Data **************************");
+        onReadDataReturn((byte) 0x01, 0, 3, PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        scrollLog.appendTitle("***** TEST Plain Record");
+        onClearRecordFileReturn((byte) 0x04);
+        onCommitTransaction();
+        Log.d("testCurrent", "*** Write Plain Record **************************");
+        onWriteRecordReturn((byte) 0x04, 0, 3, new byte[]{(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
+        onCommitTransaction();
+        Log.d("testCurrent", "*** Read Plain Record **************************");
+        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
+
+        scrollLog.appendTitle("***** TEST MAC Data");
+        Log.d("testCurrent", "*** Write MAC Data **************************");
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte[]{(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+        Log.d("testCurrent", "*** Read MAC Data **************************");
+        onReadDataReturn((byte) 0x02, 0, 0, MAC);
+
+        scrollLog.appendTitle("***** TEST Encrypted Data");
+        Log.d("testCurrent", "*** Read Encrypted Data **************************");
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
+        Log.d("testCurrent", "*** Write Encrypted Data **************************");
+        onWriteDataReturn((byte) 0x03, 0, 4, new byte[]{(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
+        Log.d("testCurrent", "*** Read Encrypted Data **************************");
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
+
+    }
+
+        //endregion
 
 
 

@@ -176,6 +176,16 @@
                 android:textSize="12sp"
                 android:layout_below="@+id/button_AuthISOTest" />
 
+            <Button
+                android:id="@+id/button_TestCurrent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/button_TestAll"
+                android:layout_toEndOf="@+id/button_TestAll"
+                android:text="Test Current"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
 
 
             <!-- Application Level Related -->

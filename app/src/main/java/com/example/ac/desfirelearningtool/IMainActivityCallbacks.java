@@ -84,6 +84,7 @@ public interface IMainActivityCallbacks {
     void onAuthISOTest(int keySize);
     void onAuthAESTest();
     void onTestAll();
+    void onTestCurrent();
     void onSetConfiguration();
     
     ScrollLog getScrollLogObject ();

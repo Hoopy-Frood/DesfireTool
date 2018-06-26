@@ -59,6 +59,7 @@ public class fCommandMenu extends Fragment{
     private Button buttonCreateTestPerso;
     // TEST
     private Button buttonTestAll;
+    private Button buttonTestCurrent;
     private Button buttonAuthISO;
     private Button buttonAuthAES;
 
@@ -122,6 +123,7 @@ public class fCommandMenu extends Fragment{
 
         //Button - Test
         buttonTestAll = (Button) rootView.findViewById(R.id.button_TestAll);
+        buttonTestCurrent = (Button) rootView.findViewById(R.id.button_TestCurrent);
 
         buttonAuthISO = (Button) rootView.findViewById(R.id.button_AuthISOTest);
         buttonAuthAES = (Button) rootView.findViewById(R.id.button_AuthAESTest);
@@ -271,6 +273,11 @@ public class fCommandMenu extends Fragment{
                 mCallback.onTestAll();
             }
         });
+        buttonTestCurrent.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mCallback.onTestCurrent();
+            }
+        });
         buttonAuthISO.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthISOTest(24);
             }
@@ -347,6 +354,7 @@ public class fCommandMenu extends Fragment{
         // Buttons - Test Perso
         buttonCreateTestPerso.setEnabled(false);
         buttonTestAll.setEnabled(false);
+        buttonTestCurrent.setEnabled(false);
 
     }
 
@@ -393,6 +401,7 @@ public class fCommandMenu extends Fragment{
         // Buttons - Test Perso
         buttonCreateTestPerso.setEnabled(true);
         buttonTestAll.setEnabled(true);
+        buttonTestCurrent.setEnabled(true);
     }
 
 }
