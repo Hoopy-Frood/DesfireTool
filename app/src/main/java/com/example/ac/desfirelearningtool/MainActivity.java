@@ -1964,7 +1964,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
+            Log.e("onAuthenticateTest", e.getMessage(), e);
         }
     }
 
@@ -1986,7 +1986,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
+            Log.e("onAuthISOTest", e.getMessage(), e);
         }
     }
 
@@ -2009,7 +2009,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
+            Log.e("onAuthAESTest", e.getMessage(), e);
         }
     }
     //endregion

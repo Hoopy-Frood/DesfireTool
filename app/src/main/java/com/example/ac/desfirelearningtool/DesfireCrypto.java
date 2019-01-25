@@ -28,6 +28,7 @@ public class DesfireCrypto {
     public final byte MODE_AUTHD40 = (byte) 0x0A;
     public final byte MODE_AUTHISO = (byte) 0x1A;
     public final byte MODE_AUTHAES = (byte) 0xAA;
+    public final byte MODE_AUTHEV2 = (byte) 0x71;
     public final byte KEYTYPE_DES = 0;
     public final byte KEYTYPE_3DES = 1;
     public final byte KEYTYPE_3K3DES = 2;
