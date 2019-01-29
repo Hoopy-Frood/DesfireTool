@@ -79,7 +79,7 @@ public class DesfireCrypto {
         authMode = authToSet;
         if (authMode == MODE_AUTHD40 || authMode == MODE_AUTHISO) {
             getKeySpec(key);
-        } else if (authMode == MODE_AUTHAES) {
+        } else if (authMode == MODE_AUTHAES || authMode == MODE_AUTHEV2 ) {
             getKeySpecAES(key);
         } else {
             Log.e("initialize", "authMode not valid");
@@ -147,6 +147,7 @@ public class DesfireCrypto {
                     blockLength = 8;
                     break;
                 case MODE_AUTHAES:
+                case MODE_AUTHEV2:
                     cipher = Cipher.getInstance("AES/CBC/NoPadding");
                     blockLength = 16;
                     break;
@@ -185,6 +186,7 @@ public class DesfireCrypto {
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
+                case MODE_AUTHEV2:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
@@ -221,6 +223,7 @@ public class DesfireCrypto {
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
+                case MODE_AUTHEV2:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
@@ -256,6 +259,7 @@ public class DesfireCrypto {
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
+                case MODE_AUTHEV2:
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     decOutput = cipher.doFinal(decInput);   // Decrypt
                     // Write the first IV as the result from PICC's encryption
@@ -289,6 +293,7 @@ public class DesfireCrypto {
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
+                case MODE_AUTHEV2:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
@@ -320,6 +325,7 @@ public class DesfireCrypto {
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
+                case MODE_AUTHEV2:
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     decOutput = cipher.doFinal(decInput);   // Decrypt
                     // Write the first IV as the result from PICC's encryption
@@ -385,7 +391,7 @@ public class DesfireCrypto {
             System.arraycopy(decRndBPrime, 0, challengeMessage, decRndA.length, decRndBPrime.length);
 
 
-        } else if (authMode == MODE_AUTHISO || authMode == MODE_AUTHAES) {
+        } else if (authMode == MODE_AUTHISO || authMode == MODE_AUTHAES || authMode == MODE_AUTHEV2 ) {
 
 
             // We decrypt the challenge, and rotate one byte to the left
