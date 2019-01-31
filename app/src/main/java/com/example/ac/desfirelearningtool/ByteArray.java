@@ -212,6 +212,14 @@ public class ByteArray {
         return ret;
     }
 
+    public static byte[] xor(byte[] a, int aStart, byte[] b, int bStart, int len) {
+        byte[] ret = new byte[len];
+        for (int i = 0; i < len; i++)
+            ret[i] = (byte)(a[i + aStart] ^ b[i + aStart]);
+        return ret;
+    }
+
+
     public static ByteArray from(byte b) {
         return new ByteArray().append(b);
     }

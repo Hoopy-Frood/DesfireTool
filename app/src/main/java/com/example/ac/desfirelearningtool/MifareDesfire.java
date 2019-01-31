@@ -1289,9 +1289,14 @@ public class MifareDesfire {
 
         dfCrypto.initialize(authType, key);
 
-        byte[] cmd = ByteArray.from(authType).append(keyNumber).toArray();
+        ByteArray baCmd = ByteArray.from(authType).append(keyNumber);
+
+        if (authType==0x71) {
+            baCmd.clear();
+            baCmd = ByteArray.from(authType).append((byte)0x00).append((byte) 0x00);
+        }
         // Send the command to the key, receive the challenge
-        DesfireResponse CardChallenge = sendBytes(cmd);
+        DesfireResponse CardChallenge = sendBytes(baCmd.toArray());
 
         if (CardChallenge.status != statusType.ADDITONAL_FRAME){
             Log.d("authenticate", "Exitied after sending get card challenge");
@@ -1308,7 +1313,7 @@ public class MifareDesfire {
         // send AF
         DesfireResponse cardResponse = sendBytes(challengeMessage);
         if (cardResponse.status != statusType.SUCCESS){
-            Log.d("authenicate", "Exitied after sending challengMessage");
+            Log.d("authenticate", "Exited after sending challenge Message");
             return cardResponse.status;
         }
 

@@ -168,6 +168,17 @@
                 android:layout_toEndOf="@+id/button_GetKeySettings" />
 
             <Button
+                android:id="@+id/button_AuthEV2Test"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Auth EV2\nTest"
+                android:textAllCaps="false"
+                android:textSize="12sp"
+                android:layout_below="@+id/button_GetKeySettings"
+                android:layout_toEndOf="@+id/button_GetKeyVersion" />
+
+
+            <Button
                 android:id="@+id/button_TestAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -44,8 +44,11 @@ public class DesfireCrypto {
     private byte[] currentIV;
     private byte[] encryptionIV;
     private int blockLength;
-    private byte[] sessionKey;
     private byte[] K1, K2;  // Subkey for CMAC
+    private byte[] EV2_KSesAuthENC, EV2_KSesAuthMAC; // EV2 Session keys for Enc and Mac
+    private byte[] EV2_TI, EV2_CmdCtr;
+
+
     public boolean trackCMAC;
     public int CRCLength;    // Length of CRC 2 or 4 bytes
     public int encryptedLength;  // specified dataLength at the first AF for Read Data
@@ -82,7 +85,7 @@ public class DesfireCrypto {
         } else if (authMode == MODE_AUTHAES || authMode == MODE_AUTHEV2 ) {
             getKeySpecAES(key);
         } else {
-            Log.e("initialize", "authMode not valid");
+            Log.e("DFCrytpo-initialize", "authMode not valid");
             return false;
         }
         return true;
@@ -294,6 +297,7 @@ public class DesfireCrypto {
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
                 case MODE_AUTHEV2:
+                    Log.d("encrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
@@ -326,6 +330,7 @@ public class DesfireCrypto {
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
                 case MODE_AUTHEV2:
+                    Log.d("decrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     decOutput = cipher.doFinal(decInput);   // Decrypt
                     // Write the first IV as the result from PICC's encryption
@@ -400,14 +405,13 @@ public class DesfireCrypto {
             Log.d("computeRAndDataToVerify", "currentIV           = " + ByteArray.byteArrayToHexString(currentIV));
 
             rndBPrime = ByteArray.rotateLT(rndB);
-            Log.d("computeRAndDataToVerify", "rndB                = " + ByteArray.byteArrayToHexString(rndB));
-            Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
             rndA = new byte[rndB.length];   // Length 8 byte for DES/3DES, 16 byte for 3k3des and AES
             randomGenerator.nextBytes(rndA);
-            Log.d("computeRAndDataToVerify", "rndA                = " + ByteArray.byteArrayToHexString(rndA));
-            Log.d("computeRAndDataToVerify", "rndB                = " + ByteArray.byteArrayToHexString(rndB));
-            //Arrays.fill(rndA, (byte)0);
-
+            Log.d("computeRAndDataToVerify", "rndB decrypted      = " + ByteArray.byteArrayToHexString(rndB));
+            Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
+            Log.d("computeRAndDataToVerify", "rndA generated      = " + ByteArray.byteArrayToHexString(rndA));
+            if (authMode == MODE_AUTHEV2)
+                Arrays.fill(currentIV,(byte)0);
 
             byte[] encInput = new byte[rndA.length + rndBPrime.length];
             System.arraycopy(rndA, 0, encInput, 0, rndA.length);
@@ -429,19 +433,35 @@ public class DesfireCrypto {
         if ((cardResponse == null))
             return false;
 
-        // Log.d("verifyCardResponse", "cardResponse                       = " + ByteArray.byteArrayToHexString(cardResponse));
+        Log.d("verifyCardResponse", "cardResponse                       = " + ByteArray.byteArrayToHexString(cardResponse));
         // We decrypt the response and shift the rightmost byte "all around" (to the left)
+
 
 
         if (authMode == MODE_AUTHD40) {
             cardResponse = decryptD40Authenticate(cardResponse);
         } else {
+            if (authMode == MODE_AUTHEV2)
+                Arrays.fill(currentIV,(byte)0);
             cardResponse = decrypt(cardResponse);
         }
-        // Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
-        cardResponse = ByteArray.rotateRT(cardResponse);
-        // Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
-        // Log.d("verifyCardResponse", "                          origRndA = " + ByteArray.byteArrayToHexString(rndA));
+
+        Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
+
+        EV2_TI = new byte[4];
+        if (authMode == MODE_AUTHEV2) {
+            System.arraycopy(cardResponse, 0, EV2_TI, 0, 4);
+            byte [] RndAPrime = new byte [16];
+            System.arraycopy(cardResponse, 4, RndAPrime, 0, 16);
+            cardResponse = ByteArray.rotateRT(RndAPrime);
+
+
+        } else{
+            cardResponse = ByteArray.rotateRT(cardResponse);
+        }
+
+        Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
+        Log.d("verifyCardResponse", "                          origRndA = " + ByteArray.byteArrayToHexString(rndA));
         if (Arrays.equals(cardResponse, rndA)) {
             genSessionKey();
             // ComputeSession Key
@@ -456,6 +476,8 @@ public class DesfireCrypto {
 
     /********** Session Key Generation related After successful authentication **********/
     private void genSessionKey() throws Exception {
+
+        byte [] sessionKey;
         switch (keyType) {
             case KEYTYPE_DES:
                 sessionKey = new byte[8];
@@ -488,30 +510,37 @@ public class DesfireCrypto {
                 blockLength = 8;
                 break;
             case KEYTYPE_AES:
-                /*// TEST
-                sessionKey = new byte[]{(byte) 0x2b, (byte) 0x7e, (byte) 0x15, (byte) 0x16, (byte) 0x28, (byte) 0xae, (byte) 0xd2, (byte) 0xa6, (byte) 0xab, (byte) 0xf7, (byte) 0x15, (byte) 0x88, (byte) 0x09, (byte) 0xcf, (byte) 0x4f, (byte) 0x3c};
-                Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
-                getKeySpecAES(sessionKey);
-                blockLength = 16;
-                genSubKeys();
-                Arrays.fill(currentIV, (byte) 0x00);
-                Log.d("800-38B", "CalcMac Ex1  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte[]{})));
-                Arrays.fill(currentIV, (byte) 0x00);
-                Log.d("800-38B", "CalcMac Ex2  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte[]{(byte) 0x6b, (byte) 0xc1, (byte) 0xbe, (byte) 0xe2, (byte) 0x2e, (byte) 0x40, (byte) 0x9f, (byte) 0x96, (byte) 0xe9, (byte) 0x3d, (byte) 0x7e, (byte) 0x11, (byte) 0x73, (byte) 0x93, (byte) 0x17, (byte) 0x2a})));
-                Arrays.fill(currentIV, (byte) 0x00);
-                Log.d("800-38B", "CalcMac Ex3  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte[]{(byte) 0x6b, (byte) 0xc1, (byte) 0xbe, (byte) 0xe2, (byte) 0x2e, (byte) 0x40, (byte) 0x9f, (byte) 0x96, (byte) 0xe9, (byte) 0x3d, (byte) 0x7e, (byte) 0x11, (byte) 0x73, (byte) 0x93, (byte) 0x17, (byte) 0x2a, (byte) 0xae, (byte) 0x2d, (byte) 0x8a, (byte) 0x57, (byte) 0x1e, (byte) 0x03, (byte) 0xac, (byte) 0x9c, (byte) 0x9e, (byte) 0xb7, (byte) 0x6f, (byte) 0xac, (byte) 0x45, (byte) 0xaf, (byte) 0x8e, (byte) 0x51, (byte) 0x30, (byte) 0xc8, (byte) 0x1c, (byte) 0x46, (byte) 0xa3, (byte) 0x5c, (byte) 0xe4, (byte) 0x11})));
-                Arrays.fill(currentIV, (byte) 0x00);
-                Log.d("800-38B", "CalcMac Ex4  = " + ByteArray.byteArrayToHexString(calcCMAC(new byte[]{(byte) 0x6b, (byte) 0xc1, (byte) 0xbe, (byte) 0xe2, (byte) 0x2e, (byte) 0x40, (byte) 0x9f, (byte) 0x96, (byte) 0xe9, (byte) 0x3d, (byte) 0x7e, (byte) 0x11, (byte) 0x73, (byte) 0x93, (byte) 0x17, (byte) 0x2a, (byte) 0xae, (byte) 0x2d, (byte) 0x8a, (byte) 0x57, (byte) 0x1e, (byte) 0x03, (byte) 0xac, (byte) 0x9c, (byte) 0x9e, (byte) 0xb7, (byte) 0x6f, (byte) 0xac, (byte) 0x45, (byte) 0xaf, (byte) 0x8e, (byte) 0x51, (byte) 0x30, (byte) 0xc8, (byte) 0x1c, (byte) 0x46, (byte) 0xa3, (byte) 0x5c, (byte) 0xe4, (byte) 0x11, (byte) 0xe5, (byte) 0xfb, (byte) 0xc1, (byte) 0x19, (byte) 0x1a, (byte) 0x0a, (byte) 0x52, (byte) 0xef, (byte) 0xf6, (byte) 0x9f, (byte) 0x24, (byte) 0x45, (byte) 0xdf, (byte) 0x4f, (byte) 0x9b, (byte) 0x17, (byte) 0xad, (byte) 0x2b, (byte) 0x41, (byte) 0x7b, (byte) 0xe6, (byte) 0x6c, (byte) 0x37, (byte) 0x10})));
-                */
-
-                // Actual
                 sessionKey = new byte[16];
-                System.arraycopy(rndA, 0, sessionKey, 0, 4);
-                System.arraycopy(rndB, 0, sessionKey, 4, 4);
-                System.arraycopy(rndA, 12, sessionKey, 8, 4);
-                System.arraycopy(rndB, 12, sessionKey, 12, 4);
-                Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
-                getKeySpecAES(sessionKey);
+                if (authMode == MODE_AUTHEV2) {
+
+                    // SV1 = A5 5A 00 01 00 80 || RndA[15-14] || (RndA[13-8] XOR (RnB[15-10]) || RndB[9-0] || RndA[7-0]
+                    byte [] SV1 = new byte[32];
+                    System.arraycopy(ByteArray.hexStringToByteArray("A55A0001008"), 0, SV1, 0,6);
+                    System.arraycopy(rndA, 0, SV1, 6, 2);
+                    System.arraycopy(ByteArray.xor(rndA, 2, rndB, 0, 6), 0, SV1, 8, 6);
+                    System.arraycopy(rndB, 6, SV1, 14, 10);
+                    System.arraycopy(rndA, 8, SV1, 24, 8);
+
+                    // SV2 = 5A A5 00 00 01 00 80 || RndA[15-14] || (RndA[13-8] XOR (RnB[15-10]) || RndB[9-0] || RndA[7-0]
+                    byte [] SV2 = new byte[32];
+                    System.arraycopy(SV1, 0, SV2, 0, 32);
+                    SV2[0] = (byte) 0x5A;
+                    SV2[1] = (byte) 0xA5;
+
+                    // KSesAuthEnc = PRF(Kx, SV1)
+                    // KSesAuthMAC = PRF(Kx, SV2)
+
+
+
+
+                } else {
+                    System.arraycopy(rndA, 0, sessionKey, 0, 4);
+                    System.arraycopy(rndB, 0, sessionKey, 4, 4);
+                    System.arraycopy(rndA, 12, sessionKey, 8, 4);
+                    System.arraycopy(rndB, 12, sessionKey, 12, 4);
+                    Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
+                    getKeySpecAES(sessionKey);
+                }
                 blockLength = 16;
                 break;
         }

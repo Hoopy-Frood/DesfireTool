@@ -83,6 +83,7 @@ public interface IMainActivityCallbacks {
     void onCreateTestPerso();
     void onAuthISOTest(int keySize);
     void onAuthAESTest();
+    void onAuthEV2Test();
     void onTestAll();
     void onTestCurrent();
     void onSetConfiguration();

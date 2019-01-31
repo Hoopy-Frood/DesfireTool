@@ -62,6 +62,7 @@ public class fCommandMenu extends Fragment{
     private Button buttonTestCurrent;
     private Button buttonAuthISO;
     private Button buttonAuthAES;
+    private Button buttonAuthEV2;
 
 
 
@@ -127,6 +128,7 @@ public class fCommandMenu extends Fragment{
 
         buttonAuthISO = (Button) rootView.findViewById(R.id.button_AuthISOTest);
         buttonAuthAES = (Button) rootView.findViewById(R.id.button_AuthAESTest);
+        buttonAuthEV2 = (Button) rootView.findViewById(R.id.button_AuthEV2Test);
         buttonSetConfiguration = (Button) rootView.findViewById(R.id.button_SetConfiguration);
 
         try {
@@ -284,6 +286,10 @@ public class fCommandMenu extends Fragment{
         });
         buttonAuthAES.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onAuthAESTest();
+            }
+        });
+        buttonAuthEV2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onAuthEV2Test();
             }
         });
         buttonCreateTestPerso.setOnClickListener(new View.OnClickListener() {

@@ -1969,13 +1969,21 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onAuthISOTest (int keySize){
-
-        byte[] zeroKey = new byte[keySize];
-        Arrays.fill(zeroKey, (byte)0);
+        scrollLog.appendTitle("AuthenticateISO Test");
 
         try {
-            scrollLog.appendTitle("Authentication");
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x1A, (byte) 0, zeroKey);
+            MifareDesfire.statusType res = desfireCard.selectApplication(new byte[] {(byte) 0x00,(byte) 0x00,(byte) 0x00 });
+            res = desfireCard.selectApplication(new byte[] {(byte) 0x15,(byte) 0x0D,(byte) 0xE5 });
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: 15 0D E5");
+
+            byte[] zeroKey = new byte[keySize];
+            Arrays.fill(zeroKey, (byte)0);
+
+            res = desfireCard.authenticate((byte) 0x1A, (byte) 0, zeroKey);
             if (res != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
             } else {
@@ -1991,13 +1999,59 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onAuthAESTest (){
-
-        byte[] zeroKey = new byte[16];
-        Arrays.fill(zeroKey, (byte)0);
+        scrollLog.appendTitle("AuthenticateISO Test");
 
         try {
+            // Select Application
+            MifareDesfire.statusType res = desfireCard.selectApplication(new byte[] {(byte) 0x00,(byte) 0x00,(byte) 0x00 });
+            res = desfireCard.selectApplication(new byte[] {(byte) 0x15,(byte) 0x0A,(byte) 0xE5 });
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: 15 0A E5");
+
+
+            byte[] zeroKey = new byte[16];
+            Arrays.fill(zeroKey, (byte)0);
+
             scrollLog.appendTitle("Authentication");
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0xAA, (byte) 0, zeroKey);
+            res = desfireCard.authenticate((byte) 0xAA, (byte) 0, zeroKey);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+
+        }
+        catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onAuthAESTest", e.getMessage(), e);
+        }
+    }
+
+    public void onAuthEV2Test (){
+        scrollLog.appendTitle("AuthenticateEV2 Test");
+
+        try {
+            // Select Application
+
+            MifareDesfire.statusType res = desfireCard.selectApplication(new byte[] {(byte) 0x00,(byte) 0x00,(byte) 0x00 });
+            res = desfireCard.selectApplication(new byte[] {(byte) 0x15,(byte) 0x0A,(byte) 0xE5 });
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: 15 0A E5");
+
+
+            byte[] zeroKey = new byte[16];
+            Arrays.fill(zeroKey, (byte)0);
+
+            scrollLog.appendTitle("Authentication");
+            res = desfireCard.authenticate((byte) 0x71, (byte) 0, zeroKey);
             if (res != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
             } else {
@@ -2140,6 +2194,53 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             }
 
             baAppId = new byte[] {(byte) 0x15,(byte) 0x0A,(byte) 0xE5 };
+            res = desfireCard.createApplication(baAppId, (byte)0x0F, (byte)0x83, baNull, baNull);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+            }
+
+            // Select Application
+            res = desfireCard.selectApplication(baAppId);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+
+            // Authenticate
+            res = desfireCard.authenticate((byte) 0xAA, (byte)0, AESKey);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+            createTestPersoFiles ();
+            //endregion
+
+            //region  Create Application AuthEV2 AES (AE 2A E5)
+            // Select Application
+            baAppId = new byte[] {(byte) 0x00,(byte) 0x00,(byte) 0x00 };
+            res = desfireCard.selectApplication(baAppId);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else
+                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+
+            // Authenticate main key
+            res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
+            if (res != MifareDesfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+            baAppId = new byte[] {(byte) 0xAE,(byte) 0x2A,(byte) 0xE5 };
             res = desfireCard.createApplication(baAppId, (byte)0x0F, (byte)0x83, baNull, baNull);
             if (res != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
