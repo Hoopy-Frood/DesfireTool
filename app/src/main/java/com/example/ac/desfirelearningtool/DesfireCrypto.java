@@ -81,9 +81,9 @@ public class DesfireCrypto {
         reset();
         authMode = authToSet;
         if (authMode == MODE_AUTHD40 || authMode == MODE_AUTHISO) {
-            getKeySpec(key);
+            genKeySpec(key);
         } else if (authMode == MODE_AUTHAES || authMode == MODE_AUTHEV2 ) {
-            getKeySpecAES(key);
+            genKeySpecAES(key);
         } else {
             Log.e("DFCrytpo-initialize", "authMode not valid");
             return false;
@@ -94,7 +94,7 @@ public class DesfireCrypto {
     // ENCRYPTION RELATED
 
     // Mifare Desfire specifications require DESede/ECB without padding
-    protected boolean getKeySpec(byte[] origKey)
+    protected boolean genKeySpec(byte[] origKey)
             throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
         ByteArray tripleDesKey = new ByteArray();
         if (origKey.length == 8) {
@@ -110,7 +110,7 @@ public class DesfireCrypto {
             keyType = KEYTYPE_3K3DES;
             tripleDesKey.append(origKey);
         } else {
-            Log.e("getKeySpec", "Wrong Key Length");
+            Log.e("genKeySpec", "Wrong Key Length");
             return false;
         }
 
@@ -119,7 +119,7 @@ public class DesfireCrypto {
         return true;
     }
 
-    protected boolean getKeySpecAES(byte[] origKey)
+    protected boolean genKeySpecAES(byte[] origKey)
             throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
 
         ByteArray AESKey = new ByteArray();
@@ -127,7 +127,7 @@ public class DesfireCrypto {
             keyType = KEYTYPE_AES;
             AESKey.append(origKey);
         } else {
-            Log.e("getKeySpec", "Wrong Key Length");
+            Log.e("genKeySpecAES", "Wrong Key Length");
             return false;
         }
 
@@ -484,7 +484,7 @@ public class DesfireCrypto {
                 System.arraycopy(rndA, 0, sessionKey, 0, 4);
                 System.arraycopy(rndB, 0, sessionKey, 4, 4);
                 Log.d("genSessionKey", "DES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
-                getKeySpec(sessionKey);
+                genKeySpec(sessionKey);
                 blockLength = 8;
                 break;
             case KEYTYPE_3DES:
@@ -494,7 +494,7 @@ public class DesfireCrypto {
                 System.arraycopy(rndA, 4, sessionKey, 8, 4);
                 System.arraycopy(rndB, 4, sessionKey, 12, 4);
                 Log.d("genSessionKey", "3DES sessionKey   = " + ByteArray.byteArrayToHexString(sessionKey));
-                getKeySpec(sessionKey);
+                genKeySpec(sessionKey);
                 blockLength = 8;
                 break;
             case KEYTYPE_3K3DES:
@@ -506,7 +506,7 @@ public class DesfireCrypto {
                 System.arraycopy(rndA, 12, sessionKey, 16, 4);
                 System.arraycopy(rndB, 12, sessionKey, 20, 4);
                 Log.d("genSessionKey", "3K3DES sessionKey  = " + ByteArray.byteArrayToHexString(sessionKey));
-                getKeySpec(sessionKey);
+                genKeySpec(sessionKey);
                 blockLength = 8;
                 break;
             case KEYTYPE_AES:
@@ -515,7 +515,7 @@ public class DesfireCrypto {
 
                     // SV1 = A5 5A 00 01 00 80 || RndA[15-14] || (RndA[13-8] XOR (RnB[15-10]) || RndB[9-0] || RndA[7-0]
                     byte [] SV1 = new byte[32];
-                    System.arraycopy(ByteArray.hexStringToByteArray("A55A0001008"), 0, SV1, 0,6);
+                    System.arraycopy(ByteArray.hexStringToByteArray("A55A00010008"), 0, SV1, 0,6);
                     System.arraycopy(rndA, 0, SV1, 6, 2);
                     System.arraycopy(ByteArray.xor(rndA, 2, rndB, 0, 6), 0, SV1, 8, 6);
                     System.arraycopy(rndB, 6, SV1, 14, 10);
@@ -527,9 +527,19 @@ public class DesfireCrypto {
                     SV2[0] = (byte) 0x5A;
                     SV2[1] = (byte) 0xA5;
 
-                    // KSesAuthEnc = PRF(Kx, SV1)
-                    // KSesAuthMAC = PRF(Kx, SV2)
+                    //
+                    genSubKeys();  // using Kx of Authentication
 
+
+                    // KSesAuthEnc = PRF(Kx, SV1)
+                    EV2_KSesAuthENC = calcCMAC_full(SV1);
+                    
+                    // KSesAuthMAC = PRF(Kx, SV2)
+                    EV2_KSesAuthMAC = calcCMAC_full(SV2);
+                    
+                    
+
+                    Log.d("genSessionKey", "EV2 KSesAuthEnc          = " + ByteArray.byteArrayToHexString(EV2_KSesAuthENC));
 
 
 
@@ -539,7 +549,7 @@ public class DesfireCrypto {
                     System.arraycopy(rndA, 12, sessionKey, 8, 4);
                     System.arraycopy(rndB, 12, sessionKey, 12, 4);
                     Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
-                    getKeySpecAES(sessionKey);
+                    genKeySpecAES(sessionKey);
                 }
                 blockLength = 16;
                 break;
@@ -709,11 +719,30 @@ public class DesfireCrypto {
 
     /********** CMAC RELATED **********/
     public byte[] calcCMAC(byte[] data) {
+        byte[] outputCMAC;
+        outputCMAC = calcCMAC_full(data);
+        byte [] returnCMAC = new byte[8];
+        if (authMode == MODE_AUTHEV2) {
+            for (int i=0; i < 8; i ++) {
+                returnCMAC[i] = outputCMAC[2*i+1];
+            }
+        } else {
+            System.arraycopy(outputCMAC, outputCMAC.length - blockLength, returnCMAC, 0, 8);
+        }
+
+        return returnCMAC;
+    }
+
+    /**
+     * Calculate CMAC without truncation according to SP800-38A
+     * @param data data to calc CMAC
+     * @return Full CMAC
+     */
+    public byte[] calcCMAC_full(byte[] data) {
         byte[] output, encInput;
         ByteArray baEncInput = new ByteArray();
-        byte[] outMAC = new byte[8];
 
-        Log.d("calcCMAC", "Starting Init Vector  = " + ByteArray.byteArrayToHexString(currentIV));
+        Log.d("calcCMAC_full", "Starting Init Vector  = " + ByteArray.byteArrayToHexString(currentIV));
         int extraLength = data.length % blockLength;
 
         // CMAC if Extralength = 0, use K1 XOR
@@ -722,7 +751,7 @@ public class DesfireCrypto {
             System.arraycopy(data, 0, encInput, 0, data.length);
 
             int startIndex = encInput.length - blockLength;
-            //Log.d("calcCMAC", "startIndex  = " + startIndex + " Using K1 To Calc = " + ByteArray.byteArrayToHexString(encInput));
+            //Log.d("calcCMAC_full", "startIndex  = " + startIndex + " Using K1 To Calc = " + ByteArray.byteArrayToHexString(encInput));
             //Mn = K1 XOR Mn*
             for (int i = 0; i < blockLength; i++) {
                 encInput[startIndex + i] ^= K1[i];
@@ -735,22 +764,17 @@ public class DesfireCrypto {
 
             int startIndex = encInput.length - blockLength;
             //Mn = K2 XOR (Mn* with padding)
-            //Log.d("calcCMAC", "startIndex  = " + startIndex + " Using K2 To Calc = " + ByteArray.byteArrayToHexString(encInput));
+            //Log.d("calcCMAC_full", "startIndex  = " + startIndex + " Using K2 To Calc = " + ByteArray.byteArrayToHexString(encInput));
             for (int i = 0; i < blockLength; i++) {
                 encInput[startIndex + i] ^= K2[i];
             }
         }
-        Log.d("calcCMAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length);
-
-        Log.d("calcCMAC", "Encrypt Input after Padding = " + ByteArray.byteArrayToHexString(encInput));
+        Log.d("calcCMAC_full", "extraLength  = " + extraLength + " encInput.length = " + encInput.length);
+        Log.d("calcCMAC_full", "Encrypt Input after Padding = " + ByteArray.byteArrayToHexString(encInput));
         output = encryptData(encInput);
-        Log.d("calcCMAC", "Encrypted Data              = " + ByteArray.byteArrayToHexString(output));
+        Log.d("calcCMAC_full", "Encrypted Data              = " + ByteArray.byteArrayToHexString(output));
 
-        System.arraycopy(output, output.length - blockLength, outMAC, 0, 8);
-
-        Log.d("calcCMAC  ", "CMAC computed             = " + ByteArray.byteArrayToHexString(outMAC));
-
-        return outMAC;
+        return output;
     }
 
     public boolean verifyCMAC(byte[] recvData) {
