@@ -1081,14 +1081,24 @@ public class MifareDesfire {
     }
 
     public DesfireResponse sendBytes(byte[] cmd) throws IOException {
+        byte[] response;
 
-        if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
+        if (dfCrypto.EV2Authenticated) {
+            byte [] cmdAuthenticted;
+            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            cmdAuthenticted = dfCrypto.EV2CalcCMAC(cmd);
+
+            response = cardCommunicator.transceive(cmdAuthenticted);
+
+        } else if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
             Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
             dfCrypto.calcCMAC(cmd);
+
+            response = cardCommunicator.transceive(cmd);
+        } else {
+
+            response = cardCommunicator.transceive(cmd);
         }
-
-
-        byte[] response = cardCommunicator.transceive(cmd);
 
         DesfireResponse result = new DesfireResponse();
 

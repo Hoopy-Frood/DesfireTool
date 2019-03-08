@@ -46,18 +46,26 @@ public class DesfireCrypto {
     private int blockLength;
     private byte[] K1, K2;  // Subkey for CMAC
     private byte[] EV2_KSesAuthENC, EV2_KSesAuthMAC; // EV2 Session keys for Enc and Mac
-    private byte[] EV2_TI, EV2_CmdCtr;
+    private SecretKey  EV2_KeySpecSesAuthENC, EV2_KeySpecSesAuthMAC; // EV2 Session key SPEC for Enc and Mac
+    private byte [] EV2_K1, EV2_K2;
+    private byte[] EV2_TI;
+    private int EV2_CmdCtr;
 
 
     public boolean trackCMAC;
+    public boolean EV2Authenticated;
     public int CRCLength;    // Length of CRC 2 or 4 bytes
     public int encryptedLength;  // specified dataLength at the first AF for Read Data
     public int currentAuthenticatedKey;
 
 
     public DesfireCrypto() {
-        reset();
         this.randomGenerator = new SecureRandom();
+
+
+        EV2_TI = new byte[4];
+        reset();
+
 
     }
 
@@ -67,10 +75,13 @@ public class DesfireCrypto {
         cipher = null;
         authMode = (byte) 0x00;
         trackCMAC = false;
+        EV2Authenticated = false;
         CRCLength = 0;
         encryptedLength = 0;
         storedAFData = new ByteArray();
         currentAuthenticatedKey = -1;
+        Arrays.fill(EV2_TI, (byte) 0);
+        EV2_CmdCtr = 0;
     }
 
     //region Key Related
@@ -132,6 +143,21 @@ public class DesfireCrypto {
         }
 
         keySpec = new SecretKeySpec(AESKey.toArray(), "AES");
+        return true;
+    }
+    protected boolean genKeySpecEV2(byte[] origKeyEnc, byte [] origKeyMac)
+            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+
+        ByteArray AESKey = new ByteArray();
+        keyType = KEYTYPE_AES;
+        AESKey.append(origKeyEnc);
+        EV2_KeySpecSesAuthENC = new SecretKeySpec(AESKey.toArray(), "AES");
+
+        AESKey.clear();
+        AESKey.append(origKeyMac);
+
+
+        EV2_KeySpecSesAuthMAC = new SecretKeySpec(AESKey.toArray(), "AES");
         return true;
     }
 
@@ -226,11 +252,16 @@ public class DesfireCrypto {
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
-                case MODE_AUTHEV2:
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
                     System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
+                    break;
+                case MODE_AUTHEV2:
+                    Arrays.fill(currentIV,(byte)0x00);
+                    cipher.init(Cipher.ENCRYPT_MODE, EV2_KeySpecSesAuthMAC, new IvParameterSpec(currentIV));
+                    encOutput = cipher.doFinal(encInput);
+
                     break;
                 default:
                     encOutput = null;
@@ -275,10 +306,8 @@ public class DesfireCrypto {
         return decOutput;
     }
 
-
-
     /********** Encryption Related **********/
-    public byte[] encrypt(byte[] encInput) {
+    public byte[] encrypt(byte[] encInput, SecretKey ks) {
 
         if (cipher == null) {
             initCipher();
@@ -290,7 +319,7 @@ public class DesfireCrypto {
             switch (authMode) {
                 case MODE_AUTHD40:
                     Log.d("encrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
-                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
+                    cipher.init(Cipher.DECRYPT_MODE, ks, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     System.arraycopy(encInput, encInput.length - blockLength, currentIV, 0, blockLength);
                     break;
@@ -298,7 +327,7 @@ public class DesfireCrypto {
                 case MODE_AUTHAES:
                 case MODE_AUTHEV2:
                     Log.d("encrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
-                    cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
+                    cipher.init(Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
                     System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
@@ -312,6 +341,12 @@ public class DesfireCrypto {
             encOutput = null;
         }
         return encOutput;
+    }
+
+    /********** Encryption Related **********/
+    public byte[] encrypt(byte[] encInput) {
+
+        return encrypt(encInput, keySpec);
     }
 
     public byte[] decrypt(byte[] decInput) {
@@ -448,7 +483,6 @@ public class DesfireCrypto {
 
         Log.d("verifyCardResponse", "cardResponse decrypted             = " + ByteArray.byteArrayToHexString(cardResponse));
 
-        EV2_TI = new byte[4];
         if (authMode == MODE_AUTHEV2) {
             System.arraycopy(cardResponse, 0, EV2_TI, 0, 4);
             byte [] RndAPrime = new byte [16];
@@ -460,6 +494,7 @@ public class DesfireCrypto {
             cardResponse = ByteArray.rotateRT(cardResponse);
         }
 
+        Log.d("verifyCardResponse", "                            EV2_TI = " + ByteArray.byteArrayToHexString(EV2_TI));
         Log.d("verifyCardResponse", "cardResponse decrypted and shifted = " + ByteArray.byteArrayToHexString(cardResponse));
         Log.d("verifyCardResponse", "                          origRndA = " + ByteArray.byteArrayToHexString(rndA));
         if (Arrays.equals(cardResponse, rndA)) {
@@ -533,10 +568,14 @@ public class DesfireCrypto {
 
                     // KSesAuthEnc = PRF(Kx, SV1)
                     EV2_KSesAuthENC = calcCMAC_full(SV1);
-                    
+
                     // KSesAuthMAC = PRF(Kx, SV2)
                     EV2_KSesAuthMAC = calcCMAC_full(SV2);
-                    
+
+                    genKeySpecEV2(EV2_KSesAuthENC, EV2_KSesAuthMAC);
+
+                    genSubKeysEV2();
+                    EV2Authenticated = true;
                     
 
                     Log.d("genSessionKey", "EV2 KSesAuthEnc          = " + ByteArray.byteArrayToHexString(EV2_KSesAuthENC));
@@ -615,7 +654,7 @@ public class DesfireCrypto {
 
     public void genSubKeys() throws GeneralSecurityException {
         byte[] encInput = new byte[blockLength];
-        Arrays.fill(encInput, (byte) 0);
+
 
         // CMAC subkey generation according to NIST SP800-38B
         // http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38b.pdf
@@ -628,10 +667,11 @@ public class DesfireCrypto {
         }
 
         // 1. Let L = CIPHK(0)).
+        Arrays.fill(encInput, (byte) 0x00);
         Arrays.fill(currentIV, (byte) 0x00);
         byte[] L = encrypt(encInput);
 
-        Log.d("800-38B", "CIPHk(0^128) = " + ByteArray.byteArrayToHexString(L));
+        Log.d("genSubKeys", "CIPHk(0^128) = " + ByteArray.byteArrayToHexString(L));
 
         // 2. If MSB1(L) = 0, then K1 = L << 1;
         // Else K1 = (L << 1) XOR Rb; see Sec. 5.3 for the definition of Rb.
@@ -648,11 +688,49 @@ public class DesfireCrypto {
         } else {
             K2 = shiftLeft1Bit(K1, Rb);
         }
-        Log.d("800-38B", "K1           = " + ByteArray.byteArrayToHexString(K1));
-        Log.d("800-38B", "K2           = " + ByteArray.byteArrayToHexString(K2));
+        Log.d("genSubKeys", "K1           = " + ByteArray.byteArrayToHexString(K1));
+        Log.d("genSubKeys", "K2           = " + ByteArray.byteArrayToHexString(K2));
         // 4. Return K1, K2.
 
     }
+
+    public void genSubKeysEV2() throws GeneralSecurityException {
+        byte[] encInput = new byte[blockLength];
+        Arrays.fill(encInput, (byte) 0);
+
+        // CMAC subkey generation according to NIST SP800-38B
+        // http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38b.pdf
+        byte Rb;  // According to SP800-38B
+
+        Rb = (byte) 0x87;
+
+        // 1. Let L = CIPHK(0)).
+        Arrays.fill(currentIV, (byte) 0x00);
+        byte[] L = encrypt(encInput,EV2_KeySpecSesAuthMAC);
+
+        Log.d("genSubKeysEV2", "CIPHk(0^128) = " + ByteArray.byteArrayToHexString(L));
+
+        // 2. If MSB1(L) = 0, then K1 = L << 1;
+        // Else K1 = (L << 1) XOR Rb; see Sec. 5.3 for the definition of Rb.
+        if ((L[0] & (byte) 0x80) == (byte) 0x00) {
+            EV2_K1 = shiftLeft1Bit(L);
+        } else {
+            EV2_K1 = shiftLeft1Bit(L, Rb);
+        }
+
+        // 3. If MSB1(K1) = 0, then K2 = K1 << 1;
+        // Else K2 = (K1 << 1) XOR Rb.
+        if ((EV2_K1[0] & (byte) 0x80) == (byte) 0x00) {
+            EV2_K2 = shiftLeft1Bit(EV2_K1);
+        } else {
+            EV2_K2 = shiftLeft1Bit(EV2_K1, Rb);
+        }
+        Log.d("genSubKeysEV2", "EV2_K1           = " + ByteArray.byteArrayToHexString(EV2_K1));
+        Log.d("genSubKeysEV2", "EV2_K2           = " + ByteArray.byteArrayToHexString(EV2_K2));
+        // 4. Return K1, K2.
+
+    }
+
     //endregion
 
     //region D40 MAC Related
@@ -678,8 +756,8 @@ public class DesfireCrypto {
             baEncInput.append(data).append(ByteArray.hexStringToByteArray("0000000000000000"));
             System.arraycopy(baEncInput.toArray(), 0, encInput, 0, data.length + blockLength - extraLength);
         }
-        //Log.d("calcCMAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length );
-        //Log.d("calcCMAC", "encInput = " + ByteArray.byteArrayToHexString(encInput));
+        //Log.d("calcD40MAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length );
+        //Log.d("calcD40MAC", "encInput = " + ByteArray.byteArrayToHexString(encInput));
 
         //Log.d ("calcD40MAC  ", "Encryt Input Data = " + ByteArray.byteArrayToHexString(encInput));
         output = encryptMAC(encInput);
@@ -695,7 +773,7 @@ public class DesfireCrypto {
 
     public boolean verifyD40MAC(byte[] recvData) {
         byte[] MACToVerify = new byte[4];
-        byte[] computedMACToVerify = new byte[4];
+        byte[] computedMACToVerify;
         if (recvData.length < 5)  // No MAC
             return false;
 
@@ -716,19 +794,18 @@ public class DesfireCrypto {
     //endregion
 
     //region D41 CMAC Related
-
     /********** CMAC RELATED **********/
     public byte[] calcCMAC(byte[] data) {
         byte[] outputCMAC;
         outputCMAC = calcCMAC_full(data);
         byte [] returnCMAC = new byte[8];
-        if (authMode == MODE_AUTHEV2) {
+        /*if (authMode == MODE_AUTHEV2) {
             for (int i=0; i < 8; i ++) {
                 returnCMAC[i] = outputCMAC[2*i+1];
             }
         } else {
-            System.arraycopy(outputCMAC, outputCMAC.length - blockLength, returnCMAC, 0, 8);
-        }
+        */    System.arraycopy(outputCMAC, outputCMAC.length - blockLength, returnCMAC, 0, 8);
+        /*}*/
 
         return returnCMAC;
     }
@@ -807,8 +884,83 @@ public class DesfireCrypto {
     }
     //endregion
 
-    //region CRC32 Related
+    //region EV2 CMAC related
 
+    /**
+     * Calculate CMAC without truncation according to SP800-38A
+     * @param cmd data to calc CMAC
+     * @return Full CMAC
+     */
+    public byte[] EV2CalcCMAC(byte[] cmd) {
+        byte[] outputCMAC, encInput;
+
+        // cmd || CmdHeader || CmdData || MAC
+        //MAC(KSesAuthMAC , Cmd || CmdCtr || TI [|| CmdHeader] [|| CmdData]
+        int extraLength = (cmd.length + 6 )% blockLength;
+
+        if (extraLength == 0) {
+            encInput = new byte[cmd.length + 6];
+        } else {
+            encInput = new byte[cmd.length +6 + blockLength - extraLength];
+        }
+
+        EV2_CmdCtr ++;
+
+        System.arraycopy(cmd, 0 , encInput, 0, 1);
+        System.arraycopy(ByteArray.fromInt(EV2_CmdCtr,2), 0 , encInput, 1, 2);
+        System.arraycopy(EV2_TI, 0 , encInput, 3, 4);
+        System.arraycopy(cmd, 1 , encInput, 7, cmd.length -1);
+
+
+
+        Log.d("EV2CalcCMAC", "Encrypt Input before Padding = " + ByteArray.byteArrayToHexString(encInput));
+
+
+        // CMAC if Extralength = 0, use K1 XOR
+        if ((extraLength == 0) && (cmd.length != 0)) {
+
+            int startIndex = encInput.length - blockLength;
+            //Log.d("calcCMAC_full", "startIndex  = " + startIndex + " Using K1 To Calc = " + ByteArray.byteArrayToHexString(encInput));
+            //Mn = K1 XOR Mn*
+            for (int i = 0; i < blockLength; i++) {
+                encInput[startIndex + i] ^= EV2_K1[i];
+            }
+
+        } else { // use 80 padding and K2 XOR
+            ByteArray baEncInput = new ByteArray();
+            baEncInput.append(encInput).append(ByteArray.hexStringToByteArray("80000000000000000000000000000000"));
+            System.arraycopy(baEncInput.toArray(), 0, encInput, 0, encInput.length);
+
+            int startIndex = encInput.length - blockLength;
+            //Mn = K2 XOR (Mn* with padding)
+            //Log.d("calcCMAC_full", "startIndex  = " + startIndex + " Using K2 To Calc = " + ByteArray.byteArrayToHexString(encInput));
+            for (int i = 0; i < blockLength; i++) {
+                encInput[startIndex + i] ^= EV2_K2[i];
+            }
+        }
+
+
+
+        Log.d("EV2CalcCMAC", "Encrypt Input after Padding  = " + ByteArray.byteArrayToHexString(encInput));
+        outputCMAC = encryptMAC(encInput);
+        Log.d("EV2CalcCMAC", "Encrypted Data               = " + ByteArray.byteArrayToHexString(outputCMAC));
+
+        byte [] returnCMAC = new byte[8];
+        int lastBlock = outputCMAC.length - blockLength;
+        for (int i=0; i < 8; i ++) {
+            returnCMAC[i] = outputCMAC[lastBlock+2*i];
+            returnCMAC[i] = outputCMAC[lastBlock+2*i];
+        }
+
+        ByteArray baOutput = new ByteArray();
+        baOutput.append(cmd).append(returnCMAC);
+
+        return baOutput.toArray();
+    }
+
+    //endregion
+
+    //region CRC32 Related
     /********** CRC RELATED **********/
     public static byte[] longToBytesInvertCRC(long l) {
         byte[] result = new byte[4];
