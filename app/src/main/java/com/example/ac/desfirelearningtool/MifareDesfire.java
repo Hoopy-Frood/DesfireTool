@@ -81,7 +81,8 @@ public class MifareDesfire {
             dfCrypto.storeAFEncrypted(response);
             dfCrypto.encryptedLength = 7;
             try {
-                result.data = dfCrypto.decryptWithIV();
+                result.data = dfCrypto.decryptReadData();
+                //result.data = dfCrypto.decryptWithIV();
             } catch (GeneralSecurityException e) {
                 result.status = statusType.PCD_ENCRYPTION_ERROR;
                 scrollLog.appendError(e.getMessage());
@@ -1309,10 +1310,12 @@ public class MifareDesfire {
         DesfireResponse CardChallenge = sendBytes(baCmd.toArray());
 
         if (CardChallenge.status != statusType.ADDITONAL_FRAME){
-            Log.d("authenticate", "Exitied after sending get card challenge");
+            Log.d("authenticate", "Exited after sending get card challenge");
             return CardChallenge.status;
         }
 
+        // TESTEV2
+        System.arraycopy(ByteArray.hexStringToByteArray("C56F576D2444171CF64B196346A81662"), 0, CardChallenge.data, 0, 16);
 
 
         // Compute next command and required response
@@ -1320,8 +1323,16 @@ public class MifareDesfire {
 
         byte[] challengeMessage = ByteArray.from((byte)0xAF).append(dfCrypto.computeResponseAndDataToVerify(CardChallenge.data)).toArray();
 
+
+
         // send AF
         DesfireResponse cardResponse = sendBytes(challengeMessage);
+
+        // TESTEV2
+        cardResponse.status = statusType.SUCCESS;
+        System.arraycopy(ByteArray.hexStringToByteArray("EE93375DE2190A24F97D4AE363CAEC8DE2ED76DF4C3EE23C9D3499E3EC8D2259"), 0, CardChallenge.data, 0, 32);
+
+
         if (cardResponse.status != statusType.SUCCESS){
             Log.d("authenticate", "Exited after sending challenge Message");
             return cardResponse.status;

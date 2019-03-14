@@ -3,8 +3,6 @@ package com.example.ac.desfirelearningtool;
 import android.util.Log;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -50,6 +48,7 @@ public class DesfireCrypto {
     private byte [] EV2_K1, EV2_K2;
     private byte[] EV2_TI;
     private int EV2_CmdCtr;
+    private byte [] nullBytes8, nullBytes16;
 
 
     public boolean trackCMAC;
@@ -62,8 +61,10 @@ public class DesfireCrypto {
     public DesfireCrypto() {
         this.randomGenerator = new SecureRandom();
 
-
+        storedAFData = new ByteArray();
         EV2_TI = new byte[4];
+        nullBytes8 = new byte[8];
+        nullBytes16 = new byte[16];
         reset();
 
 
@@ -78,10 +79,13 @@ public class DesfireCrypto {
         EV2Authenticated = false;
         CRCLength = 0;
         encryptedLength = 0;
-        storedAFData = new ByteArray();
+        storedAFData.clear();
         currentAuthenticatedKey = -1;
         Arrays.fill(EV2_TI, (byte) 0);
         EV2_CmdCtr = 0;
+
+        Arrays.fill(nullBytes8, (byte) 0);
+        Arrays.fill(nullBytes16, (byte) 0);
     }
 
     //region Key Related
@@ -91,14 +95,9 @@ public class DesfireCrypto {
 
         reset();
         authMode = authToSet;
-        if (authMode == MODE_AUTHD40 || authMode == MODE_AUTHISO) {
-            genKeySpec(key);
-        } else if (authMode == MODE_AUTHAES || authMode == MODE_AUTHEV2 ) {
-            genKeySpecAES(key);
-        } else {
-            Log.e("DFCrytpo-initialize", "authMode not valid");
-            return false;
-        }
+
+        genKeySpec(key);
+
         return true;
     }
 
@@ -107,44 +106,48 @@ public class DesfireCrypto {
     // Mifare Desfire specifications require DESede/ECB without padding
     protected boolean genKeySpec(byte[] origKey)
             throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        ByteArray tripleDesKey = new ByteArray();
+        ByteArray fullLengthKey = new ByteArray();
         if (origKey.length == 8) {
             //tripleDesKey.append(origKey).append(origKey).append(origKey);
-            tripleDesKey.append(origKey).append(origKey).append(origKey);
+            fullLengthKey.append(origKey).append(origKey).append(origKey);
             keyType = KEYTYPE_DES;
+            keySpec = new SecretKeySpec(fullLengthKey.toArray(), "DESede");
         } else if (origKey.length == 16) {
-            keyType = KEYTYPE_3DES;
-            byte[] last8Byte = new byte[8];
-            System.arraycopy(origKey, 0, last8Byte, 0, 8);
-            tripleDesKey.append(origKey).append(last8Byte);
+            if (authMode == MODE_AUTHAES || authMode == MODE_AUTHEV2 ) {
+                keyType = KEYTYPE_AES;
+                fullLengthKey.append(origKey);
+                keySpec = new SecretKeySpec(fullLengthKey.toArray(), "AES");
+            } else {
+                keyType = KEYTYPE_3DES;
+                byte[] last8Byte = new byte[8];
+                System.arraycopy(origKey, 0, last8Byte, 0, 8);
+                fullLengthKey.append(origKey).append(last8Byte);
+                keySpec = new SecretKeySpec(fullLengthKey.toArray(), "DESede");
+            }
+
         } else if (origKey.length == 24) {
             keyType = KEYTYPE_3K3DES;
-            tripleDesKey.append(origKey);
+            fullLengthKey.append(origKey);
+            keySpec = new SecretKeySpec(fullLengthKey.toArray(), "DESede");
         } else {
             Log.e("genKeySpec", "Wrong Key Length");
             return false;
         }
 
-        keySpec = new SecretKeySpec(tripleDesKey.toArray(), "DESede");
+
 
         return true;
     }
 
-    protected boolean genKeySpecAES(byte[] origKey)
-            throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-
-        ByteArray AESKey = new ByteArray();
-        if (origKey.length == 16) {
-            keyType = KEYTYPE_AES;
-            AESKey.append(origKey);
-        } else {
-            Log.e("genKeySpecAES", "Wrong Key Length");
-            return false;
-        }
-
-        keySpec = new SecretKeySpec(AESKey.toArray(), "AES");
-        return true;
-    }
+    /**
+     * genKeySpecEV2 - to generate session key spec for EV2 encryption and MAC
+     * @param origKeyEnc
+     * @param origKeyMac
+     * @return
+     * @throws InvalidKeyException
+     * @throws NoSuchPaddingException
+     * @throws NoSuchAlgorithmException
+     */
     protected boolean genKeySpecEV2(byte[] origKeyEnc, byte [] origKeyMac)
             throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
 
@@ -196,6 +199,11 @@ public class DesfireCrypto {
     //region Encryption Related
 
     /********** Encryption Related **********/
+    /**
+     * encryptData D40 encrypt data doesn't use Init Vector
+     * @param encInput
+     * @return
+     */
     public byte[] encryptData(byte[] encInput) {
 
         if (cipher == null) {
@@ -207,9 +215,8 @@ public class DesfireCrypto {
         try {
             switch (authMode) {
                 case MODE_AUTHD40:
-                    byte [] nullIV = new byte[8];
-                    Arrays.fill(nullIV, (byte) 0);
-                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(nullIV));  // IV is always 00..00
+
+                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(nullBytes8));  // IV is always 00..00
                     encOutput = cipher.doFinal(encInput);
                     System.arraycopy(encInput, encInput.length - blockLength, currentIV, 0, blockLength);
                     break;
@@ -232,7 +239,6 @@ public class DesfireCrypto {
         return encOutput;
     }
 
-    /********** Encryption Related **********/
     public byte[] encryptMAC(byte[] encInput) {
 
         if (cipher == null) {
@@ -244,22 +250,19 @@ public class DesfireCrypto {
         try {
             switch (authMode) {
                 case MODE_AUTHD40:
-                    byte [] nullIV = new byte[8];
-                    Arrays.fill(nullIV, (byte) 0);
-                    cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(nullIV));  // IV is always 00..00
+                    cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(nullBytes8));  // IV is always 00..00
                     encOutput = cipher.doFinal(encInput);
                     System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
                     break;
-                case MODE_AUTHISO:
-                case MODE_AUTHAES:
+                case MODE_AUTHISO:  // Not used
+                case MODE_AUTHAES:  // Not used
                     cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
                     encOutput = cipher.doFinal(encInput);
                     // Write the first IV as the result from PICC's encryption
                     System.arraycopy(encOutput, encOutput.length - blockLength, currentIV, 0, blockLength);
                     break;
                 case MODE_AUTHEV2:
-                    Arrays.fill(currentIV,(byte)0x00);
-                    cipher.init(Cipher.ENCRYPT_MODE, EV2_KeySpecSesAuthMAC, new IvParameterSpec(currentIV));
+                    cipher.init(Cipher.ENCRYPT_MODE, EV2_KeySpecSesAuthMAC, new IvParameterSpec(nullBytes16));
                     encOutput = cipher.doFinal(encInput);
 
                     break;
@@ -274,7 +277,11 @@ public class DesfireCrypto {
         return encOutput;
     }
 
-    /********** Encryption Related **********/
+    /**
+     * decryptData for D40 mode does not use init vector
+     * @param decInput
+     * @return
+     */
     public byte[] decryptData(byte[] decInput) {
 
         if (cipher == null) {
@@ -285,9 +292,7 @@ public class DesfireCrypto {
         try {
             switch (authMode) {
                 case MODE_AUTHD40:
-                    byte [] nullIV = new byte[8];
-                    Arrays.fill(nullIV, (byte) 0);
-                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(nullIV));
+                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(nullBytes8));
                     decOutput = cipher.doFinal(decInput);
                     System.arraycopy(decInput, decInput.length - blockLength, currentIV, 0, blockLength);
                     break;
@@ -307,6 +312,12 @@ public class DesfireCrypto {
     }
 
     /********** Encryption Related **********/
+    /**
+     * encryptData D40 encrypt (for commands like GetCardUID) uses init vector
+     * @param encInput
+     * @param ks
+     * @return
+     */
     public byte[] encrypt(byte[] encInput, SecretKey ks) {
 
         if (cipher == null) {
@@ -355,22 +366,11 @@ public class DesfireCrypto {
         }
         byte[] decOutput = null;
         try {
-            switch (authMode) {
-                case MODE_AUTHD40:
-                    Log.d("decrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
-                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
-                    decOutput = cipher.doFinal(decInput);
-                    System.arraycopy(decInput, decInput.length - blockLength, currentIV, 0, blockLength);
-                    break;
-                case MODE_AUTHISO:
-                case MODE_AUTHAES:
-                case MODE_AUTHEV2:
-                    Log.d("decrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
-                    cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
-                    decOutput = cipher.doFinal(decInput);   // Decrypt
-                    // Write the first IV as the result from PICC's encryption
-                    System.arraycopy(decInput, decInput.length - blockLength, currentIV, 0, blockLength);
-            }
+            Log.d("decrypt", "Current IV = " + ByteArray.byteArrayToHexString(currentIV));
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(currentIV));
+            decOutput = cipher.doFinal(decInput);
+            System.arraycopy(decInput, decInput.length - blockLength, currentIV, 0, blockLength);
+
         } catch (GeneralSecurityException e) {
             Log.d("decrypt", "General Security Exception Error: " + e);
             decOutput = null;
@@ -442,6 +442,11 @@ public class DesfireCrypto {
             rndBPrime = ByteArray.rotateLT(rndB);
             rndA = new byte[rndB.length];   // Length 8 byte for DES/3DES, 16 byte for 3k3des and AES
             randomGenerator.nextBytes(rndA);
+
+
+            // TESTEV2
+            System.arraycopy(ByteArray.hexStringToByteArray("876D85B7FC717073AFBF564834F98F1E"), 0, rndA, 0, 16);
+
             Log.d("computeRAndDataToVerify", "rndB decrypted      = " + ByteArray.byteArrayToHexString(rndB));
             Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
             Log.d("computeRAndDataToVerify", "rndA generated      = " + ByteArray.byteArrayToHexString(rndA));
@@ -454,6 +459,8 @@ public class DesfireCrypto {
 
 
             challengeMessage = encrypt(encInput);
+
+            Log.d("computeRAndDataToVerify", "challengeMessage   = " + ByteArray.byteArrayToHexString(challengeMessage));
 
         }
 
@@ -588,7 +595,7 @@ public class DesfireCrypto {
                     System.arraycopy(rndA, 12, sessionKey, 8, 4);
                     System.arraycopy(rndB, 12, sessionKey, 12, 4);
                     Log.d("genSessionKey", "AES sessionKey    = " + ByteArray.byteArrayToHexString(sessionKey));
-                    genKeySpecAES(sessionKey);
+                    genKeySpec(sessionKey);
                 }
                 blockLength = 16;
                 break;
@@ -621,12 +628,13 @@ public class DesfireCrypto {
         int shift = len % 8;
         byte carry_mask = (byte) ((1 << shift) - 1);
         int offset = word_size - 1;
+        int src_index;
         byte[] data = new byte[input.length];
         System.arraycopy(input, 0, data, 0, data.length);
 
 
         for (int i = 0; i < data.length; i++) {
-            int src_index = i + offset;
+            src_index = i + offset;
             if (src_index >= data.length) {
                 data[i] = 0;
             } else {
@@ -643,13 +651,6 @@ public class DesfireCrypto {
 
     private byte[] shiftLeft1Bit(byte[] data) {
         return shiftLeft(data, 1);
-    }
-
-    private byte[] shiftLeft1Bit(byte[] data, byte Rb) {
-        byte[] output;
-        output = shiftLeft(data, 1);
-        output[data.length - 1] ^= Rb;
-        return output;
     }
 
     public void genSubKeys() throws GeneralSecurityException {
@@ -675,18 +676,16 @@ public class DesfireCrypto {
 
         // 2. If MSB1(L) = 0, then K1 = L << 1;
         // Else K1 = (L << 1) XOR Rb; see Sec. 5.3 for the definition of Rb.
-        if ((L[0] & (byte) 0x80) == (byte) 0x00) {
-            K1 = shiftLeft1Bit(L);
-        } else {
-            K1 = shiftLeft1Bit(L, Rb);
+        K1 = shiftLeft1Bit(L);
+        if ((L[0] & (byte) 0x80) == (byte) 0x80) {
+            K1[K1.length - 1] ^= Rb;
         }
 
         // 3. If MSB1(K1) = 0, then K2 = K1 << 1;
         // Else K2 = (K1 << 1) XOR Rb.
-        if ((K1[0] & (byte) 0x80) == (byte) 0x00) {
-            K2 = shiftLeft1Bit(K1);
-        } else {
-            K2 = shiftLeft1Bit(K1, Rb);
+        K2 = shiftLeft1Bit(K1);
+        if ((K1[0] & (byte) 0x80) == (byte) 0x80) {
+            K2[K2.length - 1] ^= Rb;
         }
         Log.d("genSubKeys", "K1           = " + ByteArray.byteArrayToHexString(K1));
         Log.d("genSubKeys", "K2           = " + ByteArray.byteArrayToHexString(K2));
@@ -712,18 +711,16 @@ public class DesfireCrypto {
 
         // 2. If MSB1(L) = 0, then K1 = L << 1;
         // Else K1 = (L << 1) XOR Rb; see Sec. 5.3 for the definition of Rb.
-        if ((L[0] & (byte) 0x80) == (byte) 0x00) {
-            EV2_K1 = shiftLeft1Bit(L);
-        } else {
-            EV2_K1 = shiftLeft1Bit(L, Rb);
+        EV2_K1 = shiftLeft1Bit(L);
+        if ((L[0] & (byte) 0x80) == (byte) 0x80) {
+            EV2_K1[EV2_K1.length - 1] ^= Rb;
         }
 
         // 3. If MSB1(K1) = 0, then K2 = K1 << 1;
         // Else K2 = (K1 << 1) XOR Rb.
-        if ((EV2_K1[0] & (byte) 0x80) == (byte) 0x00) {
-            EV2_K2 = shiftLeft1Bit(EV2_K1);
-        } else {
-            EV2_K2 = shiftLeft1Bit(EV2_K1, Rb);
+        EV2_K2 = shiftLeft1Bit(EV2_K1);
+        if ((EV2_K1[0] & (byte) 0x80) == (byte) 0x80) {
+            EV2_K2[EV2_K2.length - 1] ^= Rb;
         }
         Log.d("genSubKeysEV2", "EV2_K1           = " + ByteArray.byteArrayToHexString(EV2_K1));
         Log.d("genSubKeysEV2", "EV2_K2           = " + ByteArray.byteArrayToHexString(EV2_K2));
@@ -734,7 +731,6 @@ public class DesfireCrypto {
     //endregion
 
     //region D40 MAC Related
-    /********** MAC RELATED **********/
     /**
      * D40 MAC only applies to Data field
      *
@@ -750,27 +746,24 @@ public class DesfireCrypto {
         if ((extraLength == 0) && (data.length != 0)) {
             encInput = new byte[data.length];
             System.arraycopy(data, 0, encInput, 0, data.length);
-
         } else {
             encInput = new byte[data.length + blockLength - extraLength];
             baEncInput.append(data).append(ByteArray.hexStringToByteArray("0000000000000000"));
             System.arraycopy(baEncInput.toArray(), 0, encInput, 0, data.length + blockLength - extraLength);
         }
-        //Log.d("calcD40MAC", "extraLength  = " + extraLength + " encInput.length = " + encInput.length );
-        //Log.d("calcD40MAC", "encInput = " + ByteArray.byteArrayToHexString(encInput));
 
-        //Log.d ("calcD40MAC  ", "Encryt Input Data = " + ByteArray.byteArrayToHexString(encInput));
         output = encryptMAC(encInput);
-        //Log.d ("calcD40MAC  ", "Encrytped Data    = " + ByteArray.byteArrayToHexString(output));
 
         System.arraycopy(output, output.length - 8, outMAC, 0, 4);
-
-        //Log.d ("calcD40MAC  ", "MAC computed      = " + ByteArray.byteArrayToHexString(outMAC) );
 
         return outMAC;
     }
 
-
+    /**
+     * verifyD40DAC Verify Mac
+     * @param recvData
+     * @return
+     */
     public boolean verifyD40MAC(byte[] recvData) {
         byte[] MACToVerify = new byte[4];
         byte[] computedMACToVerify;
@@ -885,7 +878,6 @@ public class DesfireCrypto {
     //endregion
 
     //region EV2 CMAC related
-
     /**
      * Calculate CMAC without truncation according to SP800-38A
      * @param cmd data to calc CMAC
@@ -911,10 +903,7 @@ public class DesfireCrypto {
         System.arraycopy(EV2_TI, 0 , encInput, 3, 4);
         System.arraycopy(cmd, 1 , encInput, 7, cmd.length -1);
 
-
-
         Log.d("EV2CalcCMAC", "Encrypt Input before Padding = " + ByteArray.byteArrayToHexString(encInput));
-
 
         // CMAC if Extralength = 0, use K1 XOR
         if ((extraLength == 0) && (cmd.length != 0)) {
@@ -940,7 +929,6 @@ public class DesfireCrypto {
         }
 
 
-
         Log.d("EV2CalcCMAC", "Encrypt Input after Padding  = " + ByteArray.byteArrayToHexString(encInput));
         outputCMAC = encryptMAC(encInput);
         Log.d("EV2CalcCMAC", "Encrypted Data               = " + ByteArray.byteArrayToHexString(outputCMAC));
@@ -960,8 +948,10 @@ public class DesfireCrypto {
 
     //endregion
 
+    //region CRC Related
+
     //region CRC32 Related
-    /********** CRC RELATED **********/
+    /********** CRC32 RELATED **********/
     public static byte[] longToBytesInvertCRC(long l) {
         byte[] result = new byte[4];
         for (int i = 0; i < 4; i++) {
@@ -970,7 +960,6 @@ public class DesfireCrypto {
         }
         return result;
     }
-
     //endregion
 
     //region CRC16 Related
@@ -1006,166 +995,6 @@ public class DesfireCrypto {
         bb[1] = (byte) ((wCrc >> 8) & maskB);
         return bb;
     }
-
-
-    // https://github.com/jekkos/android-hce-desfire/blob/master/hceappletdesfire/src/main/java/net/jpeelaer/hce/desfire/Util.java
-    public static byte[] crc16(byte[] data) {
-        short crc = (short) 0x0000;
-        short[] table = {
-                (short) 0x0000, (short) 0xC0C1, (short) 0xC181, (short) 0x0140, (short) 0xC301, (short) 0x03C0, (short) 0x0280, (short) 0xC241,
-                (short) 0xC601, (short) 0x06C0, (short) 0x0780, (short) 0xC741, (short) 0x0500, (short) 0xC5C1, (short) 0xC481, (short) 0x0440,
-                (short) 0xCC01, (short) 0x0CC0, (short) 0x0D80, (short) 0xCD41, (short) 0x0F00, (short) 0xCFC1, (short) 0xCE81, (short) 0x0E40,
-                (short) 0x0A00, (short) 0xCAC1, (short) 0xCB81, (short) 0x0B40, (short) 0xC901, (short) 0x09C0, (short) 0x0880, (short) 0xC841,
-                (short) 0xD801, (short) 0x18C0, (short) 0x1980, (short) 0xD941, (short) 0x1B00, (short) 0xDBC1, (short) 0xDA81, (short) 0x1A40,
-                (short) 0x1E00, (short) 0xDEC1, (short) 0xDF81, (short) 0x1F40, (short) 0xDD01, (short) 0x1DC0, (short) 0x1C80, (short) 0xDC41,
-                (short) 0x1400, (short) 0xD4C1, (short) 0xD581, (short) 0x1540, (short) 0xD701, (short) 0x17C0, (short) 0x1680, (short) 0xD641,
-                (short) 0xD201, (short) 0x12C0, (short) 0x1380, (short) 0xD341, (short) 0x1100, (short) 0xD1C1, (short) 0xD081, (short) 0x1040,
-                (short) 0xF001, (short) 0x30C0, (short) 0x3180, (short) 0xF141, (short) 0x3300, (short) 0xF3C1, (short) 0xF281, (short) 0x3240,
-                (short) 0x3600, (short) 0xF6C1, (short) 0xF781, (short) 0x3740, (short) 0xF501, (short) 0x35C0, (short) 0x3480, (short) 0xF441,
-                (short) 0x3C00, (short) 0xFCC1, (short) 0xFD81, (short) 0x3D40, (short) 0xFF01, (short) 0x3FC0, (short) 0x3E80, (short) 0xFE41,
-                (short) 0xFA01, (short) 0x3AC0, (short) 0x3B80, (short) 0xFB41, (short) 0x3900, (short) 0xF9C1, (short) 0xF881, (short) 0x3840,
-                (short) 0x2800, (short) 0xE8C1, (short) 0xE981, (short) 0x2940, (short) 0xEB01, (short) 0x2BC0, (short) 0x2A80, (short) 0xEA41,
-                (short) 0xEE01, (short) 0x2EC0, (short) 0x2F80, (short) 0xEF41, (short) 0x2D00, (short) 0xEDC1, (short) 0xEC81, (short) 0x2C40,
-                (short) 0xE401, (short) 0x24C0, (short) 0x2580, (short) 0xE541, (short) 0x2700, (short) 0xE7C1, (short) 0xE681, (short) 0x2640,
-                (short) 0x2200, (short) 0xE2C1, (short) 0xE381, (short) 0x2340, (short) 0xE101, (short) 0x21C0, (short) 0x2080, (short) 0xE041,
-                (short) 0xA001, (short) 0x60C0, (short) 0x6180, (short) 0xA141, (short) 0x6300, (short) 0xA3C1, (short) 0xA281, (short) 0x6240,
-                (short) 0x6600, (short) 0xA6C1, (short) 0xA781, (short) 0x6740, (short) 0xA501, (short) 0x65C0, (short) 0x6480, (short) 0xA441,
-                (short) 0x6C00, (short) 0xACC1, (short) 0xAD81, (short) 0x6D40, (short) 0xAF01, (short) 0x6FC0, (short) 0x6E80, (short) 0xAE41,
-                (short) 0xAA01, (short) 0x6AC0, (short) 0x6B80, (short) 0xAB41, (short) 0x6900, (short) 0xA9C1, (short) 0xA881, (short) 0x6840,
-                (short) 0x7800, (short) 0xB8C1, (short) 0xB981, (short) 0x7940, (short) 0xBB01, (short) 0x7BC0, (short) 0x7A80, (short) 0xBA41,
-                (short) 0xBE01, (short) 0x7EC0, (short) 0x7F80, (short) 0xBF41, (short) 0x7D00, (short) 0xBDC1, (short) 0xBC81, (short) 0x7C40,
-                (short) 0xB401, (short) 0x74C0, (short) 0x7580, (short) 0xB541, (short) 0x7700, (short) 0xB7C1, (short) 0xB681, (short) 0x7640,
-                (short) 0x7200, (short) 0xB2C1, (short) 0xB381, (short) 0x7340, (short) 0xB101, (short) 0x71C0, (short) 0x7080, (short) 0xB041,
-                (short) 0x5000, (short) 0x90C1, (short) 0x9181, (short) 0x5140, (short) 0x9301, (short) 0x53C0, (short) 0x5280, (short) 0x9241,
-                (short) 0x9601, (short) 0x56C0, (short) 0x5780, (short) 0x9741, (short) 0x5500, (short) 0x95C1, (short) 0x9481, (short) 0x5440,
-                (short) 0x9C01, (short) 0x5CC0, (short) 0x5D80, (short) 0x9D41, (short) 0x5F00, (short) 0x9FC1, (short) 0x9E81, (short) 0x5E40,
-                (short) 0x5A00, (short) 0x9AC1, (short) 0x9B81, (short) 0x5B40, (short) 0x9901, (short) 0x59C0, (short) 0x5880, (short) 0x9841,
-                (short) 0x8801, (short) 0x48C0, (short) 0x4980, (short) 0x8941, (short) 0x4B00, (short) 0x8BC1, (short) 0x8A81, (short) 0x4A40,
-                (short) 0x4E00, (short) 0x8EC1, (short) 0x8F81, (short) 0x4F40, (short) 0x8D01, (short) 0x4DC0, (short) 0x4C80, (short) 0x8C41,
-                (short) 0x4400, (short) 0x84C1, (short) 0x8581, (short) 0x4540, (short) 0x8701, (short) 0x47C0, (short) 0x4680, (short) 0x8641,
-                (short) 0x8201, (short) 0x42C0, (short) 0x4380, (short) 0x8341, (short) 0x4100, (short) 0x81C1, (short) 0x8081, (short) 0x4040,
-        };
-        for (short i = 0; i < data.length; i++) {
-            crc = (short) ((crc >>> 8) ^ crc_table[(crc ^ data[i]) & (short) 0xff]);
-        }
-
-        return new byte[]{(byte) (crc >>> 8), (byte) (crc)};
-    }
-
-
-    // http://automationwiki.com/index.php?title=CRC-16-CCITT
-    private static int crc_table[] = {
-
-            0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,
-            0x60c6, 0x70e7, 0x8108, 0x9129, 0xa14a, 0xb16b,
-            0xc18c, 0xd1ad, 0xe1ce, 0xf1ef, 0x1231, 0x0210,
-            0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
-            0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c,
-            0xf3ff, 0xe3de, 0x2462, 0x3443, 0x0420, 0x1401,
-            0x64e6, 0x74c7, 0x44a4, 0x5485, 0xa56a, 0xb54b,
-            0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
-            0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6,
-            0x5695, 0x46b4, 0xb75b, 0xa77a, 0x9719, 0x8738,
-            0xf7df, 0xe7fe, 0xd79d, 0xc7bc, 0x48c4, 0x58e5,
-            0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
-            0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969,
-            0xa90a, 0xb92b, 0x5af5, 0x4ad4, 0x7ab7, 0x6a96,
-            0x1a71, 0x0a50, 0x3a33, 0x2a12, 0xdbfd, 0xcbdc,
-            0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
-            0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03,
-            0x0c60, 0x1c41, 0xedae, 0xfd8f, 0xcdec, 0xddcd,
-            0xad2a, 0xbd0b, 0x8d68, 0x9d49, 0x7e97, 0x6eb6,
-            0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
-            0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a,
-            0x9f59, 0x8f78, 0x9188, 0x81a9, 0xb1ca, 0xa1eb,
-            0xd10c, 0xc12d, 0xf14e, 0xe16f, 0x1080, 0x00a1,
-            0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
-            0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c,
-            0xe37f, 0xf35e, 0x02b1, 0x1290, 0x22f3, 0x32d2,
-            0x4235, 0x5214, 0x6277, 0x7256, 0xb5ea, 0xa5cb,
-            0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
-            0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447,
-            0x5424, 0x4405, 0xa7db, 0xb7fa, 0x8799, 0x97b8,
-            0xe75f, 0xf77e, 0xc71d, 0xd73c, 0x26d3, 0x36f2,
-            0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
-            0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9,
-            0xb98a, 0xa9ab, 0x5844, 0x4865, 0x7806, 0x6827,
-            0x18c0, 0x08e1, 0x3882, 0x28a3, 0xcb7d, 0xdb5c,
-            0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
-            0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0,
-            0x2ab3, 0x3a92, 0xfd2e, 0xed0f, 0xdd6c, 0xcd4d,
-            0xbdaa, 0xad8b, 0x9de8, 0x8dc9, 0x7c26, 0x6c07,
-            0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
-            0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba,
-            0x8fd9, 0x9ff8, 0x6e17, 0x7e36, 0x4e55, 0x5e74,
-            0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
-    };
-
-    byte[] CRCCCITT(byte[] data, int seed) {
-
-        int count;
-        long crc = seed;
-        long temp;
-        int maxlength = data.length;
-        Log.d("CRCCITT", "ENTER data.lenth = " + data.length);
-        for (count = 0; count < maxlength; count++) {
-            Log.d("CRCCITT", "Loop: " + count);
-            temp = (data[count] ^ (crc >>> 8)) & 0xff;
-            Log.d("CRCCITT", "temp = " + temp);
-            if (temp > 255) {
-                Log.d("CRCCITT", " temp greater than 255 ERROR");
-            }
-            crc = crc_table[(int) temp] ^ (crc << 8);
-            Log.d("CRCCITT", "crc = " + crc);
-        }
-        int iCRC = (int) crc & 0xffff;
-
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-
-        Log.d("CRCCITT", "finished crc = " + iCRC);
-        byte[] returnCRC = new byte[4];
-        System.arraycopy(b.putInt(iCRC).array(), 0, returnCRC, 0, 4);
-        Log.d("CRCCITT", "byte crc = " + ByteArray.byteArrayToHexString(returnCRC));
-        return returnCRC;
-
-    }
-
-    //https://www.lammertbies.nl/forum/viewtopic.php?t=1907
-    static byte[] ComputeCRC(byte[] val) {
-        long crc;
-        long q;
-        byte c;
-        crc = 0x6363;
-        for (int i = 0; i < val.length; i++) {
-            c = val[i];
-            q = (crc ^ c) & 0x0f;
-            crc = (crc >> 4) ^ (q * 0x1081);
-            q = (crc ^ (c >> 4)) & 0x0f;
-            crc = (crc >> 4) ^ (q * 0x1081);
-        }
-        int crcend = ((byte) crc << 8 | (byte) (crc >> 8)) & 0xffff;
-//Swap bytes
-        byte[] result = new byte[2];
-        result[0] = (byte) ((crcend >> 8) & 0xff);
-        result[1] = (byte) (crcend & 0xff);
-
-        /*int byte1 = (crcend & 0xff);
-        int byte2 = ((crcend >> 8) & 0xff);
-        int result = ((byte1 << 8) | (byte2));
-//Swap
-
-
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-
-        byte[] returnCRC = new byte[2];
-        System.arraycopy(b.putInt(result).array(), 0 , returnCRC, 0 , 2);
-         */
-        Log.d("ComputeCRC", "Calc CRC: " + ByteArray.byteArrayToHexString(result));
-        return result;
-    }
-
 //endregion
 
     public byte[] calcCRC(byte[] data) {
@@ -1180,12 +1009,6 @@ public class DesfireCrypto {
 
         } else {
             returnCRC = iso14443a_crc(data);
-            //returnCRC = crc16(data);
-            //returnCRC = CRCCCITT(data,0xFFFF);
-            //returnCRC = CRCCCITT(data,0x6363);
-            //returnCRC = crc16(data);
-            //returnCRC = ComputeCRC(data);
-            //returnCRC = CRC16CCITT(data);
         }
         Log.d("calcCRC", "Calculated CRC      = " + ByteArray.byteArrayToHexString(returnCRC));
         return returnCRC;
@@ -1223,6 +1046,7 @@ public class DesfireCrypto {
 
         Log.d("decryptReadData", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
 
+        // Remove padding, separate CRC
         ByteArray baDecryptedPlainData = new ByteArray();
         ByteArray baCRC = new ByteArray();
         if (encryptedLength != 0) {  // if count is specified 00 .. 00 padding is used
@@ -1239,6 +1063,7 @@ public class DesfireCrypto {
             baCRC.append(decryptedData, decryptedData.length - CRCLength - padCount, CRCLength);
         }
 
+        // CRC verification
         Log.d("decryptReadData", "CRC  Data      = " + ByteArray.byteArrayToHexString(baCRC.toArray()));
         byte[] returnData = baDecryptedPlainData.toArray();
         if (CRCLength == 4) {
@@ -1263,7 +1088,7 @@ public class DesfireCrypto {
         return returnData;
     }
 
-    public byte[] decryptWithIV() throws IOException, GeneralSecurityException {
+/*    public byte[] decryptWithIV() throws IOException, GeneralSecurityException {
         byte[] decryptedData;
 
 
@@ -1280,6 +1105,7 @@ public class DesfireCrypto {
 
         Log.d("decryptWithIV", "Decrypted Data = " + ByteArray.byteArrayToHexString(decryptedData));
 
+        // Remove Padding
         ByteArray baDecryptedPlainData = new ByteArray();
         ByteArray baCRC = new ByteArray();
         if (encryptedLength != 0) {  // if count is specified 00 .. 00 padding is used
@@ -1316,7 +1142,7 @@ public class DesfireCrypto {
         storedAFData.clear();
 
         return returnData;
-    }
+    }*/
 
     public byte[] encryptWriteDataBlock(byte[] bCmdHeader, byte[] bDataToEncrypt) throws IOException, GeneralSecurityException {
 
@@ -1365,28 +1191,6 @@ public class DesfireCrypto {
 
     }
 
-
-    public byte[] encryptDataWithIV(byte[] bCmdHeader, byte[] bDataToEncrypt) throws IOException, GeneralSecurityException {
-
-
-        // CALC CRC
-        ByteArray baDataToCRC = new ByteArray();
-        byte[] computedCRC;
-
-        if (CRCLength == 4) {
-            baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray();
-            Log.d("encryptDataWithIV", "CRC32 Input = " + ByteArray.byteArrayToHexString(baDataToCRC.toArray()));
-            computedCRC = calcCRC(baDataToCRC.toArray());
-        } else {  // CRC16 does not CRC the header
-            Log.d("encryptDataWithIV", "CRC16 Input = " + ByteArray.byteArrayToHexString(bDataToEncrypt));
-            computedCRC = calcCRC(bDataToEncrypt);
-        }
-
-        ByteArray baDataToEncrypt = new ByteArray();
-
-        return encryptDataWithIVBlock (baDataToEncrypt.append(bDataToEncrypt).append(computedCRC).toArray());
-    }
-
     // encrypt Data Block - encrypts bDataToEncrypt + padding only.  CRC not included
     public byte[] encryptDataWithIVBlock(byte[] bDataToEncrypt) throws IOException, GeneralSecurityException {
         // DO PADDING
@@ -1411,4 +1215,27 @@ public class DesfireCrypto {
         return bEncryptedData;
 
     }
+
+    public byte[] encryptDataWithCRC(byte[] bCmdHeader, byte[] bDataToEncrypt) throws IOException, GeneralSecurityException {
+
+
+        // CALC CRC
+        ByteArray baDataToCRC = new ByteArray();
+        byte[] computedCRC;
+
+        if (CRCLength == 4) {
+            baDataToCRC.append(bCmdHeader).append(bDataToEncrypt).toArray();
+            Log.d("encryptDataWithIV", "CRC32 Input = " + ByteArray.byteArrayToHexString(baDataToCRC.toArray()));
+            computedCRC = calcCRC(baDataToCRC.toArray());
+        } else {  // CRC16 does not CRC the header
+            Log.d("encryptDataWithIV", "CRC16 Input = " + ByteArray.byteArrayToHexString(bDataToEncrypt));
+            computedCRC = calcCRC(bDataToEncrypt);
+        }
+
+        ByteArray baDataToEncrypt = new ByteArray();
+
+        return encryptDataWithIVBlock (baDataToEncrypt.append(bDataToEncrypt).append(computedCRC).toArray());
+    }
+
+
 }
