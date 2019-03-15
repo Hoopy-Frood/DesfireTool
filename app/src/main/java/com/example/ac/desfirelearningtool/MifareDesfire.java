@@ -1330,7 +1330,7 @@ public class MifareDesfire {
 
         // TESTEV2
         cardResponse.status = statusType.SUCCESS;
-        System.arraycopy(ByteArray.hexStringToByteArray("EE93375DE2190A24F97D4AE363CAEC8DE2ED76DF4C3EE23C9D3499E3EC8D2259"), 0, CardChallenge.data, 0, 32);
+        cardResponse.data = ByteArray.hexStringToByteArray("EE93375DE2190A24F97D4AE363CAEC8DE2ED76DF4C3EE23C9D3499E3EC8D2259");
 
 
         if (cardResponse.status != statusType.SUCCESS){

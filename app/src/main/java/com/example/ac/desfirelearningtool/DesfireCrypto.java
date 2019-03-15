@@ -557,7 +557,7 @@ public class DesfireCrypto {
 
                     // SV1 = A5 5A 00 01 00 80 || RndA[15-14] || (RndA[13-8] XOR (RnB[15-10]) || RndB[9-0] || RndA[7-0]
                     byte [] SV1 = new byte[32];
-                    System.arraycopy(ByteArray.hexStringToByteArray("A55A00010008"), 0, SV1, 0,6);
+                    System.arraycopy(ByteArray.hexStringToByteArray("A55A00010080"), 0, SV1, 0,6);
                     System.arraycopy(rndA, 0, SV1, 6, 2);
                     System.arraycopy(ByteArray.xor(rndA, 2, rndB, 0, 6), 0, SV1, 8, 6);
                     System.arraycopy(rndB, 6, SV1, 14, 10);
@@ -573,9 +573,11 @@ public class DesfireCrypto {
                     genSubKeys();  // using Kx of Authentication
 
 
+                    Arrays.fill(currentIV, (byte) 0);
                     // KSesAuthEnc = PRF(Kx, SV1)
                     EV2_KSesAuthENC = calcCMAC_full(SV1);
 
+                    Arrays.fill(currentIV, (byte) 0);
                     // KSesAuthMAC = PRF(Kx, SV2)
                     EV2_KSesAuthMAC = calcCMAC_full(SV2);
 
@@ -586,6 +588,7 @@ public class DesfireCrypto {
                     
 
                     Log.d("genSessionKey", "EV2 KSesAuthEnc          = " + ByteArray.byteArrayToHexString(EV2_KSesAuthENC));
+                    Log.d("genSessionKey", "EV2 KSesAuthMac          = " + ByteArray.byteArrayToHexString(EV2_KSesAuthMAC));
 
 
 
