@@ -1315,7 +1315,7 @@ public class MifareDesfire {
         }
 
         // TESTEV2
-        System.arraycopy(ByteArray.hexStringToByteArray("C56F576D2444171CF64B196346A81662"), 0, CardChallenge.data, 0, 16);
+        //System.arraycopy(ByteArray.hexStringToByteArray("C56F576D2444171CF64B196346A81662"), 0, CardChallenge.data, 0, 16);
 
 
         // Compute next command and required response
@@ -1329,8 +1329,8 @@ public class MifareDesfire {
         DesfireResponse cardResponse = sendBytes(challengeMessage);
 
         // TESTEV2
-        cardResponse.status = statusType.SUCCESS;
-        cardResponse.data = ByteArray.hexStringToByteArray("EE93375DE2190A24F97D4AE363CAEC8DE2ED76DF4C3EE23C9D3499E3EC8D2259");
+        //cardResponse.status = statusType.SUCCESS;
+        //cardResponse.data = ByteArray.hexStringToByteArray("EE93375DE2190A24F97D4AE363CAEC8DE2ED76DF4C3EE23C9D3499E3EC8D2259");
 
 
         if (cardResponse.status != statusType.SUCCESS){

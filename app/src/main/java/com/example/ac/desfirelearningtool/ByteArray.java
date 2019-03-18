@@ -215,7 +215,7 @@ public class ByteArray {
     public static byte[] xor(byte[] a, int aStart, byte[] b, int bStart, int len) {
         byte[] ret = new byte[len];
         for (int i = 0; i < len; i++)
-            ret[i] = (byte)(a[i + aStart] ^ b[i + aStart]);
+            ret[i] = (byte)(a[i + aStart] ^ b[i + bStart]);
         return ret;
     }
 

@@ -445,7 +445,7 @@ public class DesfireCrypto {
 
 
             // TESTEV2
-            System.arraycopy(ByteArray.hexStringToByteArray("876D85B7FC717073AFBF564834F98F1E"), 0, rndA, 0, 16);
+            //System.arraycopy(ByteArray.hexStringToByteArray("876D85B7FC717073AFBF564834F98F1E"), 0, rndA, 0, 16);
 
             Log.d("computeRAndDataToVerify", "rndB decrypted      = " + ByteArray.byteArrayToHexString(rndB));
             Log.d("computeRAndDataToVerify", "rndBPrime           = " + ByteArray.byteArrayToHexString(rndBPrime));
@@ -559,7 +559,7 @@ public class DesfireCrypto {
                     byte [] SV1 = new byte[32];
                     System.arraycopy(ByteArray.hexStringToByteArray("A55A00010080"), 0, SV1, 0,6);
                     System.arraycopy(rndA, 0, SV1, 6, 2);
-                    System.arraycopy(ByteArray.xor(rndA, 2, rndB, 0, 6), 0, SV1, 8, 6);
+                    System.arraycopy(ByteArray.xor(rndA, 2, rndB, 0, 6), 0, SV1, 8, 6);//
                     System.arraycopy(rndB, 6, SV1, 14, 10);
                     System.arraycopy(rndA, 8, SV1, 24, 8);
 
@@ -569,7 +569,7 @@ public class DesfireCrypto {
                     SV2[0] = (byte) 0x5A;
                     SV2[1] = (byte) 0xA5;
 
-                    //
+
                     genSubKeys();  // using Kx of Authentication
 
 
@@ -581,16 +581,14 @@ public class DesfireCrypto {
                     // KSesAuthMAC = PRF(Kx, SV2)
                     EV2_KSesAuthMAC = calcCMAC_full(SV2);
 
-                    genKeySpecEV2(EV2_KSesAuthENC, EV2_KSesAuthMAC);
-
-                    genSubKeysEV2();
-                    EV2Authenticated = true;
-                    
-
                     Log.d("genSessionKey", "EV2 KSesAuthEnc          = " + ByteArray.byteArrayToHexString(EV2_KSesAuthENC));
                     Log.d("genSessionKey", "EV2 KSesAuthMac          = " + ByteArray.byteArrayToHexString(EV2_KSesAuthMAC));
 
 
+                    genKeySpecEV2(EV2_KSesAuthENC, EV2_KSesAuthMAC);
+
+                    genSubKeysEV2();
+                    EV2Authenticated = true;
 
                 } else {
                     System.arraycopy(rndA, 0, sessionKey, 0, 4);
@@ -681,14 +679,14 @@ public class DesfireCrypto {
         // Else K1 = (L << 1) XOR Rb; see Sec. 5.3 for the definition of Rb.
         K1 = shiftLeft1Bit(L);
         if ((L[0] & (byte) 0x80) == (byte) 0x80) {
-            K1[K1.length - 1] ^= Rb;
+            K1[blockLength - 1] ^= Rb;
         }
 
         // 3. If MSB1(K1) = 0, then K2 = K1 << 1;
         // Else K2 = (K1 << 1) XOR Rb.
         K2 = shiftLeft1Bit(K1);
         if ((K1[0] & (byte) 0x80) == (byte) 0x80) {
-            K2[K2.length - 1] ^= Rb;
+            K2[blockLength - 1] ^= Rb;
         }
         Log.d("genSubKeys", "K1           = " + ByteArray.byteArrayToHexString(K1));
         Log.d("genSubKeys", "K2           = " + ByteArray.byteArrayToHexString(K2));
@@ -794,14 +792,16 @@ public class DesfireCrypto {
     public byte[] calcCMAC(byte[] data) {
         byte[] outputCMAC;
         outputCMAC = calcCMAC_full(data);
-        byte [] returnCMAC = new byte[8];
-        /*if (authMode == MODE_AUTHEV2) {
+        byte [] returnCMAC = new byte[blockLength];
+        if (authMode == MODE_AUTHEV2) {
             for (int i=0; i < 8; i ++) {
                 returnCMAC[i] = outputCMAC[2*i+1];
             }
         } else {
-        */    System.arraycopy(outputCMAC, outputCMAC.length - blockLength, returnCMAC, 0, 8);
-        /*}*/
+
+            // Truncate CMAC by taking the most significant bits
+            System.arraycopy(outputCMAC, outputCMAC.length - blockLength, returnCMAC, 0, 8);
+        }
 
         return returnCMAC;
     }
@@ -813,6 +813,7 @@ public class DesfireCrypto {
      */
     public byte[] calcCMAC_full(byte[] data) {
         byte[] output, encInput;
+
         ByteArray baEncInput = new ByteArray();
 
         Log.d("calcCMAC_full", "Starting Init Vector  = " + ByteArray.byteArrayToHexString(currentIV));
@@ -847,7 +848,10 @@ public class DesfireCrypto {
         output = encryptData(encInput);
         Log.d("calcCMAC_full", "Encrypted Data              = " + ByteArray.byteArrayToHexString(output));
 
-        return output;
+        byte[] lastBlockOutput = new byte [blockLength];
+        System.arraycopy(output, output.length - blockLength, lastBlockOutput, 0, blockLength);
+        Log.d("calcCMAC_full", "Output full CMAC before truc= " + ByteArray.byteArrayToHexString(lastBlockOutput));
+        return lastBlockOutput;
     }
 
     public boolean verifyCMAC(byte[] recvData) {
