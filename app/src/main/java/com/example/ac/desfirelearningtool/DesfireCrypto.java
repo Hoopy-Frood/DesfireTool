@@ -52,7 +52,7 @@ public class DesfireCrypto {
 
 
     public boolean trackCMAC;
-    public boolean EV2Authenticated;
+    public boolean EV2_Authenticated;
     public int CRCLength;    // Length of CRC 2 or 4 bytes
     public int encryptedLength;  // specified dataLength at the first AF for Read Data
     public int currentAuthenticatedKey;
@@ -76,7 +76,7 @@ public class DesfireCrypto {
         cipher = null;
         authMode = (byte) 0x00;
         trackCMAC = false;
-        EV2Authenticated = false;
+        EV2_Authenticated = false;
         CRCLength = 0;
         encryptedLength = 0;
         storedAFData.clear();
@@ -588,7 +588,8 @@ public class DesfireCrypto {
                     genKeySpecEV2(EV2_KSesAuthENC, EV2_KSesAuthMAC);
 
                     genSubKeysEV2();
-                    EV2Authenticated = true;
+                    EV2_Authenticated = true;
+
 
                 } else {
                     System.arraycopy(rndA, 0, sessionKey, 0, 4);
@@ -792,7 +793,7 @@ public class DesfireCrypto {
     public byte[] calcCMAC(byte[] data) {
         byte[] outputCMAC;
         outputCMAC = calcCMAC_full(data);
-        byte [] returnCMAC = new byte[blockLength];
+        byte [] returnCMAC = new byte[8];
         if (authMode == MODE_AUTHEV2) {
             for (int i=0; i < 8; i ++) {
                 returnCMAC[i] = outputCMAC[2*i+1];
@@ -800,7 +801,7 @@ public class DesfireCrypto {
         } else {
 
             // Truncate CMAC by taking the most significant bits
-            System.arraycopy(outputCMAC, outputCMAC.length - blockLength, returnCMAC, 0, 8);
+            System.arraycopy(outputCMAC, 0, returnCMAC, 0, 8);
         }
 
         return returnCMAC;
@@ -890,7 +891,7 @@ public class DesfireCrypto {
      * @param cmd data to calc CMAC
      * @return Full CMAC
      */
-    public byte[] EV2CalcCMAC(byte[] cmd) {
+    public byte[] EV2_CalcCMAC(byte[] cmd) {
         byte[] outputCMAC, encInput;
 
         // cmd || CmdHeader || CmdData || MAC
