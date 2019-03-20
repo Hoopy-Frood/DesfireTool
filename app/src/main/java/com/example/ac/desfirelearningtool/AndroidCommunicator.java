@@ -107,8 +107,10 @@ public class AndroidCommunicator implements ICardCommunicator {
             scrollLog.append("<-" + ByteArray.byteArrayToHexString(isoAnswer));
             return fromIsoAnswer(isoAnswer);
         } else {
+            Log.v("Transceive CMD:", ByteArray.byteArrayToHexString(data));
             scrollLog.append("->" + ByteArray.byteArrayToHexString(data));
             byte [] answer = isoDep.transceive(data);
+            Log.v("Transceive RSP:", ByteArray.byteArrayToHexString(answer));
             scrollLog.append("<-" + ByteArray.byteArrayToHexString(answer));
             return answer;
         }

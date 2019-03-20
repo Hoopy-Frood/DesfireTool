@@ -308,6 +308,10 @@ public class ByteArray {
         System.arraycopy(buffer, 0, data, 0, count);
         return data;
     }
+    public String toHexString() {
+        return byteArrayToHexString(buffer,0,count);
+    }
+
 
     public byte[] rawData() {
         return buffer;

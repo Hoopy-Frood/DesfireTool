@@ -65,34 +65,55 @@ public class MifareDesfire {
         ByteArray array = new ByteArray();
         byte[] cmd = array.append((byte) 0x51).toArray();
 
-        if ((dfCrypto.trackCMAC)) {
+        if (dfCrypto.trackCMAC) {
             Log.d("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd));
             dfCrypto.calcCMAC(cmd);
-        } else (dfCrypto.EV2_Authenticated) {
-            cmd = array.append((byte) 0x51).append(dfCrypto.EV2_ComputeMAC(cmd))
+        } else if (dfCrypto.EV2_Authenticated) {
+            cmd = dfCrypto.EV2_GenerateMacCmd(cmd);
         }
 
         byte[] response = cardCommunicator.transceive(cmd);
 
+        // TestEV2
+        //00377D8A81AF663484
+        //System.arraycopy(ByteArray.hexStringToByteArray("00377D8A81AF663484"), 0 , response, 0 , 9);
+
+
         DesfireResponse result = new DesfireResponse();
+
 
         result.status = findStatus(response[0]);
 
         if (result.status == statusType.SUCCESS) {
-            // Result is always encrypted
-            dfCrypto.storeAFEncrypted(response);
-            dfCrypto.encryptedLength = 7;
-            try {
-                result.data = dfCrypto.decryptReadData();
-                //result.data = dfCrypto.decryptWithIV();
-            } catch (GeneralSecurityException e) {
-                result.status = statusType.PCD_ENCRYPTION_ERROR;
-                scrollLog.appendError(e.getMessage());
-            } finally {
-                dfCrypto.storedAFData.clear();
-                dfCrypto.encryptedLength = 0;
-            }
+            if (dfCrypto.getAuthMode()  == dfCrypto.MODE_AUTHEV2) {
+                if (!dfCrypto.EV2_verifyMacResponse(response)) {
+                    scrollLog.appendError("Error: CMAC Doesn't Verify");
 
+                } else {
+                    scrollLog.appendStatus("OK: CMAC Verified");
+
+                    //strip status and mac
+                    byte [] encData = new byte[response.length - 9];
+                    System.arraycopy(response, 1, encData, 0, response.length - 9 );
+
+                    result.data = dfCrypto.EV2_DecryptData(encData);
+                }
+            } else {
+                // Result is always encrypted
+                dfCrypto.storeAFEncrypted(response);
+                dfCrypto.encryptedLength = 7;
+                try {
+
+                    result.data = dfCrypto.decryptReadData();
+                    //result.data = dfCrypto.decryptWithIV();
+                } catch (GeneralSecurityException e) {
+                    result.status = statusType.PCD_ENCRYPTION_ERROR;
+                    scrollLog.appendError(e.getMessage());
+                } finally {
+                    dfCrypto.storedAFData.clear();
+                    dfCrypto.encryptedLength = 0;
+                }
+            }
         }
         return result;
     }
@@ -354,7 +375,7 @@ public class MifareDesfire {
             keyBlockBuilder.append(dfCrypto.calcCRC(baNewKey));
             Log.d("changeKey", "Case 1 Input = " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
 
-            commandBuilder.append(dfCrypto.encryptDataWithIVBlock (keyBlockBuilder.toArray()));
+            commandBuilder.append(dfCrypto.encryptDataBlock (keyBlockBuilder.toArray()));
 
         } else {
             Log.d("changeKey","Change Key Case 2");
@@ -1086,42 +1107,50 @@ public class MifareDesfire {
     public DesfireResponse sendBytes(byte[] cmd) throws IOException {
         byte[] response;
 
-        if (dfCrypto.EV2_Authenticated) {
-            byte [] cmdAuthenticted;
-            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
-            cmdAuthenticted = dfCrypto.EV2_CalcCMAC(cmd);
+        if ((dfCrypto.EV2_Authenticated) && (cmd[0] != (byte) 0xAF)) {
 
-            response = cardCommunicator.transceive(cmdAuthenticted);
+            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
+            cmd = dfCrypto.EV2_GenerateMacCmd(cmd);
+
+
 
         } else if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
             Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
             dfCrypto.calcCMAC(cmd);
 
-            response = cardCommunicator.transceive(cmd);
-        } else {
-
-            response = cardCommunicator.transceive(cmd);
         }
+
+        response = cardCommunicator.transceive(cmd);
 
         DesfireResponse result = new DesfireResponse();
 
         result.status = findStatus(response[0]);
         if (result.status == statusType.SUCCESS) {
-            if (dfCrypto.trackCMAC) {
+            if (dfCrypto.EV2_Authenticated) {
+                if (!dfCrypto.EV2_verifyMacResponse(response)) {
+                    scrollLog.appendError("Error: CMAC Incorrect");
+
+                } else {
+                    scrollLog.appendStatus("OK: CMAC Verified");
+
+                    result.data = ByteArray.appendCutCMAC(response,8);
+                }
+            } else if (dfCrypto.trackCMAC) {
                 Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
                 } else {
-                    scrollLog.appendError("Failed: CMAC Incorrect");
+                    scrollLog.appendError("Error: CMAC Incorrect");
                 }
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else {
                 result.data = ByteArray.appendCut(null, response);
             }
         } else if (result.status == statusType.ADDITONAL_FRAME) {
-            if (dfCrypto.trackCMAC) {
+            if (dfCrypto.trackCMAC || dfCrypto.EV2_Authenticated) {
                 Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
+
             }
             result.data = ByteArray.appendCut(null, response);
         } else {

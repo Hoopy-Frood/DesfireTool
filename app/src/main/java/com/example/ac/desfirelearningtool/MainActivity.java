@@ -688,7 +688,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("onSetConfiguration", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
-
+/*
         onAuthenticateTest();
 
         onGetCardUID();
@@ -697,7 +697,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
         onChangeKeyReturn((byte) 0x00, (byte) 0x00, keyEX_16, null);
 
-/*
+
         onAuthenticateTest ();
 
         scrollLog.appendTitle("***** TEST Change different key Data");
@@ -716,20 +716,20 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** TEST Change different key Data **************************");
         onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_16, key0B_16);
         Log.d("TestAll", "*** Test Change Key ****************************");
+*/
 
-/*
         Log.d("TestAll", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST ISO DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
 
-        onAuthISOTest ();
+        onAuthISOTest (24);
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
         onChangeKeyReturn((byte) 0x00, (byte) 0x0A, key00_24, null);
 
 
-        onAuthISOTest ();
+        onAuthISOTest (24);
 
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
