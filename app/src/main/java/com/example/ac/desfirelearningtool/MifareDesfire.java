@@ -486,7 +486,12 @@ public class MifareDesfire {
         ByteArray array = new ByteArray();
         byte[] cmd = array.append((byte) 0xBD).append(fid).append(start, 3).append(count, 3).toArray();
 
-        if ((dfCrypto.trackCMAC)) {
+        if (dfCrypto.EV2_Authenticated) {
+            if (curCommMode == commMode.MAC || curCommMode == commMode.ENCIPHERED) {
+                afd
+            }
+
+        } else if ((dfCrypto.trackCMAC)) {
             Log.d("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd));
             dfCrypto.calcCMAC(cmd);
         }

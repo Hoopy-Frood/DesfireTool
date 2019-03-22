@@ -1054,12 +1054,15 @@ public class DesfireCrypto {
         // cmd || CmdHeader || CmdData || MAC
         //MAC(KSesAuthMAC , Cmd || CmdCtr || TI [|| CmdHeader] [|| CmdData]
         int dataLength = resp.length + storedAFData.length() + 6 - 8;
-        int extraLength = (dataLength) % blockLength;
+        int extraLength = dataLength % blockLength;
+        int paddingLength = blockLength - extraLength;
+
+        if (paddingLength == 16) paddingLength = 0;
 
         if (extraLength == 0) {
             encInput = new byte[dataLength];
         } else {
-            encInput = new byte[dataLength + blockLength - extraLength];
+            encInput = new byte[dataLength + paddingLength];
         }
 
         System.arraycopy(resp, 0, encInput, 0, 1);
@@ -1081,7 +1084,7 @@ public class DesfireCrypto {
             }
 
         } else { // use 80 padding and K2 XOR
-            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, resp.length + 6 - 8, extraLength);
+            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, dataLength, paddingLength);
 
             int startIndex = encInput.length - blockLength;
             //Mn = K2 XOR (Mn* with padding)
