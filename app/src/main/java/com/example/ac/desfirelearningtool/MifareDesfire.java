@@ -44,10 +44,6 @@ public class MifareDesfire {
         return result;
     }
 
-    public DesfireResponse getMoreData() throws IOException {
-        return sendBytes(new byte[]{(byte)0xAF});
-    }
-
     public DesfireResponse getDFNames() throws IOException {
         return sendBytes(new byte[]{(byte)0x6D});
     }
@@ -60,6 +56,12 @@ public class MifareDesfire {
         return sendBytes(new byte[]{(byte)0x61});
     }
 
+    public DesfireResponse getCardUID() throws Exception {
+        dfCrypto.encryptedLength = 7;
+        return sendBytes((byte)0x51, null, null, commMode.ENCIPHERED);
+
+    }
+    /*
     public DesfireResponse getCardUID() throws Exception {
 
         ByteArray array = new ByteArray();
@@ -87,16 +89,14 @@ public class MifareDesfire {
         if (result.status == statusType.SUCCESS) {
             if (dfCrypto.getAuthMode()  == dfCrypto.MODE_AUTHEV2) {
                 if (!dfCrypto.EV2_verifyMacResponse(response)) {
-                    scrollLog.appendError("Error: CMAC Doesn't Verify");
+                    scrollLog.appendError("Error: CMAC Incorrect");
 
                 } else {
                     scrollLog.appendStatus("OK: CMAC Verified");
 
-                    //strip status and mac
-                    byte [] encData = new byte[response.length - 9];
-                    System.arraycopy(response, 1, encData, 0, response.length - 9 );
 
-                    result.data = dfCrypto.EV2_DecryptData(encData);
+
+                    result.data = dfCrypto.EV2_DecryptData(ByteArray.appendCutCMAC(response, 8));
                 }
             } else {
                 // Result is always encrypted
@@ -117,6 +117,7 @@ public class MifareDesfire {
         }
         return result;
     }
+    */
 
     public DesfireResponse getFreeMem() throws IOException {
         return sendBytes(new byte[]{(byte)0x6E});
@@ -156,8 +157,8 @@ public class MifareDesfire {
 
     public statusType selectApplication(byte[] applicationId) throws IOException {
         dfCrypto.reset();
-        byte[] params = ByteArray.from((byte) 0x5a).append(applicationId).toArray();
-        DesfireResponse res = sendBytes(params);
+        byte[] cmd = ByteArray.from((byte) 0x5a).append(applicationId).toArray();
+        DesfireResponse res = sendBytes(cmd);
 
 
         return res.status;
@@ -427,131 +428,29 @@ public class MifareDesfire {
 
     }
 
+    public DesfireResponse getMoreData() throws IOException {
+        return sendBytes((byte)0xAF, null, null, commMode.PLAIN);
+        //return sendBytes(new byte[]{(byte)0xAF});
+    }
+
     public DesfireResponse getMoreData(commMode curCommMode) throws IOException {
-        byte[] cmd = new byte[] {(byte)0xAF};
-
-
-        byte[] response = cardCommunicator.transceive(cmd);
-
-        DesfireResponse result = new DesfireResponse();
-
-        result.status = findStatus(response[0]);
-
-        if (result.status == statusType.SUCCESS) {
-            if (curCommMode == commMode.ENCIPHERED) {
-
-                dfCrypto.storeAFEncrypted(response);
-                try {
-                    result.data = dfCrypto.decryptReadData();
-                } catch (GeneralSecurityException e) {
-                    scrollLog.appendError(e.getMessage());
-                }
-
-            } else if (dfCrypto.trackCMAC) {
-                Log.d("getMoreData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
-                if (dfCrypto.verifyCMAC(response)) {
-                    scrollLog.appendStatus("OK: CMAC Verified");
-                } else {
-                    scrollLog.appendError("Failed: CMAC Incorrect");
-                }
-                result.data = ByteArray.appendCutCMAC(response,8);
-            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
-                if (dfCrypto.verifyD40MAC(response)) {
-                    scrollLog.appendStatus("MAC Verified");
-                } else {
-                    scrollLog.appendError("MAC Incorrect");
-                }
-                result.data = ByteArray.appendCutMAC(response,4);
-            } else {
-                result.data = ByteArray.appendCut(null, response);
-            }
-        } else if (result.status == statusType.ADDITONAL_FRAME) {
-            if (curCommMode == commMode.ENCIPHERED) {
-                Log.d ("getMoreData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
-                dfCrypto.storeAFEncrypted(response);
-            } else if (dfCrypto.trackCMAC) {
-                Log.d ("getMoreData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
-                dfCrypto.storeAFCMAC(response);
-            }
-            result.data = ByteArray.appendCut(null, response);
-        } else {
-            dfCrypto.trackCMAC = false;
-        }
-
-        return result;
-
+        return sendBytes((byte)0xAF, null, null, curCommMode);
     }
 
     public DesfireResponse readData(byte fid, int start, int count, commMode curCommMode) throws IOException {
         ByteArray array = new ByteArray();
-        byte[] cmd = array.append((byte) 0xBD).append(fid).append(start, 3).append(count, 3).toArray();
+        byte[] cmdHeader = array.append(fid).append(start, 3).append(count, 3).toArray();
 
-        if (dfCrypto.EV2_Authenticated) {
-            if (curCommMode == commMode.MAC || curCommMode == commMode.ENCIPHERED) {
-                afd
-            }
-
-        } else if ((dfCrypto.trackCMAC)) {
-            Log.d("readData", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd));
-            dfCrypto.calcCMAC(cmd);
-        }
-
-        byte[] response = cardCommunicator.transceive(cmd);
-
-        DesfireResponse result = new DesfireResponse();
-
-        result.status = findStatus(response[0]);
-
-        if (result.status == statusType.SUCCESS) {
-            if (curCommMode == commMode.ENCIPHERED) {
-                dfCrypto.storeAFEncryptedSetLength(response, count);
-                try {
-                    result.data = dfCrypto.decryptReadData();
-                } catch (GeneralSecurityException e) {
-                    scrollLog.appendError(e.getMessage());
-                    result.status = statusType.PCD_ENCRYPTION_ERROR;
-                }
-
-            } else if (dfCrypto.trackCMAC) {
-                Log.d("readData", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
-                if (dfCrypto.verifyCMAC(response)) {
-                    scrollLog.appendStatus("OK: CMAC Verified");
-                } else {
-                    scrollLog.appendError("Failed: CMAC Incorrect");
-                    result.status = statusType.PCD_ENCRYPTION_ERROR;
-                }
-                result.data = ByteArray.appendCutCMAC(response,8);
-            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
-                if (dfCrypto.verifyD40MAC(response)) {
-                    scrollLog.appendStatus("MAC Verified");
-                } else {
-                    scrollLog.appendError("MAC Incorrect");
-                    result.status = statusType.PCD_ENCRYPTION_ERROR;
-                }
-                result.data = ByteArray.appendCutMAC(response,4);
-            } else {
-                result.data = ByteArray.appendCut(null, response);
-            }
-        } else if (result.status == statusType.ADDITONAL_FRAME) {
-            if (curCommMode == commMode.ENCIPHERED) {
-                Log.d ("readData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
-                dfCrypto.storeAFEncryptedSetLength(response,count);
-            } else if ((dfCrypto.trackCMAC) || (curCommMode == commMode.MAC)) {
-                Log.d ("readData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
-                dfCrypto.storeAFCMAC(response);
-            }
-            result.data = ByteArray.appendCut(null, response);
-        } else {
-            dfCrypto.trackCMAC = false;
-        }
-        return result;
+        dfCrypto.setAFLength(count);
+        return sendBytes((byte) 0xBD, cmdHeader, null, curCommMode);
     }
 
     public DesfireResponse readRecords(byte fid, int offsetRecord, int numOfRecords, commMode curCommMode) throws IOException {
         ByteArray array = new ByteArray();
-        byte[] cmd = array.append((byte) 0xBB).append(fid).append(offsetRecord, 3).append(numOfRecords, 3).toArray();
+        byte[] cmdHeader = array.append(fid).append(offsetRecord, 3).append(numOfRecords, 3).toArray();
 
-
+        return sendBytes((byte) 0xBB, cmdHeader, null, curCommMode);
+/*
         if ((dfCrypto.trackCMAC)) {
             Log.d ("readRecords", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
             dfCrypto.calcCMAC(cmd);
@@ -603,7 +502,7 @@ public class MifareDesfire {
             dfCrypto.trackCMAC = false;
         }
         return result;
-
+*/
     }
 
     public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
@@ -1142,11 +1041,11 @@ public class MifareDesfire {
                 }
             } else if (dfCrypto.trackCMAC) {
                 Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
-                if (dfCrypto.verifyCMAC(response)) {
-                    scrollLog.appendStatus("OK: CMAC Verified");
-                } else {
+                if (!dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendError("Error: CMAC Incorrect");
                 }
+                scrollLog.appendStatus("OK: CMAC Verified");
+
                 result.data = ByteArray.appendCutCMAC(response,8);
             } else {
                 result.data = ByteArray.appendCut(null, response);
@@ -1154,6 +1053,118 @@ public class MifareDesfire {
         } else if (result.status == statusType.ADDITONAL_FRAME) {
             if (dfCrypto.trackCMAC || dfCrypto.EV2_Authenticated) {
                 Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
+                dfCrypto.storeAFCMAC(response);
+
+            }
+            result.data = ByteArray.appendCut(null, response);
+        } else {
+            dfCrypto.trackCMAC = false;
+        }
+
+        return result;
+    }
+
+    /**
+     * sendbytes with encryption and mac - returns decrypted text
+     * @param cmd
+     * @return
+     * @throws IOException
+     */
+    public DesfireResponse sendBytes(byte cmd, byte[] cmdHeader, byte [] cmdData, commMode curCommMode) throws IOException {
+        byte[] response;
+
+        ByteArray baCmdBuilder = new ByteArray();
+        baCmdBuilder.append(cmd).append(cmdHeader).append(cmdData);
+        byte [] cmdToSend = baCmdBuilder.toArray();
+
+        if ((dfCrypto.EV2_Authenticated)) {
+
+            //TODO: Add encryption if curCommMode is encrypted
+            if (cmd != (byte) 0xAF) {
+                Log.d("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToSend));
+                cmdToSend = dfCrypto.EV2_GenerateMacCmd(cmdToSend);
+            }
+
+
+        } else if ((dfCrypto.trackCMAC) && (cmd != (byte) 0xAF)) {
+            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToSend) );
+            dfCrypto.calcCMAC(cmdToSend);
+        }
+
+        response = cardCommunicator.transceive(cmdToSend);
+
+        DesfireResponse result = new DesfireResponse();
+        result.status = findStatus(response[0]);
+
+        if (result.status == statusType.SUCCESS) {
+            if (dfCrypto.EV2_Authenticated) {
+                if (!dfCrypto.EV2_verifyMacResponse(response)) {
+                    scrollLog.appendError("Error: CMAC Incorrect");
+
+                } else {
+                    scrollLog.appendStatus("OK: CMAC Verified");
+
+                    if (curCommMode == commMode.ENCIPHERED) {
+
+                        result.data = dfCrypto.EV2_DecryptData(ByteArray.appendCutCMAC(response, 8));
+                    } else {
+                        result.data = ByteArray.appendCutCMAC(response, 8);
+                    }
+                }
+            } else if (dfCrypto.trackCMAC) {    // D41 authenticated
+                if (curCommMode == commMode.ENCIPHERED){
+                    dfCrypto.storeAFEncrypted(response);
+                    try {
+                        result.data = dfCrypto.decryptReadData();
+                    } catch (GeneralSecurityException e) {
+                        result.status = statusType.PCD_ENCRYPTION_ERROR;
+                        scrollLog.appendError(e.getMessage());
+                    } finally {
+                        dfCrypto.storedAFData.clear();
+                        dfCrypto.encryptedLength = 0;
+                    }
+                } else {
+                    Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
+                    if (!dfCrypto.verifyCMAC(response)) {
+                        scrollLog.appendError("Error: CMAC Incorrect");
+                    } else {
+                        scrollLog.appendStatus("OK: CMAC Verified");
+
+                        result.data = ByteArray.appendCutCMAC(response, 8);
+                    }
+                }
+            } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
+                if (!dfCrypto.verifyD40MAC(response)) {
+                    scrollLog.appendError("MAC Incorrect");
+                    result.status = statusType.PCD_ENCRYPTION_ERROR;
+                } else {
+                    scrollLog.appendStatus("MAC Verified");
+                    result.data = ByteArray.appendCutMAC(response, 4);
+                }
+            }else {  // Plain text or D40
+                if (curCommMode == commMode.ENCIPHERED){
+                    dfCrypto.storeAFEncrypted(response);
+                    try {
+                        result.data = dfCrypto.decryptReadData();
+                    } catch (GeneralSecurityException e) {
+                        result.status = statusType.PCD_ENCRYPTION_ERROR;
+                        scrollLog.appendError(e.getMessage());
+                    } finally {
+                        dfCrypto.storedAFData.clear();
+                        dfCrypto.encryptedLength = 0;
+                    }
+                } else {
+                    result.data = ByteArray.appendCut(null, response);
+                }
+            }
+        } else if (result.status == statusType.ADDITONAL_FRAME) {
+            if (dfCrypto.trackCMAC || dfCrypto.EV2_Authenticated) {
+                if (curCommMode == commMode.ENCIPHERED) {
+                    Log.d ("getMoreData", "Response AF - Store Hex Str for CRC:  " + ByteArray.byteArrayToHexString(response) );
+                    dfCrypto.storeAFEncrypted(response);
+                }
+
+                Log.d ("getMoreData", "Response AF - Store Hex Str for CMAC: " + ByteArray.byteArrayToHexString(response) );
                 dfCrypto.storeAFCMAC(response);
 
             }
@@ -1374,12 +1385,12 @@ public class MifareDesfire {
             return cardResponse.status;
         }
 
-        if (dfCrypto.verifyCardResponse(cardResponse.data)) {
-            dfCrypto.currentAuthenticatedKey = keyNumber;
-            return statusType.SUCCESS;
-        }
+        if (!dfCrypto.verifyCardResponse(cardResponse.data)) {
 
-        return statusType.PCD_AUTHENTICATION_ERROR;
+            return statusType.PCD_AUTHENTICATION_ERROR;
+        }
+        dfCrypto.currentAuthenticatedKey = keyNumber;
+        return statusType.SUCCESS;
 
     }
 

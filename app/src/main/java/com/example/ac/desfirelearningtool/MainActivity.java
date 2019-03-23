@@ -473,7 +473,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onGetCardUID", e.getMessage(), e);
         }
     }
     //endregion
@@ -501,7 +501,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onGetApplicationIDs", e.getMessage(), e);
         }
     }
 
@@ -533,7 +533,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onGetFreeMem", e.getMessage(), e);
         }
     }
     //endregion
@@ -666,7 +666,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onGetDFNames", e.getMessage(), e);
         }
     }
     //endregion
@@ -1057,7 +1057,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onFormatPICC", e.getMessage(), e);
         }
     }
     //endregion
@@ -1216,7 +1216,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onGetFileIDs", e.getMessage(), e);
         }
     }
     public Bundle onFragmentGetFileIDs (){
@@ -1256,7 +1256,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetVersion", e.getMessage(), e);
+            Log.e("onGetISOFileIDs", e.getMessage(), e);
         }
     }
     //endregion

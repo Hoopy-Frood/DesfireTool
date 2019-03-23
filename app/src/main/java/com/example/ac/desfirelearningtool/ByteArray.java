@@ -11,7 +11,11 @@ public class ByteArray {
     private static HashMap<String, Byte> hexMap = null;
 
 
-
+    /**
+     * Returns the padding count
+     * @param in
+     * @return
+     */
     public static int ISO9797m2PadCount (byte [] in) {
         int count = in.length - 1;
         while (count > 0 && in[count] == 0) {
@@ -286,6 +290,8 @@ public class ByteArray {
     }
 
     public ByteArray append(byte[] b) {
+        if (b == null) return this;
+
         return append(b, 0, b.length);
     }
 

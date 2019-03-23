@@ -410,7 +410,7 @@ public class DesfireCrypto {
         decOutput = decrypt(dataBlock, EV2_KeySpecSesAuthENC);
 
         // Remove padding
-        int dataSize = ByteArray.ISO9797m2PadCount(decOutput);
+        int dataSize = decOutput.length - ByteArray.ISO9797m2PadCount(decOutput);
         byte [] dataOutput = new byte[dataSize];
 
         System.arraycopy(decOutput,0,dataOutput, 0, dataSize);
@@ -979,11 +979,14 @@ public class DesfireCrypto {
         // cmd || CmdHeader || CmdData || MAC
         //MAC(KSesAuthMAC , Cmd || CmdCtr || TI [|| CmdHeader] [|| CmdData]
         int extraLength = (cmd.length + 6) % blockLength;
+        int paddingLength;
 
         if (extraLength == 0) {
             encInput = new byte[cmd.length + 6];
+            paddingLength = 0;
         } else {
             encInput = new byte[cmd.length + 6 + blockLength - extraLength];
+            paddingLength = blockLength - extraLength;
         }
 
 
@@ -1005,7 +1008,7 @@ public class DesfireCrypto {
             }
 
         } else { // use 80 padding and K2 XOR
-            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, cmd.length + 6, extraLength);
+            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, cmd.length + 6, paddingLength);
 
             int startIndex = encInput.length - blockLength;
             //Mn = K2 XOR (Mn* with padding)
@@ -1190,6 +1193,10 @@ public class DesfireCrypto {
         return Arrays.equals(crcToVerify, calcCRC(data));
     }
     //endregion
+
+    public void setAFLength (int len) {
+        encryptedLength = len;
+    }
 
     public void storeAFEncryptedSetLength(byte[] recvData, int len) {
         encryptedLength = len;
