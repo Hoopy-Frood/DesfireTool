@@ -1355,7 +1355,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 parseAccessRight("Change Access Rights", (byte)(res.data[3] & (byte) 0x0F));
                 scrollLog.appendData("- File size           : " + ByteBuffer.wrap(res.data,4,3).order(ByteOrder.LITTLE_ENDIAN).getShort() + " B");
 
-            } else if ((res.data[0] == (byte) 0x02) ) {
+            } else if ((res.data[0] == (byte) 0x02) ) {  // Value File
                 parseAccessRight("GetValue/Debit Access          ", (byte)((res.data[2] >> 4) & (byte) 0x0F));
                 parseAccessRight("GetValue/Debit/LtdCredit Access", (byte)(res.data[2] & (byte) 0x0F));
                 parseAccessRight("GetValue/Debit/LtdCredit/Credit", (byte)((res.data[3] >> 4) & (byte) 0x0F));
@@ -1374,7 +1374,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                     scrollLog.appendData("- Free GetValue disabled   ");
                 }
 
-            } else if ((res.data[0] == (byte) 0x03) || (res.data[0] == (byte) 0x04)) {
+            } else if ((res.data[0] == (byte) 0x03) || (res.data[0] == (byte) 0x04)) {  // Record file
                 parseAccessRight("Read Access          ", (byte)((res.data[2] >> 4) & (byte) 0x0F));
                 parseAccessRight("Write Access         ", (byte)(res.data[2] & (byte) 0x0F));
                 parseAccessRight("Read & Write Access  ", (byte)((res.data[3] >> 4) & (byte) 0x0F));
@@ -1638,10 +1638,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
+        int recordLength = 0;
+
         try {
             ByteArray baRecvData = new ByteArray();
 
-            MifareDesfire.DesfireResponse res = desfireCard.readRecords(bFileID, iOffsetRecord, iNumOfRecords, selCommMode);
+            if (selCommMode == MifareDesfire.commMode.ENCIPHERED) {
+                recordLength = desfireCard.getRecordLength(bFileID);
+            }
+
+            MifareDesfire.DesfireResponse res = desfireCard.readRecords(bFileID, iOffsetRecord, iNumOfRecords, selCommMode, recordLength);
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
                 while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
@@ -2638,6 +2644,27 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("testCurrent", "*** Read Plain Record **************************");
         onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
 
+
+        scrollLog.appendTitle("***** TEST MAC Record");
+        onClearRecordFileReturn((byte) 0x05);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
+
+
+        scrollLog.appendTitle("***** TEST Encrypted Record");
+        onClearRecordFileReturn((byte) 0x06);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
+/*
+
         scrollLog.appendTitle("***** TEST MAC Data");
         Log.d("testCurrent", "*** Write MAC Data **************************");
         onWriteDataReturn((byte) 0x02, 0, 3, new byte[]{(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
@@ -2651,7 +2678,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onWriteDataReturn((byte) 0x03, 0, 4, new byte[]{(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
         Log.d("testCurrent", "*** Read Encrypted Data **************************");
         onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-
+*/
     }
 
         //endregion

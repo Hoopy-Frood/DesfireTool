@@ -136,6 +136,16 @@ public class MifareDesfire {
         return sendBytes(new byte[]{(byte)0xf5, fid});
     }
 
+    public int getRecordLength(byte fid) throws IOException {
+        DesfireResponse resp = sendBytes(new byte[]{(byte)0xf5, fid});
+        int recordLength = -1;
+
+        if (resp.status == statusType.SUCCESS) {
+            recordLength = ByteBuffer.wrap(resp.data, 4,3).order(ByteOrder.LITTLE_ENDIAN).getShort();
+        }
+        return recordLength;
+    }
+
     public DesfireResponse getApplicationIDs() throws IOException {
         ByteArrayOutputStream appIDs = new ByteArrayOutputStream();
         DesfireResponse result = sendBytes(new byte[]{(byte)0x6a});
@@ -446,9 +456,14 @@ public class MifareDesfire {
     }
 
     public DesfireResponse readRecords(byte fid, int offsetRecord, int numOfRecords, commMode curCommMode) throws IOException {
+        dfCrypto.encryptedLength = 0;
+        return readRecords(fid, offsetRecord, numOfRecords,curCommMode);
+    }
+
+    public DesfireResponse readRecords(byte fid, int offsetRecord, int numOfRecords, commMode curCommMode, int encryptedLength) throws IOException {
         ByteArray array = new ByteArray();
         byte[] cmdHeader = array.append(fid).append(offsetRecord, 3).append(numOfRecords, 3).toArray();
-
+        dfCrypto.encryptedLength = encryptedLength;
         return sendBytes((byte) 0xBB, cmdHeader, null, curCommMode);
 /*
         if ((dfCrypto.trackCMAC)) {
@@ -508,9 +523,10 @@ public class MifareDesfire {
     public DesfireResponse writeData(byte fid, int start, int count, byte [] dataToWrite, commMode curCommMode) throws IOException {
 
         byte [] macToSend;
-        ByteArray baCmdToSend = new ByteArray();
-        baCmdToSend.append((byte) 0x3D).append(fid).append(start, 3).append(count, 3);
-
+        ByteArray baCmdHeaderToSend = new ByteArray();
+        baCmdHeaderToSend.append(fid).append(start, 3).append(count, 3);
+        return sendBytes(fid,baCmdHeaderToSend.toArray(),dataToWrite, curCommMode);
+        /*
         if (curCommMode == commMode.ENCIPHERED) {
             try {
                 byte [] encipheredData = dfCrypto.encryptWriteDataBlock(baCmdToSend.toArray(), dataToWrite);
@@ -581,7 +597,7 @@ public class MifareDesfire {
         } else {
             dfCrypto.trackCMAC = false;
         }
-        return result;
+        return result;*/
     }
 
     public DesfireResponse writeRecord(byte fid, int startRecord, int sizeToWrite, byte [] dataToWrite, commMode curCommMode) throws IOException {
@@ -1072,26 +1088,80 @@ public class MifareDesfire {
      */
     public DesfireResponse sendBytes(byte cmd, byte[] cmdHeader, byte [] cmdData, commMode curCommMode) throws IOException {
         byte[] response;
-
+        byte [] cmdToSend;
         ByteArray baCmdBuilder = new ByteArray();
-        baCmdBuilder.append(cmd).append(cmdHeader).append(cmdData);
-        byte [] cmdToSend = baCmdBuilder.toArray();
 
+
+        baCmdBuilder.append(cmd).append(cmdHeader);
         if ((dfCrypto.EV2_Authenticated)) {
 
-            //TODO: Add encryption if curCommMode is encrypted
+            if ((curCommMode == commMode.ENCIPHERED) && (cmdData != null)) {
+
+
+                byte [] encryptData = dfCrypto.EV2_EncryptData(cmdData);
+                if (encryptData == null) {
+                    Log.d("sendBytes", "Command Encrypt error ");
+                    scrollLog.appendError("Encrypt Command Data Error");
+                    DesfireResponse badResult = new DesfireResponse();
+
+                    badResult.status = statusType.PCD_ENCRYPTION_ERROR;
+                    badResult.data = null;
+                    return badResult;
+                }
+
+                baCmdBuilder.append(encryptData);
+            } else {
+                baCmdBuilder.append(cmdData);
+            }
+
+
             if (cmd != (byte) 0xAF) {
-                Log.d("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToSend));
-                cmdToSend = dfCrypto.EV2_GenerateMacCmd(cmdToSend);
+                Log.d("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(baCmdBuilder.toArray()));
+                cmdToSend = dfCrypto.EV2_GenerateMacCmd(baCmdBuilder.toArray());
+                baCmdBuilder.clear();
+                baCmdBuilder.append(cmdToSend);
+            }
+
+        } else if ((curCommMode == commMode.ENCIPHERED) && (cmdData != null)) {
+            try {
+                byte[] encryptData = dfCrypto.encryptWriteDataBlock(baCmdBuilder.toArray(), cmdData);
+
+                baCmdBuilder.append(encryptData);
+            } catch (GeneralSecurityException e) {
+                scrollLog.appendError(e.getMessage());
+                DesfireResponse badResult = new DesfireResponse();
+
+                badResult.status = statusType.PCD_ENCRYPTION_ERROR;
+                badResult.data = null;
+                return badResult;
             }
 
 
         } else if ((dfCrypto.trackCMAC) && (cmd != (byte) 0xAF)) {
-            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToSend) );
-            dfCrypto.calcCMAC(cmdToSend);
+
+            baCmdBuilder.append(cmdData);
+            byte [] cmdToMac = baCmdBuilder.toArray();
+
+
+            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmdToMac) );
+            byte [] macComputed = dfCrypto.calcCMAC(cmdToMac);
+
+            if (curCommMode == commMode.MAC) {
+                baCmdBuilder.append(macComputed);
+            }
+
+        }  else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)){
+            ByteArray arrayMAC = new ByteArray();
+            byte[] cmdToMAC = arrayMAC.append(cmdData).toArray();
+
+            Log.d ("sendBytes", "Command to MAC = " + ByteArray.byteArrayToHexString(cmdToMAC) );
+            byte [] macToSend = dfCrypto.calcD40MAC(cmdToMAC);
+            baCmdBuilder.append(cmdData).append(macToSend);
+        } else {
+            baCmdBuilder.append(cmdData);
         }
 
-        response = cardCommunicator.transceive(cmdToSend);
+        response = cardCommunicator.transceive(baCmdBuilder.toArray());
 
         DesfireResponse result = new DesfireResponse();
         result.status = findStatus(response[0]);
