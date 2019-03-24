@@ -47,7 +47,7 @@ public class DesfireCrypto {
     private SecretKey EV2_KeySpecSesAuthENC, EV2_KeySpecSesAuthMAC; // EV2 Session key SPEC for Enc and Mac
     private byte[] EV2_K1, EV2_K2;
     private byte[] EV2_TI;
-    private int EV2_CmdCtr;
+    public int EV2_CmdCtr;
     private byte[] nullBytes8, nullBytes16;
 
 
@@ -378,16 +378,18 @@ public class DesfireCrypto {
         encInput = new byte[16];
         System.arraycopy(ByteArray.hexStringToByteArray("A55A"),0,encInput,0,2);
         System.arraycopy(EV2_TI,0,encInput,2,4);
-        System.arraycopy(ByteArray.fromInt(EV2_CmdCtr, 2), 0, encInput, 6, 4);
+        System.arraycopy(ByteArray.fromInt(EV2_CmdCtr, 2), 0, encInput, 6, 2);
         System.arraycopy(ByteArray.hexStringToByteArray("0000000000000000"), 0, encInput, 8, 8);
         Arrays.fill(currentIV,(byte) 0);
         currentIV = encrypt(encInput, EV2_KeySpecSesAuthENC);
 
         // calculate block length and padding
-        int extraLength = (dataBlock.length + 1) % blockLength;
-        byte [] padding = new byte[extraLength];
-        Arrays.fill(padding, (byte) 0);
-
+        int paddingLength = blockLength - ((dataBlock.length + 1) % blockLength);
+        byte[] padding = null;
+        if (paddingLength != 0) {
+            padding = new byte[paddingLength];
+            Arrays.fill(padding, (byte) 0);
+        }
         // encrypt datablock
         ByteArray baEncInput = new ByteArray();
         encOutput = encrypt(baEncInput.append(dataBlock).append((byte) 0x80).append(padding).toArray(), EV2_KeySpecSesAuthENC);
