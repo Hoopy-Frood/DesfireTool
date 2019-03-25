@@ -685,107 +685,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //region Set Configuration
     public void onSetConfiguration (){
 
-        byte [] key00_16 = new byte [] {(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
-        byte [] keyEX_16 = new byte [] {(byte)0xB0,(byte)0xB1,(byte)0xB2,(byte)0xB3,(byte)0xB4,(byte)0xB5,(byte)0xB6,(byte)0xB7,(byte)0xB8,(byte)0xB9,(byte)0xBA,(byte)0xBB,(byte)0xBC,(byte)0xBD,(byte)0xBE,(byte)0xBF};
-        byte [] key01_16 = new byte [] {(byte)0x12,(byte)0x22,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
-        byte [] key0A_16 = new byte [] {(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A};
-        byte [] key0B_16 = new byte [] {(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B};
-        byte [] key00_24 = new byte [] {(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
-        byte [] key0A_24 = new byte [] {(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A};
-        byte [] key0B_24 = new byte [] {(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B};
-
-
-
-        Log.d("onSetConfiguration", "*** Test Change Key ****************************");
-        scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
-        onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
-
-        onAuthenticateTest();
-
-        scrollLog.appendTitle("***** TEST Change Same key Data");
-        Log.d("TestAll", "*** TEST Change Same key Data **************************");
-        onChangeKeyReturn((byte) 0x00, (byte) 0x00, keyEX_16, null);
-
-    /*
-        onAuthenticateTest ();
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key0A_16, key00_16);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_16, key0A_16);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key0B_16, key00_16);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_16, key0B_16);
-        Log.d("TestAll", "*** Test Change Key ****************************");
-
-
-
-        Log.d("TestAll", "*** Test Change Key ****************************");
-        scrollLog.appendTitle("***** TEST ISO DES CHANGE KEY ");
-        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
-
-        onAuthISOTest (24);
-
-        scrollLog.appendTitle("***** TEST Change Same key Data");
-        Log.d("TestAll", "*** TEST Change Same key Data **************************");
-        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, key00_24, null);
-
-
-        onAuthISOTest (24);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key0A_24, key00_24);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_24, key0A_24);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key0B_24, key00_24);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** TEST Change different key Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_24, key0B_24);
-        Log.d("TestAll", "*** Test Change Key ****************************");
-
-/*
-        scrollLog.appendTitle("***** TEST ISO AES CHANGE KEY ");
-        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0A, (byte) 0xE5});
-
-        onAuthAESTest ();
-
-        scrollLog.appendTitle("***** TEST Change Same key Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, key00_16, null);
-
-
-        onAuthAESTest ();
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x1A, key0A_16, key00_16);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x01, (byte) 0x1A, key00_16, key0B_16);
-
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x2A, key0B_16, key00_16);
-        scrollLog.appendTitle("***** TEST Change different key Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onChangeKeyReturn((byte) 0x02, (byte) 0x2A, key00_16, key0B_16);
-*/
     }
     //endregion
 
@@ -1969,7 +1868,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //region Authentication Tests
     public void onAuthenticateTest (){
 
-        byte[] zeroKey = new byte[16];
+        byte[] zeroKey = new byte[8];
         Arrays.fill(zeroKey, (byte)0);
 
         try {
@@ -2477,11 +2376,111 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     public void onTestCurrent() {
 
-        Log.d("TestAll", "*** Test EV2 ****************************");
-        scrollLog.appendTitle("***** TEST EV2 AES ***** ");
+        byte [] key00_8 = new byte [] {(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
+        byte [] keyAA_8 = new byte [] {(byte)0xAA,(byte)0xBB,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
 
-        onAuthEV2Test ();
-        onApplicationTest ();
+        byte [] key00_16 = new byte [] {(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
+        byte [] keyEX_16 = new byte [] {(byte)0xB0,(byte)0xB1,(byte)0xB2,(byte)0xB3,(byte)0xB4,(byte)0xB5,(byte)0xB6,(byte)0xB7,(byte)0xB8,(byte)0xB9,(byte)0xBA,(byte)0xBB,(byte)0xBC,(byte)0xBD,(byte)0xBE,(byte)0xBF};
+        byte [] key01_16 = new byte [] {(byte)0x12,(byte)0x22,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
+        byte [] key0A_16 = new byte [] {(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A};
+        byte [] key0B_16 = new byte [] {(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B};
+        byte [] key00_24 = new byte [] {(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00};
+        byte [] key0A_24 = new byte [] {(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A,(byte)0x0A};
+        byte [] key0B_24 = new byte [] {(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B};
+
+
+
+        Log.d("onSetConfiguration", "*** Test Change Key ****************************");
+        scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
+        onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
+
+        onAuthenticateTest();
+
+        scrollLog.appendTitle("***** TEST Change Same key Data");
+        Log.d("TestAll", "*** TEST Change Same key Data **************************");
+        onChangeKeyReturn((byte) 0x00, (byte) 0x00, key00_16, null);
+
+
+        onAuthenticateTest ();
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+         onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_16, key00_16);
+ /*
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_16, key0A_16);
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key0B_16, key00_16);
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_16, key0B_16);
+        Log.d("TestAll", "*** Test Change Key ****************************");
+
+*/
+/*
+        Log.d("TestAll", "*** Test Change Key ****************************");
+        scrollLog.appendTitle("***** TEST ISO DES CHANGE KEY ");
+        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
+
+        onAuthISOTest (24);
+
+        scrollLog.appendTitle("***** TEST Change Same key Data");
+        Log.d("TestAll", "*** TEST Change Same key Data **************************");
+        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, key00_24, null);
+
+
+        onAuthISOTest (24);
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key0A_24, key00_24);
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+        onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_24, key0A_24);
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key0B_24, key00_24);
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** TEST Change different key Data **************************");
+        onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_24, key0B_24);
+        Log.d("TestAll", "*** Test Change Key ****************************");
+
+
+        scrollLog.appendTitle("***** TEST ISO AES CHANGE KEY ");
+        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0A, (byte) 0xE5});
+
+        onAuthAESTest ();
+
+        scrollLog.appendTitle("***** TEST Change Same key Data");
+        Log.d("TestAll", "*** Write Plain Data **************************");
+        onChangeKeyReturn((byte) 0x00, (byte) 0x0A, key00_16, null);
+
+
+        onAuthAESTest ();
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** Write Plain Data **************************");
+        onChangeKeyReturn((byte) 0x01, (byte) 0x1A, key0A_16, key00_16);
+*/
+/*
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** Write Plain Data **************************");
+        onChangeKeyReturn((byte) 0x01, (byte) 0x1A, key00_16, key0B_16);
+
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** Write Plain Data **************************");
+        onChangeKeyReturn((byte) 0x02, (byte) 0x2A, key0B_16, key00_16);
+        scrollLog.appendTitle("***** TEST Change different key Data");
+        Log.d("TestAll", "*** Write Plain Data **************************");
+        onChangeKeyReturn((byte) 0x02, (byte) 0x2A, key00_16, key0B_16);
+
 /**/
     }
 

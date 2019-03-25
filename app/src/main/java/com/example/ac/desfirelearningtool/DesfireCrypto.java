@@ -218,7 +218,7 @@ public class DesfireCrypto {
                 case MODE_AUTHD40:
                     cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(nullBytes8));  // IV is always 00..00
                     encOutput = cipher.doFinal(encInput);
-                    System.arraycopy(encInput, encInput.length - blockLength, currentIV, 0, blockLength);
+                    //System.arraycopy(encInput, encInput.length - blockLength, currentIV, 0, blockLength);
                     break;
                 case MODE_AUTHISO:
                 case MODE_AUTHAES:
