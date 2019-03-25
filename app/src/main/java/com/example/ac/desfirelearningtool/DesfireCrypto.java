@@ -47,7 +47,7 @@ public class DesfireCrypto {
     private SecretKey EV2_KeySpecSesAuthENC, EV2_KeySpecSesAuthMAC; // EV2 Session key SPEC for Enc and Mac
     private byte[] EV2_K1, EV2_K2;
     private byte[] EV2_TI;
-    private int EV2_CmdCtr;
+    public int EV2_CmdCtr;
     private byte[] nullBytes8, nullBytes16;
 
 
@@ -378,16 +378,18 @@ public class DesfireCrypto {
         encInput = new byte[16];
         System.arraycopy(ByteArray.hexStringToByteArray("A55A"),0,encInput,0,2);
         System.arraycopy(EV2_TI,0,encInput,2,4);
-        System.arraycopy(ByteArray.fromInt(EV2_CmdCtr, 2), 0, encInput, 6, 4);
+        System.arraycopy(ByteArray.fromInt(EV2_CmdCtr, 2), 0, encInput, 6, 2);
         System.arraycopy(ByteArray.hexStringToByteArray("0000000000000000"), 0, encInput, 8, 8);
         Arrays.fill(currentIV,(byte) 0);
         currentIV = encrypt(encInput, EV2_KeySpecSesAuthENC);
 
         // calculate block length and padding
-        int extraLength = (dataBlock.length + 1) % blockLength;
-        byte [] padding = new byte[extraLength];
-        Arrays.fill(padding, (byte) 0);
-
+        int paddingLength = blockLength - ((dataBlock.length + 1) % blockLength);
+        byte[] padding = null;
+        if (paddingLength != 0) {
+            padding = new byte[paddingLength];
+            Arrays.fill(padding, (byte) 0);
+        }
         // encrypt datablock
         ByteArray baEncInput = new ByteArray();
         encOutput = encrypt(baEncInput.append(dataBlock).append((byte) 0x80).append(padding).toArray(), EV2_KeySpecSesAuthENC);
@@ -410,7 +412,7 @@ public class DesfireCrypto {
         decOutput = decrypt(dataBlock, EV2_KeySpecSesAuthENC);
 
         // Remove padding
-        int dataSize = ByteArray.ISO9797m2PadCount(decOutput);
+        int dataSize = decOutput.length - ByteArray.ISO9797m2PadCount(decOutput);
         byte [] dataOutput = new byte[dataSize];
 
         System.arraycopy(decOutput,0,dataOutput, 0, dataSize);
@@ -979,11 +981,14 @@ public class DesfireCrypto {
         // cmd || CmdHeader || CmdData || MAC
         //MAC(KSesAuthMAC , Cmd || CmdCtr || TI [|| CmdHeader] [|| CmdData]
         int extraLength = (cmd.length + 6) % blockLength;
+        int paddingLength;
 
         if (extraLength == 0) {
             encInput = new byte[cmd.length + 6];
+            paddingLength = 0;
         } else {
             encInput = new byte[cmd.length + 6 + blockLength - extraLength];
+            paddingLength = blockLength - extraLength;
         }
 
 
@@ -1005,7 +1010,7 @@ public class DesfireCrypto {
             }
 
         } else { // use 80 padding and K2 XOR
-            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, cmd.length + 6, extraLength);
+            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, cmd.length + 6, paddingLength);
 
             int startIndex = encInput.length - blockLength;
             //Mn = K2 XOR (Mn* with padding)
@@ -1054,12 +1059,15 @@ public class DesfireCrypto {
         // cmd || CmdHeader || CmdData || MAC
         //MAC(KSesAuthMAC , Cmd || CmdCtr || TI [|| CmdHeader] [|| CmdData]
         int dataLength = resp.length + storedAFData.length() + 6 - 8;
-        int extraLength = (dataLength) % blockLength;
+        int extraLength = dataLength % blockLength;
+        int paddingLength = blockLength - extraLength;
+
+        if (paddingLength == 16) paddingLength = 0;
 
         if (extraLength == 0) {
             encInput = new byte[dataLength];
         } else {
-            encInput = new byte[dataLength + blockLength - extraLength];
+            encInput = new byte[dataLength + paddingLength];
         }
 
         System.arraycopy(resp, 0, encInput, 0, 1);
@@ -1081,7 +1089,7 @@ public class DesfireCrypto {
             }
 
         } else { // use 80 padding and K2 XOR
-            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, resp.length + 6 - 8, extraLength);
+            System.arraycopy(ByteArray.hexStringToByteArray("80000000000000000000000000000000"), 0, encInput, dataLength, paddingLength);
 
             int startIndex = encInput.length - blockLength;
             //Mn = K2 XOR (Mn* with padding)
@@ -1187,6 +1195,10 @@ public class DesfireCrypto {
         return Arrays.equals(crcToVerify, calcCRC(data));
     }
     //endregion
+
+    public void setAFLength (int len) {
+        encryptedLength = len;
+    }
 
     public void storeAFEncryptedSetLength(byte[] recvData, int len) {
         encryptedLength = len;
