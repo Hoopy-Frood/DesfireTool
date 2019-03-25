@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             desfireCard.connect();
             Log.d("onCardDetection:"," CONNECTED");
             //scrollLog.setTextColor(0xAAFF0000);
-            scrollLog.appendTitle("DESFire Connected\n");
+            scrollLog.appendStatus("DESFire Connected\n");
             applicationListPopulated = false;
 
 
@@ -468,7 +468,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Get Card UID Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 return;
             }
-            scrollLog.appendStatus("Decrypted Card UID: " + ByteArray.byteArrayToHexString(res.data));
+            scrollLog.appendData("Decrypted Card UID: " + ByteArray.byteArrayToHexString(res.data));
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -492,10 +492,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             applicationListPopulated = true;
 
             if (applicationList.length == 0) {
-                scrollLog.appendTitle ("No application on card " );
+                scrollLog.appendData ("No application on card " );
                 return;
             }
-            scrollLog.appendTitle ("getAppIDs : " + ByteArray.byteArrayToHexString(applicationList));
+            scrollLog.appendData ("getAppIDs : " + ByteArray.byteArrayToHexString(applicationList));
 
         }
         catch (Exception e) {
@@ -528,7 +528,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             ByteBuffer bb = ByteBuffer.wrap(res.data);
             bb.order( ByteOrder.LITTLE_ENDIAN);
 
-            scrollLog.appendTitle("Free Memory: " + bb.getShort() + "B");
+            scrollLog.appendData("Free Memory: " + bb.getShort() + "B");
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -549,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Get Key Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 return;
             }
-            scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
+            scrollLog.appendStatus("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
 
             if ((res.data[0] & (byte) 0xF0) == (byte) 0x00) {
                 scrollLog.appendData("- Change key access: Master Key");
@@ -602,7 +602,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Get Key Settins Failed: " + desfireCard.DesFireErrorMsg(res.status));
                 return null;
             }
-            scrollLog.appendTitle("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
+            scrollLog.appendStatus("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
 
             if ((res.data[0] & (byte) 0xF0) == (byte) 0x00) {
                 scrollLog.appendData("- Change key access: Master Key");
@@ -653,12 +653,23 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
             scrollLog.appendTitle("Get DF Names");
             MifareDesfire.DesfireResponse res = desfireCard.getDFNames();
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME))
-                scrollLog.appendTitle("Application 1: " + ByteArray.byteArrayToHexString(res.data));
+
+            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+                if ((res.data == null) || (res.data.length == 0)){
+                    scrollLog.appendData("No DF name returned");
+                    return;
+                }
+
+                scrollLog.appendData("Application 1: " + ByteArray.byteArrayToHexString(res.data));
+            } else {
+                scrollLog.appendError("Error: " + desfireCard.DesFireErrorMsg(res.status));
+                return;
+            }
+
             int i = 2;
             while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
                 res = desfireCard.getMoreData();
-                scrollLog.appendTitle("Application " + i + ": " + ByteArray.byteArrayToHexString(res.data));
+                scrollLog.appendData("Application " + i + ": " + ByteArray.byteArrayToHexString(res.data));
                 i++;
             }
 
@@ -688,16 +699,14 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("onSetConfiguration", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
-/*
-        onAuthenticateTest();
 
-        onGetCardUID();
+        onAuthenticateTest();
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
         onChangeKeyReturn((byte) 0x00, (byte) 0x00, keyEX_16, null);
 
-
+    /*
         onAuthenticateTest ();
 
         scrollLog.appendTitle("***** TEST Change different key Data");
@@ -716,7 +725,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** TEST Change different key Data **************************");
         onChangeKeyReturn((byte) 0x02, (byte) 0x00, key00_16, key0B_16);
         Log.d("TestAll", "*** Test Change Key ****************************");
-*/
+
+
 
         Log.d("TestAll", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST ISO DES CHANGE KEY ");
@@ -893,7 +903,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         baFileIDList = null;
         bFileIDListPopulated = false;
 
-        scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
+        scrollLog.appendData("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
         if (baAppId.length != 3) {
             scrollLog.appendError("Application ID too short");
             return;
@@ -904,7 +914,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (retValue != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
-                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendData("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -937,7 +947,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
         getSupportFragmentManager().popBackStack();
-        scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
+        scrollLog.appendData("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
         if (baAppId.length != 3) {
             scrollLog.appendError("Application ID too short");
             return;
@@ -948,7 +958,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (mfResult != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(mfResult));
             else
-                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendData("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -984,7 +994,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
-        scrollLog.appendTitle("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
+        scrollLog.appendData("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
         if (baAppId.length != 3) {
             scrollLog.appendError("Application ID too short");
             return;
@@ -995,7 +1005,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (retValue != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Delete Application Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
-                scrollLog.appendTitle("Delete Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendData("Delete Application OK: " + ByteArray.byteArrayToHexString(baAppId));
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1053,6 +1063,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             if (res  == MifareDesfire.statusType.AUTHENTICATION_ERROR)
                 scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
+            if (res  == MifareDesfire.statusType.SUCCESS)
+                scrollLog.appendStatus("Format PICC Successful");
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1071,6 +1083,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             if (res.status  == MifareDesfire.statusType.AUTHENTICATION_ERROR)
                 scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
+            if (res.status  == MifareDesfire.statusType.SUCCESS)
+                scrollLog.appendStatus("Commit Successful");
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1089,6 +1103,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             if (res.status  == MifareDesfire.statusType.AUTHENTICATION_ERROR)
                 scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
+            if (res.status  == MifareDesfire.statusType.SUCCESS)
+                scrollLog.appendStatus("Abort Successful");
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1132,7 +1148,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (retValue != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
-                scrollLog.appendTitle("Create Data File OK");
+                scrollLog.appendData("Create Data File OK");
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1158,7 +1174,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (retValue != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
-                scrollLog.appendTitle("Create Record File OK");
+                scrollLog.appendData("Create Record File OK");
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1185,7 +1201,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (retValue != MifareDesfire.statusType.SUCCESS)
                 scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
             else
-                scrollLog.appendTitle("Create Value File OK");
+                scrollLog.appendData("Create Value File OK");
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1204,11 +1220,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             if (res.data != null) {
                 if (res.data.length > 0) {
-                    scrollLog.appendTitle("FileIDs :" + ByteArray.byteArrayToHexString(res.data));
+                    scrollLog.appendData("FileIDs :" + ByteArray.byteArrayToHexString(res.data));
                     baFileIDList = res.data;
                 }
             } else {
-                scrollLog.appendTitle("No file in directory.");
+                scrollLog.appendData("No file in directory.");
                 baFileIDList = null;
             }
             bFileIDListPopulated = true;
@@ -1248,9 +1264,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 }
             }
             if (baISOFileIDs.toArray().length > 0)
-                scrollLog.appendTitle("ISO FileIDs :" + ByteArray.byteArrayToHexString(baISOFileIDs.toArray()));
+                scrollLog.appendData("ISO FileIDs :" + ByteArray.byteArrayToHexString(baISOFileIDs.toArray()));
             else
-                scrollLog.appendTitle("No ISO FileIDs");
+                scrollLog.appendData("No ISO FileIDs");
 
         }
         catch (Exception e) {
@@ -1308,7 +1324,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 return;
             }
 
-            scrollLog.appendTitle("File Settings of file 0x" + ByteArray.byteToHexString(bFileID) + ": " + ByteArray.byteArrayToHexString(res.data));
+            scrollLog.appendStatus("File Settings of file 0x" + ByteArray.byteToHexString(bFileID) + ": " + ByteArray.byteArrayToHexString(res.data));
             // File Type
             switch (res.data[0]) {
                 case (byte) 0x00:
@@ -1498,7 +1514,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 return;
             }
 
-            scrollLog.appendTitle("Delete File " + ByteArray.byteArrayToHexString(new byte [] {bFileID}) + " Ok ");
+            scrollLog.appendData("Delete File " + ByteArray.byteArrayToHexString(new byte [] {bFileID}) + " Ok ");
 
         } catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1953,7 +1969,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //region Authentication Tests
     public void onAuthenticateTest (){
 
-        byte[] zeroKey = new byte[8];
+        byte[] zeroKey = new byte[16];
         Arrays.fill(zeroKey, (byte)0);
 
         try {
@@ -1984,7 +2000,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: 15 0D E5");
+                scrollLog.appendData("Select OK: 15 0D E5");
 
             byte[] zeroKey = new byte[keySize];
             Arrays.fill(zeroKey, (byte)0);
@@ -2015,7 +2031,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: 15 0A E5");
+                scrollLog.appendStatus("Select OK: 15 0A E5");
 
 
             byte[] zeroKey = new byte[16];
@@ -2050,7 +2066,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: 15 0A E5");
+                scrollLog.appendStatus("Select OK: 15 0A E5");
 
 
             byte[] zeroKey = new byte[16];
@@ -2110,7 +2126,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else {
-                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
             }
 
             // Select Application
@@ -2119,7 +2135,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
@@ -2141,7 +2157,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate main key
             res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
@@ -2158,7 +2174,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else {
-                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
             }
 
             // Select Application
@@ -2167,7 +2183,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0x1A, (byte)0, T3DESKey);
@@ -2188,7 +2204,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate main key
             res = desfireCard.authenticate((byte) 0x0A, (byte)0, key);
@@ -2205,7 +2221,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else {
-                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
             }
 
             // Select Application
@@ -2214,7 +2230,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0xAA, (byte)0, AESKey);
@@ -2252,7 +2268,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else {
-                scrollLog.appendTitle("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
             }
 
             // Select Application
@@ -2261,7 +2277,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
                 return;
             } else
-                scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0xAA, (byte)0, AESKey);
@@ -2335,12 +2351,98 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
                 return;
             }
-            scrollLog.appendTitle("Create Data File OK");
+            scrollLog.appendStatus("Create Data File OK");
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
             Log.e("createTestPersoFiles", e.getMessage(), e);
         }
+    }
+
+    public void onApplicationTest () {
+
+        scrollLog.appendTitle("***** TEST Plain Data");
+        Log.d("TestAll", "*** Write Plain Data **************************");
+        onWriteDataReturn((byte) 0x01, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
+        Log.d("TestAll", "*** Read Plain Data **************************");
+        onReadDataReturn((byte) 0x01,0,3,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
+
+        scrollLog.appendTitle("***** TEST Plain Record");
+        onClearRecordFileReturn((byte) 0x04);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write Plain Record **************************");
+        onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Read Plain Record **************************");
+        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
+
+        scrollLog.appendTitle("***** TEST MAC Data");
+        Log.d("TestAll", "*** Write MAC Data **************************");
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+        Log.d("TestAll", "*** Read MAC Data **************************");
+        onReadDataReturn((byte) 0x02, 0, 0, MAC);
+
+        scrollLog.appendTitle("***** TEST Encrypted Data");
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
+        Log.d("TestAll", "*** Write Encrypted Data **************************");
+        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
+        Log.d("TestAll", "*** Read Encrypted Data **************************");
+        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
+
+
+        scrollLog.appendTitle("***** TEST MAC Record");
+        onClearRecordFileReturn((byte) 0x05);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Read MAC Record **************************");
+        onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
+
+
+        scrollLog.appendTitle("***** TEST Encrypted Record");
+        onClearRecordFileReturn((byte) 0x06);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Write MAC Record **************************");
+        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
+        onCommitTransaction();
+        Log.d("TestAll", "*** Read MAC Record **************************");
+        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
+
+        scrollLog.appendTitle("***** TEST Get Value - Plain");
+        onGetValueReturn((byte) 0x07, PLAIN);
+        onCreditReturn((byte)0x07,80,PLAIN);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x07, PLAIN);
+        onDebitReturn((byte)0x07,80,PLAIN);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x07, PLAIN);
+        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x07, PLAIN);
+        scrollLog.appendTitle("***** TEST Get Value - MAC");
+        onGetValueReturn((byte) 0x08, MAC);
+        onCreditReturn((byte)0x08,90,MAC);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x08, MAC);
+        onDebitReturn((byte)0x08,90,MAC);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x08, MAC);
+        onLimitedCreditReturn((byte)0x08, 20, MAC);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x08, MAC);
+        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
+        onCreditReturn((byte)0x09,100,ENCIPHERED);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
+        onDebitReturn((byte)0x09,100,ENCIPHERED);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
+        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
+        onCommitTransaction();
+        onGetValueReturn((byte) 0x09, ENCIPHERED);
     }
 
     public void onTestAll() {
@@ -2352,361 +2454,25 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         onAuthenticateTest ();
 
-        scrollLog.appendTitle("***** TEST Plain Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onWriteDataReturn((byte) 0x01, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
-        Log.d("TestAll", "*** Read Plain Data **************************");
-        onReadDataReturn((byte) 0x01,0,3,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        scrollLog.appendTitle("***** TEST Plain Record");
-        onClearRecordFileReturn((byte) 0x04);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write Plain Record **************************");
-        onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Read Plain Record **************************");
-        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
-
-        scrollLog.appendTitle("***** TEST MAC Data");
-        Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataReturn((byte) 0x02, 0, 0, MAC);
-
-        scrollLog.appendTitle("***** TEST Encrypted Data");
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-       Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-
-
-        scrollLog.appendTitle("***** TEST MAC Record");
-        onClearRecordFileReturn((byte) 0x05);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
-
-
-        scrollLog.appendTitle("***** TEST Encrypted Record");
-        onClearRecordFileReturn((byte) 0x06);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
-
-        scrollLog.appendTitle("***** TEST Get Value - Plain");
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onCreditReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onDebitReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        scrollLog.appendTitle("***** TEST Get Value - MAC");
-        onGetValueReturn((byte) 0x08, MAC);
-        onCreditReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onDebitReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onLimitedCreditReturn((byte)0x08, 20, MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onCreditReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onDebitReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-
-
+        onApplicationTest();
+        /*
         // Test ISO DES
         Log.d("TestAll", "*** Test ISO DES ****************************");
         scrollLog.appendTitle("***** TEST ISO DES ***** ");
-        onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
-
         onAuthISOTest (24);
-
-        scrollLog.appendTitle("***** TEST Plain Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onWriteDataReturn((byte) 0x01, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
-        Log.d("TestAll", "*** Read Plain Data **************************");
-        onReadDataReturn((byte) 0x01,0,3,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        scrollLog.appendTitle("***** TEST Plain Record");
-        onClearRecordFileReturn((byte) 0x04);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write Plain Record **************************");
-        onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Read Plain Record **************************");
-        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
-
-        scrollLog.appendTitle("***** TEST MAC Data");
-        Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataReturn((byte) 0x02, 0, 0, MAC);
-
-        scrollLog.appendTitle("***** TEST Encrypted Data");
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-        Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-
-
-        scrollLog.appendTitle("***** TEST MAC Record");
-        onClearRecordFileReturn((byte) 0x05);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
-
-
-        scrollLog.appendTitle("***** TEST Encrypted Record");
-        onClearRecordFileReturn((byte) 0x06);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
-
-        scrollLog.appendTitle("***** TEST Get Value - Plain");
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onCreditReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onDebitReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        scrollLog.appendTitle("***** TEST Get Value - MAC");
-        onGetValueReturn((byte) 0x08, MAC);
-        onCreditReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onDebitReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onLimitedCreditReturn((byte)0x08, 20, MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onCreditReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onDebitReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-
-
-
+        onApplicationTest ();
 
         Log.d("TestAll", "*** Test AES ****************************");
         scrollLog.appendTitle("***** TEST ISO AES ***** ");
-
         onAuthAESTest ();
-
-        scrollLog.appendTitle("***** TEST Plain Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onWriteDataReturn((byte) 0x01, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
-        Log.d("TestAll", "*** Read Plain Data **************************");
-        onReadDataReturn((byte) 0x01,0,3,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        scrollLog.appendTitle("***** TEST Plain Record");
-        onClearRecordFileReturn((byte) 0x04);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write Plain Record **************************");
-        onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Read Plain Record **************************");
-        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
-
-        scrollLog.appendTitle("***** TEST MAC Data");
-        Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataReturn((byte) 0x02, 0, 0, MAC);
-
-        scrollLog.appendTitle("***** TEST Encrypted Data");
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-        Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-
-
-        scrollLog.appendTitle("***** TEST MAC Record");
-        onClearRecordFileReturn((byte) 0x05);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
-
-
-        scrollLog.appendTitle("***** TEST Encrypted Record");
-        onClearRecordFileReturn((byte) 0x06);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
-
-        scrollLog.appendTitle("***** TEST Get Value - Plain");
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onCreditReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onDebitReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        scrollLog.appendTitle("***** TEST Get Value - MAC");
-        onGetValueReturn((byte) 0x08, MAC);
-        onCreditReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onDebitReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onLimitedCreditReturn((byte)0x08, 20, MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onCreditReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onDebitReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-
+        onApplicationTest ();
 
 
         Log.d("TestAll", "*** Test EV2 ****************************");
         scrollLog.appendTitle("***** TEST EV2 AES ***** ");
-
         onAuthEV2Test ();
-
-        scrollLog.appendTitle("***** TEST Plain Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onWriteDataReturn((byte) 0x01, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
-        Log.d("TestAll", "*** Read Plain Data **************************");
-        onReadDataReturn((byte) 0x01,0,3,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        scrollLog.appendTitle("***** TEST Plain Record");
-        onClearRecordFileReturn((byte) 0x04);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write Plain Record **************************");
-        onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Read Plain Record **************************");
-        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
-
-        scrollLog.appendTitle("***** TEST MAC Data");
-        Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataReturn((byte) 0x02, 0, 0, MAC);
-
-        scrollLog.appendTitle("***** TEST Encrypted Data");
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-        Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-
-
-        scrollLog.appendTitle("***** TEST MAC Record");
-        onClearRecordFileReturn((byte) 0x05);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
-
-
-        scrollLog.appendTitle("***** TEST Encrypted Record");
-        onClearRecordFileReturn((byte) 0x06);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
-
-        scrollLog.appendTitle("***** TEST Get Value - Plain");
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onCreditReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onDebitReturn((byte)0x07,80,PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        onLimitedCreditReturn((byte)0x07, 20, PLAIN);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x07, PLAIN);
-        scrollLog.appendTitle("***** TEST Get Value - MAC");
-        onGetValueReturn((byte) 0x08, MAC);
-        onCreditReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onDebitReturn((byte)0x08,90,MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        onLimitedCreditReturn((byte)0x08, 20, MAC);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x08, MAC);
-        scrollLog.appendTitle("***** TEST Get Value - Enciphered");
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onCreditReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onDebitReturn((byte)0x09,100,ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-        onLimitedCreditReturn((byte)0x09, 20, ENCIPHERED);
-        onCommitTransaction();
-        onGetValueReturn((byte) 0x09, ENCIPHERED);
-/**/
+        onApplicationTest ();
+*/
     }
 
     public void onTestCurrent() {
@@ -2715,55 +2481,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         scrollLog.appendTitle("***** TEST EV2 AES ***** ");
 
         onAuthEV2Test ();
-
-        scrollLog.appendTitle("***** TEST Plain Data");
-        Log.d("TestAll", "*** Write Plain Data **************************");
-        onWriteDataReturn((byte) 0x01, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, PLAIN);
-        Log.d("TestAll", "*** Read Plain Data **************************");
-        onReadDataReturn((byte) 0x01,0,3,PLAIN);  // Enc   Key 2 / 0 (Should be encrypted after auth key 0
-
-        scrollLog.appendTitle("***** TEST Plain Record");
-        onClearRecordFileReturn((byte) 0x04);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write Plain Record **************************");
-        onWriteRecordReturn((byte) 0x04, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, PLAIN);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Read Plain Record **************************");
-        onReadRecordsReturn((byte) 0x04, 0, 0, PLAIN);
-
-        scrollLog.appendTitle("***** TEST MAC Data");
-        Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
-        Log.d("TestAll", "*** Read MAC Data **************************");
-        onReadDataReturn((byte) 0x02, 0, 0, MAC);
-
-        scrollLog.appendTitle("***** TEST Encrypted Data");
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-        Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
-        Log.d("TestAll", "*** Read Encrypted Data **************************");
-        onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
-
-
-        scrollLog.appendTitle("***** TEST MAC Record");
-        onClearRecordFileReturn((byte) 0x05);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x05, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, MAC);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x05, 0, 0, MAC);
-
-
-        scrollLog.appendTitle("***** TEST Encrypted Record");
-        onClearRecordFileReturn((byte) 0x06);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onWriteRecordReturn((byte) 0x06, 0, 3, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC}, ENCIPHERED);
-        onCommitTransaction();
-        Log.d("TestAll", "*** Write MAC Record **************************");
-        onReadRecordsReturn((byte) 0x06, 0, 0, ENCIPHERED);
+        onApplicationTest ();
 /**/
     }
 

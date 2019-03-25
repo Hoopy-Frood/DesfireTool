@@ -43,7 +43,7 @@ public class DesfireCrypto {
     private byte[] encryptionIV;
     private int blockLength;
     private byte[] K1, K2;  // Subkey for CMAC
-    private byte[] EV2_KSesAuthENC, EV2_KSesAuthMAC; // EV2 Session keys for Enc and Mac
+
     private SecretKey EV2_KeySpecSesAuthENC, EV2_KeySpecSesAuthMAC; // EV2 Session key SPEC for Enc and Mac
     private byte[] EV2_K1, EV2_K2;
     private byte[] EV2_TI;
@@ -618,6 +618,7 @@ public class DesfireCrypto {
             case KEYTYPE_AES:
                 sessionKey = new byte[16];
                 if (authMode == MODE_AUTHEV2) {
+                    byte[] EV2_KSesAuthENC, EV2_KSesAuthMAC; // EV2 Session keys for Enc and Mac
 
                     // SV1 = A5 5A 00 01 00 80 || RndA[15-14] || (RndA[13-8] XOR (RnB[15-10]) || RndB[9-0] || RndA[7-0]
                     byte[] SV1 = new byte[32];

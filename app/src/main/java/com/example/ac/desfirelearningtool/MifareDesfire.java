@@ -21,9 +21,9 @@ public class MifareDesfire {
     private final int macSize = 4;
     private final int maxDataSize = 52 - macSize;
 
-    protected ICardCommunicator cardCommunicator;
+    private ICardCommunicator cardCommunicator;
 
-    public byte[] uid;
+    private byte[] uid;
     private ScrollLog scrollLog;
     DesfireCrypto dfCrypto;
 
@@ -37,49 +37,48 @@ public class MifareDesfire {
     }
 
     public DesfireResponse getVersion() throws IOException {
-        DesfireResponse result = sendBytes(new byte[]{(byte)0x60});
+        DesfireResponse result = sendBytes((byte)0x60, commMode.MAC);
 
         if (result.status != statusType.ADDITONAL_FRAME)
             scrollLog.appendError("Error in card response: " + DesFireErrorMsg(result.status));
         return result;
     }
 
-    public DesfireResponse getDFNames() throws IOException {
-        return sendBytes(new byte[]{(byte)0x6D});
+    public  DesfireResponse getDFNames() throws IOException {
+        return sendBytes((byte)0x6D, commMode.MAC);
     }
 
     public DesfireResponse getFileIDs() throws IOException {
-        return sendBytes(new byte[]{(byte)0x6F});
+        return sendBytes((byte)0x6F, commMode.MAC);
     }
 
     public DesfireResponse getISOFileIDs() throws IOException {
-        return sendBytes(new byte[]{(byte)0x61});
+        return sendBytes((byte)0x61, commMode.MAC);
     }
 
     public DesfireResponse getCardUID() throws Exception {
         dfCrypto.encryptedLength = 7;
-        return sendBytes((byte)0x51, null, null, commMode.ENCIPHERED);
+        return sendBytes((byte)0x51, commMode.ENCIPHERED);
     }
 
     public DesfireResponse getFreeMem() throws IOException {
-        return sendBytes(new byte[]{(byte)0x6E});
+        return sendBytes((byte)0x6E, commMode.MAC);
     }
 
     public DesfireResponse getKeySettings() throws IOException {
-        return sendBytes(new byte[]{(byte)0x45});
+        return sendBytes((byte)0x45, commMode.MAC);
     }
 
     public DesfireResponse getKeyVersion(byte selectedKey) throws IOException {
-        byte[] params = ByteArray.from((byte) 0x64).append(selectedKey).toArray();
-        return sendBytes(params);
+        return sendBytes((byte)0x64, new byte[] {selectedKey}, null, commMode.MAC);
     }
 
     public DesfireResponse getFileSettings(byte fid) throws IOException {
-        return sendBytes(new byte[]{(byte)0xf5, fid});
+        return sendBytes((byte)0xf5, new byte[] {fid}, null, commMode.MAC);
     }
 
     public int getRecordLength(byte fid) throws IOException {
-        DesfireResponse resp = sendBytes(new byte[]{(byte)0xf5, fid});
+        DesfireResponse resp = sendBytes((byte)0xf5, new byte[] {fid}, null, commMode.MAC);
         int recordLength = -1;
 
         if (resp.status == statusType.SUCCESS) {
@@ -90,7 +89,7 @@ public class MifareDesfire {
 
     public DesfireResponse getApplicationIDs() throws IOException {
         ByteArrayOutputStream appIDs = new ByteArrayOutputStream();
-        DesfireResponse result = sendBytes(new byte[]{(byte)0x6a});
+        DesfireResponse result = sendBytes((byte)0x6a, commMode.MAC);
 
         if (result.status != MifareDesfire.statusType.SUCCESS) {
             return result;
@@ -99,7 +98,7 @@ public class MifareDesfire {
         appIDs.write(result.data);
 
         if (result.status == statusType.ADDITONAL_FRAME) {
-            result = sendBytes(new byte[]{(byte)0xAF});
+            result = sendBytes((byte)0xAF, commMode.MAC);
             appIDs.write(result.data);
         }
 
@@ -109,42 +108,27 @@ public class MifareDesfire {
 
     public statusType selectApplication(byte[] applicationId) throws IOException {
         dfCrypto.reset();
-        byte[] cmd = ByteArray.from((byte) 0x5a).append(applicationId).toArray();
-        DesfireResponse res = sendBytes(cmd);
 
-
-        return res.status;
+        return sendBytes((byte)0x5a, applicationId, null, commMode.MAC).status;
     }
 
-    public statusType createApplication(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] baISOName, byte [] baDFName) throws IOException {
+    public statusType createApplication(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] bISOName, byte [] bDFName) throws IOException {
         // TODO: Sanity Checks
 
         ByteArray baCreateApplicationArray = new ByteArray();
-
-        baCreateApplicationArray.append((byte) 0xCA)
-                .append(appId)
-                .append(bKeySetting1)
-                .append(bKeySetting2);
-
-        if (baISOName.length == 2) {
-            baCreateApplicationArray.append(baISOName);
+        baCreateApplicationArray.append(appId).append(bKeySetting1).append(bKeySetting2);
+        if (bISOName.length == 2) {
+            baCreateApplicationArray.append(bISOName);
         }
-        baCreateApplicationArray.append(baDFName);
+        baCreateApplicationArray.append(bDFName);
 
         Log.v("createApplication", "Command for Create Application  File  : " + ByteArray.byteArrayToHexString(baCreateApplicationArray.toArray()));
 
-
-        // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        DesfireResponse res = sendBytes(baCreateApplicationArray.toArray());
-
-        return res.status;
+        return sendBytes((byte) 0xCA, baCreateApplicationArray.toArray(), null, commMode.MAC).status;
     }
 
     public statusType deleteApplication(byte[] applicationId) throws IOException {
-        byte[] params = ByteArray.from((byte) 0xDA).append(applicationId).toArray();
-        DesfireResponse res = sendBytes(params);
-
-        return res.status;
+        return sendBytes((byte)0xDA, applicationId, null, commMode.MAC).status;
     }
 
     public statusType createDataFile(byte bFileType, byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
@@ -152,31 +136,16 @@ public class MifareDesfire {
 
         ByteArray baCreateDataFileArray = new ByteArray();
 
-        baCreateDataFileArray.append(bFileType)
-                .append(bFileID);
+        baCreateDataFileArray.append(bFileID);
 
         if (baISOName.length == 2) {
             baCreateDataFileArray.append(baISOName);
         }
-        baCreateDataFileArray.append(bCommSetting).append(baAccessRights);
-
-        // File Size changed to 4 byte string then copy it to 3 bytes
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-
-        byte[] baFileSize = b.putInt(iFileSize).array();
-        byte[] ba3FileSize = new byte[3];
-        System.arraycopy(baFileSize, 0, ba3FileSize, 0, 3);
-
-        baCreateDataFileArray.append(ba3FileSize);
+        baCreateDataFileArray.append(bCommSetting).append(baAccessRights).append(iFileSize, 3);
 
         Log.v("createDataFile", "Command for Create Data File  : " + ByteArray.byteArrayToHexString(baCreateDataFileArray.toArray()));
 
-
-        // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
-
-        return res.status;
+        return sendBytes(bFileType, baCreateDataFileArray.toArray(), null, commMode.MAC).status;
     }
 
     public statusType createStdDataFile(byte bFileID, byte [] baISOName, byte bCommSetting, byte [] baAccessRights, int iFileSize) throws IOException {
@@ -199,38 +168,14 @@ public class MifareDesfire {
         // TODO: Sanity Checks
 
         ByteArray baCreateDataFileArray = new ByteArray();
-
-        baCreateDataFileArray.append(bFileType)
-                .append(bFileID);
-
+        baCreateDataFileArray.append(bFileID);
         if (baISOName.length == 2) {
             baCreateDataFileArray.append(baISOName);
         }
-        baCreateDataFileArray.append(bCommSetting).append(baAccessRights);
+        baCreateDataFileArray.append(bCommSetting).append(baAccessRights).append(iRecordSize,3).append(iNumOfRecords,3);
 
-        // File Size changed to 4 byte string then copy it to 3 bytes
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-
-        byte[] baRecordSize = b.putInt(iRecordSize).array();
-        byte[] ba3RecordSize = new byte[3];
-        System.arraycopy(baRecordSize, 0, ba3RecordSize, 0, 3);
-        baCreateDataFileArray.append(ba3RecordSize);
-
-        ByteBuffer NoR = ByteBuffer.allocate(4);
-        NoR.order(ByteOrder.LITTLE_ENDIAN); // optional, the initial order of a byte buffer is always BIG_ENDIAN.
-
-        byte[] baNumOfRecords = NoR.putInt(iNumOfRecords).array();
-        byte[] ba3NumOfRecords = new byte[3];
-        System.arraycopy(baNumOfRecords, 0, ba3NumOfRecords, 0, 3);
-        baCreateDataFileArray.append(ba3NumOfRecords);
-
-        Log.v("createRecordFile", "Command for Create Record File  : " + ByteArray.byteArrayToHexString(baCreateDataFileArray.toArray()));
-
-        // byte[] params = ByteArray.from((byte) 0xCA).append(createAppByteArray).toArray();
-        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
-
-        return res.status;
+        Log.v("createRecordFile", "Command Header for Create Record File  : " + ByteArray.byteArrayToHexString(baCreateDataFileArray.toArray()));
+        return sendBytes(bFileType, baCreateDataFileArray.toArray(), null, commMode.MAC).status;
     }
 
     public statusType createValueFile(byte bFileID, byte bCommSetting, byte [] baAccessRights, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) throws IOException {
@@ -238,50 +183,22 @@ public class MifareDesfire {
 
         ByteArray baCreateDataFileArray = new ByteArray();
 
-        baCreateDataFileArray.append((byte)0xcc)
-                .append(bFileID);
+        baCreateDataFileArray.append(bFileID);
 
-        baCreateDataFileArray.append(bCommSetting).append(baAccessRights);
-
-        // Int to 4 byte array conversion
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN);
-
-        byte[] baLowerLimit = b.putInt(iLowerLimit).array();
-        baCreateDataFileArray.append(baLowerLimit);
-
-        // Int to 4 byte array conversion
-        ByteBuffer c = ByteBuffer.allocate(4);
-        c.order(ByteOrder.LITTLE_ENDIAN);
-
-        byte[] baUpperLimit = c.putInt(iUpperLimit).array();
-        baCreateDataFileArray.append(baUpperLimit);
-
-        // Int to 4 byte array conversion
-        ByteBuffer d = ByteBuffer.allocate(4);
-        d.order(ByteOrder.LITTLE_ENDIAN);
-
-        byte[] baValue = d.putInt(iValue).array();
-        baCreateDataFileArray.append(baValue);
-
-        baCreateDataFileArray.append(bOptionByte);
-
+        baCreateDataFileArray.append(bCommSetting).append(baAccessRights).append(iLowerLimit,4).append(iUpperLimit,4).append(iValue,4).append(bOptionByte);
 
         Log.v("createRecordFile", "Command for Create Value File  : " + ByteArray.byteArrayToHexString(baCreateDataFileArray.toArray()));
-
-        DesfireResponse res = sendBytes(baCreateDataFileArray.toArray());
+        DesfireResponse res = sendBytes((byte) 0xCC, baCreateDataFileArray.toArray(), null, commMode.MAC);
 
         return res.status;
     }
 
     public DesfireResponse deleteFile(byte fid) throws IOException {
-        return sendBytes(new byte[]{(byte)0xDF, fid});
+        return sendBytes((byte)0xDF, new byte[] {fid}, null, commMode.MAC);
     }
 
     public statusType formatPICC() throws IOException {
-        DesfireResponse result = sendBytes(new byte[]{(byte)0xFC});
-
-        return result.status;
+        return sendBytes((byte) 0xFC, commMode.MAC).status;
     }
 
     public statusType changeKey (byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey) throws GeneralSecurityException, IOException{
@@ -292,7 +209,7 @@ public class MifareDesfire {
         // Case 1
         // If oldKey != null, AND bKeyToChange != currAuthKey
         if (bKeyToChange != dfCrypto.currentAuthenticatedKey) {
-            Log.d("changeKey","Change Key Case 1");
+            Log.d("changeKey","Change Key Case 1 - Different KeyNo");
             if (baOldKey == null) {
                 throw new GeneralSecurityException("Previous Key not specified");
             }
@@ -331,7 +248,7 @@ public class MifareDesfire {
             commandBuilder.append(dfCrypto.encryptDataBlock (keyBlockBuilder.toArray()));
 
         } else {
-            Log.d("changeKey","Change Key Case 2");
+            Log.d("changeKey","Change Key Case 2 - Same KeyNo");
             // Case 2
             // Append NewKey
             keyBlockBuilder.append(baNewKey);
@@ -358,11 +275,8 @@ public class MifareDesfire {
 
         result.status = findStatus(response[0]);
 
-        if (bKeyToChange == dfCrypto.currentAuthenticatedKey)
-            dfCrypto.reset();
-
         if (result.status == statusType.SUCCESS) {
-            if (dfCrypto.trackCMAC) {
+            if ((dfCrypto.trackCMAC) && (response.length > 1)) {
                 Log.d("changeKey", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
                 if (dfCrypto.verifyCMAC(response)) {
                     scrollLog.appendStatus("OK: CMAC Verified");
@@ -376,13 +290,15 @@ public class MifareDesfire {
             dfCrypto.reset();
         }
 
+        if (bKeyToChange == dfCrypto.currentAuthenticatedKey)
+            dfCrypto.reset();
+
         return result.status;
 
     }
 
     public DesfireResponse getMoreData() throws IOException {
         return sendBytes((byte)0xAF, null, null, commMode.PLAIN);
-        //return sendBytes(new byte[]{(byte)0xAF});
     }
 
     public DesfireResponse getMoreData(commMode curCommMode) throws IOException {
@@ -393,13 +309,12 @@ public class MifareDesfire {
         ByteArray array = new ByteArray();
         byte[] cmdHeader = array.append(fid).append(start, 3).append(count, 3).toArray();
 
-        dfCrypto.setAFLength(count);
+        dfCrypto.setAFLength(count);  //if count is zero, whole data file is read
         return sendBytes((byte) 0xBD, cmdHeader, null, curCommMode);
     }
 
     public DesfireResponse readRecords(byte fid, int offsetRecord, int numOfRecords, commMode curCommMode) throws IOException {
-        dfCrypto.encryptedLength = 0;
-        return readRecords(fid, offsetRecord, numOfRecords,curCommMode);
+        return readRecords(fid, offsetRecord, numOfRecords,curCommMode,0);
     }
 
     public DesfireResponse readRecords(byte fid, int offsetRecord, int numOfRecords, commMode curCommMode, int encryptedLength) throws IOException {
@@ -425,7 +340,7 @@ public class MifareDesfire {
     }
 
     public DesfireResponse clearRecordFile(byte fid) throws IOException {
-        return sendBytes(new byte[]{(byte)0xEB, fid});
+        return sendBytes((byte) 0xEB, new byte[] {fid}, null, commMode.MAC);
     }
 
     public DesfireResponse getValue(byte bFileID,commMode curCommMode) throws IOException {
@@ -461,11 +376,11 @@ public class MifareDesfire {
     }
 
     public DesfireResponse commitTransaction() throws IOException {
-        return sendBytes(new byte[]{(byte)0xC7});
+        return sendBytes((byte) 0xC7, commMode.MAC);
     }
 
     public DesfireResponse abortTransaction() throws IOException {
-        return sendBytes(new byte[]{(byte)0xA7});
+        return sendBytes((byte) 0xA7, commMode.MAC);
     }
 
     public enum statusType {
@@ -520,66 +435,18 @@ public class MifareDesfire {
         }
     }
 
-    public DesfireResponse sendBytes(byte[] cmd) throws IOException {
-        byte[] response;
-
-        if ((dfCrypto.EV2_Authenticated) && (cmd[0] != (byte) 0xAF)) {
-
-            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
-            cmd = dfCrypto.EV2_GenerateMacCmd(cmd);
-
-
-
-        } else if ((dfCrypto.trackCMAC) && (cmd[0] != (byte) 0xAF)) {
-            Log.d ("sendBytes  ", "Command to Track CMAC   = " + ByteArray.byteArrayToHexString(cmd) );
-            dfCrypto.calcCMAC(cmd);
-
-        }
-
-        response = cardCommunicator.transceive(cmd);
-
-        DesfireResponse result = new DesfireResponse();
-
-        result.status = findStatus(response[0]);
-        if (result.status == statusType.SUCCESS) {
-            if (dfCrypto.EV2_Authenticated) {
-                if (!dfCrypto.EV2_verifyMacResponse(response)) {
-                    scrollLog.appendError("Error: CMAC Incorrect");
-
-                } else {
-                    scrollLog.appendStatus("OK: CMAC Verified");
-
-                    result.data = ByteArray.appendCutCMAC(response,8);
-                }
-            } else if (dfCrypto.trackCMAC) {
-                Log.d("sendBytes  ", "Response to verify CMAC = " + ByteArray.byteArrayToHexString(response));
-                if (!dfCrypto.verifyCMAC(response)) {
-                    scrollLog.appendError("Error: CMAC Incorrect");
-                }
-                scrollLog.appendStatus("OK: CMAC Verified");
-
-                result.data = ByteArray.appendCutCMAC(response,8);
-            } else {
-                result.data = ByteArray.appendCut(null, response);
-            }
-        } else if (result.status == statusType.ADDITONAL_FRAME) {
-            if (dfCrypto.trackCMAC || dfCrypto.EV2_Authenticated) {
-                Log.d ("sendBytes  ", "Response to verify CMAC AF = " + ByteArray.byteArrayToHexString(response) );
-                dfCrypto.storeAFCMAC(response);
-
-            }
-            result.data = ByteArray.appendCut(null, response);
-        } else {
-            dfCrypto.trackCMAC = false;
-        }
-
-        return result;
+    public DesfireResponse sendBytes (byte cmd, commMode expectedCommMode) throws IOException {
+        return sendBytes(cmd, null, null, expectedCommMode);
     }
 
-    public DesfireResponse sendBytes (byte cmd) throws IOException {
-        return sendBytes(cmd, null, null, commMode.PLAIN);
-    }
+    private DesfireResponse encryptionError () {
+        DesfireResponse badResult = new DesfireResponse();
 
+        dfCrypto.reset();
+        badResult.status = statusType.PCD_ENCRYPTION_ERROR;
+        badResult.data = null;
+        return badResult;
+    }
     /**
      * sendBytes handles all DESFire D40, EV1, EV2 secure messaging and sending/receiving of data
      * @param cmd cmd byte as specified in data sheet
@@ -587,9 +454,9 @@ public class MifareDesfire {
      * @param cmdData data to send
      * @param curCommMode communicaiton mode - PLAIN, MAC, ENCIPHERED
      * @return DESFireResponse status byte and data if any
-     * @throws IOException
+     * @throws IOException Lost connection of smart card reader
      */
-    public DesfireResponse sendBytes(byte cmd, byte[] cmdHeader, byte [] cmdData, commMode curCommMode) throws IOException {
+    private DesfireResponse sendBytes(byte cmd, byte[] cmdHeader, byte [] cmdData, commMode curCommMode) throws IOException {
         byte[] response;
         byte [] cmdToSend;
         ByteArray baCmdBuilder = new ByteArray();
@@ -604,12 +471,8 @@ public class MifareDesfire {
                 byte [] encryptData = dfCrypto.EV2_EncryptData(cmdData);
                 if (encryptData == null) {
                     Log.d("sendBytes", "Command Encrypt error ");
-                    scrollLog.appendError("Encrypt Command Data Error");
-                    DesfireResponse badResult = new DesfireResponse();
-
-                    badResult.status = statusType.PCD_ENCRYPTION_ERROR;
-                    badResult.data = null;
-                    return badResult;
+                    scrollLog.appendError("Encrypt CmdData Error");
+                    return encryptionError();
                 }
 
                 baCmdBuilder.append(encryptData);
@@ -631,12 +494,11 @@ public class MifareDesfire {
 
                 baCmdBuilder.append(encryptData);
             } catch (GeneralSecurityException e) {
-                scrollLog.appendError(e.getMessage());
-                DesfireResponse badResult = new DesfireResponse();
+                Log.d("sendBytes", "Command Encrypt error ");
+                scrollLog.appendError("Encrypt CmdData Error");
 
-                badResult.status = statusType.PCD_ENCRYPTION_ERROR;
-                badResult.data = null;
-                return badResult;
+                scrollLog.appendError(e.getMessage());
+                return encryptionError();
             }
 
 
@@ -679,8 +541,7 @@ public class MifareDesfire {
                 } else {
                     if (!dfCrypto.EV2_verifyMacResponse(response)) {
                         scrollLog.appendError("Error: CMAC Incorrect");
-                        result.status = statusType.PCD_ENCRYPTION_ERROR;
-                        return result;
+                        return encryptionError();
                     } else {
                         scrollLog.appendStatus("OK: CMAC Verified");
                     }
@@ -719,7 +580,7 @@ public class MifareDesfire {
                     }
                 }
             } else if ((curCommMode == commMode.MAC) && (dfCrypto.getAuthMode() == dfCrypto.MODE_AUTHD40)) {
-                if (response.length != 1) {
+                if ((response.length != 1) && ((cmd == (byte) 0xBD) || (cmd == (byte) 0x6C) || (cmd == (byte) 0xBB))) {  // D40 MAC only applied to data manipulation response data
                     if (!dfCrypto.verifyD40MAC(response)) {
                         scrollLog.appendError("MAC Incorrect");
                         result.status = statusType.PCD_ENCRYPTION_ERROR;
@@ -727,12 +588,15 @@ public class MifareDesfire {
                         scrollLog.appendStatus("MAC Verified");
                         result.data = ByteArray.appendCutMAC(response, 4);
                     }
+                } else {
+                    result.data = ByteArray.appendCut(null, response);
                 }
-            }else if (curCommMode == commMode.ENCIPHERED){
+            }else if (curCommMode == commMode.ENCIPHERED){  // D40 encrypted
                 if (response.length != 1) {
                     dfCrypto.storeAFEncrypted(response);
                     try {
                         result.data = dfCrypto.decryptReadData();
+                        scrollLog.appendStatus("Response decryption/CRC check successful");
                     } catch (GeneralSecurityException e) {
                         result.status = statusType.PCD_ENCRYPTION_ERROR;
                         scrollLog.appendError(e.getMessage());
@@ -758,7 +622,7 @@ public class MifareDesfire {
             }
             result.data = ByteArray.appendCut(null, response);
         } else {
-            dfCrypto.trackCMAC = false;
+            dfCrypto.reset();
         }
 
         return result;
@@ -935,38 +799,26 @@ public class MifareDesfire {
 
         dfCrypto.initialize(authType, key);
 
-        ByteArray baCmd = ByteArray.from(authType).append(keyNumber);
+        ByteArray baCmd = ByteArray.from(keyNumber);
 
         if (authType==0x71) {
-            baCmd.clear();
-            baCmd = ByteArray.from(authType).append((byte)0x00).append((byte) 0x00);
+            baCmd.append((byte)0x00);
         }
         // Send the command to the key, receive the challenge
-        DesfireResponse CardChallenge = sendBytes(baCmd.toArray());
+        DesfireResponse CardChallenge = sendBytes(authType,baCmd.toArray(),null,commMode.PLAIN);
 
         if (CardChallenge.status != statusType.ADDITONAL_FRAME){
             Log.d("authenticate", "Exited after sending get card challenge");
             return CardChallenge.status;
         }
 
-        // TESTEV2
-        //System.arraycopy(ByteArray.hexStringToByteArray("C56F576D2444171CF64B196346A81662"), 0, CardChallenge.data, 0, 16);
-
-
         // Compute next command and required response
-
-
-        byte[] challengeMessage = ByteArray.from((byte)0xAF).append(dfCrypto.computeResponseAndDataToVerify(CardChallenge.data)).toArray();
+        byte[] challengeMessage = dfCrypto.computeResponseAndDataToVerify(CardChallenge.data);
 
 
 
         // send AF
-        DesfireResponse cardResponse = sendBytes(challengeMessage);
-
-        // TESTEV2
-        //cardResponse.status = statusType.SUCCESS;
-        //cardResponse.data = ByteArray.hexStringToByteArray("EE93375DE2190A24F97D4AE363CAEC8DE2ED76DF4C3EE23C9D3499E3EC8D2259");
-
+        DesfireResponse cardResponse = sendBytes((byte)0xAF, challengeMessage, null, commMode.PLAIN);
 
         if (cardResponse.status != statusType.SUCCESS){
             Log.d("authenticate", "Exited after sending challenge Message");
@@ -974,7 +826,6 @@ public class MifareDesfire {
         }
 
         if (!dfCrypto.verifyCardResponse(cardResponse.data)) {
-
             return statusType.PCD_AUTHENTICATION_ERROR;
         }
         dfCrypto.currentAuthenticatedKey = keyNumber;

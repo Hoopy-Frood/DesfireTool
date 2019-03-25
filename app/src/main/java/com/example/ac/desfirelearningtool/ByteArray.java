@@ -35,7 +35,7 @@ public class ByteArray {
         if (first == null || first.length == 0) {
             ret = new byte[last.length - 1];
             if (last.length == 1 && last[0] == 0x00)
-                return new byte[0];
+                return null;
             System.arraycopy(last, 1, ret, 0, last.length - 1);
             return ret;
         }
