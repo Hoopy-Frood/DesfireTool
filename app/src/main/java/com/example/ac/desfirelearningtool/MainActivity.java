@@ -1888,8 +1888,15 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onAuthenticateTest", e.getMessage(), e);
         }
     }
-
     public void onAuthISOTest (int keySize){
+        byte[] zeroKey = new byte[keySize];
+        Arrays.fill(zeroKey, (byte)0);
+
+        onAuthISOTest(keySize, zeroKey);
+        return;
+    }
+
+    public void onAuthISOTest (int keySize, byte [] key){
         scrollLog.appendTitle("AuthenticateISO Test");
 
         try {
@@ -1901,10 +1908,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else
                 scrollLog.appendData("Select OK: 15 0D E5");
 
-            byte[] zeroKey = new byte[keySize];
-            Arrays.fill(zeroKey, (byte)0);
 
-            res = desfireCard.authenticate((byte) 0x1A, (byte) 0, zeroKey);
+            res = desfireCard.authenticate((byte) 0x1A, (byte) 0, key);
             if (res != MifareDesfire.statusType.SUCCESS) {
                 scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
             } else {
@@ -2389,7 +2394,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         byte [] key0B_24 = new byte [] {(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B,(byte)0x0B};
 
 
-
+/*
         Log.d("onSetConfiguration", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST D40 DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0xD4, (byte) 0x0D, (byte) 0xE5});
@@ -2406,7 +2411,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
          onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_16, key00_16);
- /*
+
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
         onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_16, key0A_16);
@@ -2421,12 +2426,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Test Change Key ****************************");
 
 */
-/*
+
         Log.d("TestAll", "*** Test Change Key ****************************");
         scrollLog.appendTitle("***** TEST ISO DES CHANGE KEY ");
         onSelectApplicationReturn(new byte[] { (byte) 0x15, (byte) 0x0D, (byte) 0xE5});
 
-        onAuthISOTest (24);
+        onAuthISOTest (24,key00_24);
 
         scrollLog.appendTitle("***** TEST Change Same key Data");
         Log.d("TestAll", "*** TEST Change Same key Data **************************");
@@ -2438,7 +2443,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
         onChangeKeyReturn((byte) 0x01, (byte) 0x00, key0A_24, key00_24);
-
+/*
         scrollLog.appendTitle("***** TEST Change different key Data");
         Log.d("TestAll", "*** TEST Change different key Data **************************");
         onChangeKeyReturn((byte) 0x01, (byte) 0x00, key00_24, key0A_24);

@@ -234,8 +234,8 @@ public class MifareDesfire {
             if (dfCrypto.CRCLength == 4) {
                 ByteArray baDataToCRC = new ByteArray();
                 baDataToCRC.append(commandBuilder.toArray()).append(keyBlockBuilder.toArray()); //
-                Log.d("changeKey", "CRC32 Input of XOR = " + ByteArray.byteArrayToHexString(baDataToCRC.toArray()));
-                computedCrcXorKey = dfCrypto.calcCRC(baDataToCRC.toArray());
+                Log.d("changeKey", "CRC32 Input of XOR = " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
+                computedCrcXorKey = dfCrypto.calcCRC(keyBlockBuilder.toArray());
             } else {
                 Log.d("changeKey", "CRC16 Input of XOR= " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
                 computedCrcXorKey = dfCrypto.calcCRC(keyBlockBuilder.toArray());
@@ -243,7 +243,7 @@ public class MifareDesfire {
 
             keyBlockBuilder.append(computedCrcXorKey);
             keyBlockBuilder.append(dfCrypto.calcCRC(baNewKey));
-            Log.d("changeKey", "Case 1 Input = " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
+            Log.d("changeKey", "Case 1 encryption Input = " + ByteArray.byteArrayToHexString(keyBlockBuilder.toArray()));
 
             commandBuilder.append(dfCrypto.encryptDataBlock (keyBlockBuilder.toArray()));
 
