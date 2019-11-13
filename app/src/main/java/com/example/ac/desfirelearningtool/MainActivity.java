@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     private byte[] baFileIDList;
     private boolean bFileIDListPopulated;
     private byte[] baISOFileIDList;
-    private boolean bISOFileIDListPopulated;
+    private boolean isISOFileIDListPopulated;
     Toolbar toolbar;
 
 
@@ -150,7 +150,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         applicationList = null;
         baFileIDList = null;
+        baISOFileIDList = null;
         boolWrapperMode = false;
+        isISOFileIDListPopulated = false;
 
         buttonClearScreen.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -1152,24 +1154,29 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     public void onGetISOFileIDs(){
         try {
-
             ByteArray baISOFileIDs = new ByteArray();
 
             scrollLog.appendTitle("Get ISO File IDs");
             MifareDesfire.DesfireResponse res = desfireCard.getISOFileIDs();
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
+                //baISOFileIDList;
                 baISOFileIDs.append(res.data);
+                isISOFileIDListPopulated = true;
 
                 while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
                     res = desfireCard.getMoreData();
                     baISOFileIDs.append(res.data);
                 }
             }
-            if (baISOFileIDs.toArray().length > 0)
-                scrollLog.appendData("ISO FileIDs :" + ByteArray.byteArrayToHexString(baISOFileIDs.toArray()));
-            else
+            baISOFileIDList = baISOFileIDs.toArray();
+
+            if (baISOFileIDs.toArray().length > 0) {
+
+                scrollLog.appendData("ISO FileIDs :" +ByteArray.byteArrayToHexString(baISOFileIDList));
+            } else {
                 scrollLog.appendData("No ISO FileIDs");
+            }
 
         }
         catch (Exception e) {
@@ -1185,7 +1192,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onGetISOFileIDs();
 
         Bundle appListInfo = new Bundle();
-        appListInfo.putByteArray("ISOFileIDList", ISOFileIDList);
+        appListInfo.putByteArray("ISOFileIDList", baISOFileIDList);
         appListInfo.putBoolean("isISOFileIDListPopulated", isISOFileIDListPopulated);
 
         return appListInfo;
