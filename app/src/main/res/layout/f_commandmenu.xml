@@ -227,11 +227,21 @@
                 android:textSize="12sp" />
 
             <Button
-                android:id="@+id/button_GetFileSettings"
+                android:id="@+id/button_ISOSelect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignBottom="@+id/button_Select"
                 android:layout_toEndOf="@+id/button_Select"
+                android:text="ISO Select"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/button_GetFileSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/button_Select"
+                android:layout_toEndOf="@+id/button_ISOSelect"
                 android:text="Get\nFile Settings"
                 android:textAllCaps="false"
                 android:textSize="12sp" />

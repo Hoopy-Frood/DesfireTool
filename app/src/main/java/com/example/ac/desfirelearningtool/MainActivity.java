@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     fCommandMenu commandFragment;
     fSelectApplication selectFragment;
+    fISOSelectApplication isoSelectFragment;
     fCreateApplication createApplicationFragment;
     fGetKeyVersion getKeyVersionFragment;
     fDeleteApplication deleteApplicationFragment;
@@ -141,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         // Buttons - Log Management
         buttonClearScreen = (Button) findViewById(R.id.button_ClearScreen);
         buttonCopyLog = (Button) findViewById(R.id.button_CopyLog);
-        checkboxWrapperMode = (CheckBox) findViewById(R.id.CheckBox_WrapAPDU);
+        checkboxWrapperMode = (CheckBox) findViewById(R.id.CheckBox_ISOWrap);
         scrollViewTextLog = findViewById(R.id.scrollview_TextLog);
         scrollLog = new ScrollLog((TextView) findViewById(R.id.textView_scrollLog),scrollViewTextLog);
 

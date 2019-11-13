@@ -28,6 +28,7 @@ public class fCommandMenu extends Fragment{
     private Button buttonGetKeySettings;
     // Buttons - Application
     private Button buttonSelect;
+    private Button buttonISOSelect;
     private Button buttonGetFileSettings;
     private Button buttonGetFileIDs;
     private Button buttonGetISOFileIDs;
@@ -92,6 +93,7 @@ public class fCommandMenu extends Fragment{
         buttonGetKeySettings = (Button) rootView.findViewById(R.id.button_GetKeySettings);
         // Buttons - Application
         buttonSelect = (Button) rootView.findViewById(R.id.button_Select);
+        buttonISOSelect = (Button) rootView.findViewById(R.id.button_ISOSelect);
         buttonGetFileSettings = (Button) rootView.findViewById(R.id.button_GetFileSettings);
         buttonGetFileIDs = (Button) rootView.findViewById(R.id.button_GetFileIDs);
         buttonGetISOFileIDs = (Button) rootView.findViewById(R.id.button_GetISOFileIDs);
@@ -182,6 +184,10 @@ public class fCommandMenu extends Fragment{
         // Buttons - Application
         buttonSelect.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onSelectApplication();
+            }
+        });
+        buttonISOSelect.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onISOSelectApplication();
             }
         });
         buttonGetFileIDs.setOnClickListener(new View.OnClickListener() {
@@ -330,6 +336,7 @@ public class fCommandMenu extends Fragment{
         buttonGetKeySettings.setEnabled(false);
         // Buttons - Application
         buttonSelect.setEnabled(false);
+        buttonISOSelect.setEnabled(false);
         buttonGetFileSettings.setEnabled(false);
         buttonGetFileIDs.setEnabled(false);
         buttonGetISOFileIDs.setEnabled(false);
@@ -377,6 +384,7 @@ public class fCommandMenu extends Fragment{
         buttonGetKeySettings.setEnabled(true);
         // Buttons - Application
         buttonSelect.setEnabled(true);
+        buttonISOSelect.setEnabled(true);
         buttonGetFileSettings.setEnabled(true);
         buttonGetFileIDs.setEnabled(true);
         buttonGetISOFileIDs.setEnabled(true);
