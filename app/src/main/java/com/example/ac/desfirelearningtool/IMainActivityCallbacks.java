@@ -12,6 +12,7 @@ public interface IMainActivityCallbacks {
     void onGetCardUID();
     void onGetApplicationIDs();
     Bundle onFragmentGetApplicationIDs();
+    Bundle onFragmentGetISOFileIDs();
     Bundle onFragmentGetFileIDs();
     void onGetDFNames();
     void onGetFreeMem();

@@ -84,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     private boolean applicationListPopulated;
     private byte[] baFileIDList;
     private boolean bFileIDListPopulated;
+    private byte[] baISOFileIDList;
+    private boolean bISOFileIDListPopulated;
     Toolbar toolbar;
 
 
@@ -518,6 +520,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     }
     //endregion
+
 
     //region Get Free Memory
     public void onGetFreeMem (){
@@ -1175,7 +1178,21 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             Log.e("onGetISOFileIDs", e.getMessage(), e);
         }
     }
+
+
+    public Bundle onFragmentGetISOFileIDs (){
+
+        onGetISOFileIDs();
+
+        Bundle appListInfo = new Bundle();
+        appListInfo.putByteArray("ISOFileIDList", ISOFileIDList);
+        appListInfo.putBoolean("isISOFileIDListPopulated", isISOFileIDListPopulated);
+
+        return appListInfo;
+
+    }
     //endregion
+
 
     //region Get File Settings
     public void onGetFileSettings() {
