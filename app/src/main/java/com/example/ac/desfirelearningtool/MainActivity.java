@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     fCommandMenu commandFragment;
     fSelectApplication selectFragment;
-    fISOSelectApplication isoSelectFragment;
+    fSelectISOFileID isoSelectFragment;
     fCreateApplication createApplicationFragment;
     fGetKeyVersion getKeyVersionFragment;
     fDeleteApplication deleteApplicationFragment;

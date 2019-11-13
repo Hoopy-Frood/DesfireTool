@@ -22,12 +22,12 @@ import java.util.List;
  * Created by Ac on 8/19/2017.
  */
 
-public class fISOSelectApplication extends Fragment {
+public class fSelectISOFileID extends Fragment {
     private Button buttonGo;
-    private EditText applicationID;
-    private byte [] applicationList;
-    private boolean applicationListPopulated;
-    private ListView lvApplicationList;
+    private EditText ISOFileID;
+    private byte [] ISOFileIDList;
+    private boolean isISOFileIDListPopulated;
+    private ListView lvISOFileIDList;
     View rootView;
     IMainActivityCallbacks mCallback;
 
@@ -35,7 +35,7 @@ public class fISOSelectApplication extends Fragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                                 Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.f_selectapplication, container, false);
+        rootView = inflater.inflate(R.layout.f_isoselectapplication, container, false);
 
 
 
@@ -51,7 +51,7 @@ public class fISOSelectApplication extends Fragment {
 
 
         buttonGo = (Button) rootView.findViewById(R.id.button_Go);
-        applicationID = (EditText) rootView.findViewById(R.id.EditText_ApplicationID);
+        ISOFileID = (EditText) rootView.findViewById(R.id.EditText_ISOFileID);
 
         buttonGo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -60,38 +60,38 @@ public class fISOSelectApplication extends Fragment {
         });
         buttonGo.setEnabled(false);
 
-        applicationID.addTextChangedListener(watcher);
+        ISOFileID.addTextChangedListener(watcher);
 
-        applicationList = getArguments().getByteArray("applicationList");
-        applicationListPopulated = getArguments().getBoolean("applicationListPopulated");
+        ISOFileIDList = getArguments().getByteArray("ISOFileIDList");
+        isISOFileIDListPopulated = getArguments().getBoolean("isISOFileIDListPopulated");
 
-        //Log.v("Select application List", ByteArray.byteArrayToHexString(applicationList));
+        //Log.v("Select application List", ByteArray.byteArrayToHexString(ISOFileIDList));
         populateListView ();
-        //lvApplicationList.setOnItemClickListener();
+        //lvISOFileIDList.setOnItemClickListener();
 
-        lvApplicationList.setClickable(true);
-        lvApplicationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        lvISOFileIDList.setClickable(true);
+        lvISOFileIDList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             public void onItemClick(AdapterView<?> arg0,View arg1, int position, long arg3)
             {
                 if (position == 0)
-                    applicationID.setText("000000");
+                    ISOFileID.setText("000000");
                 else {
-                    if (applicationListPopulated == true) {
-                        if (position == lvApplicationList.getAdapter().getCount() - 1){
-                            Bundle appListInfo = mCallback.onFragmentGetApplicationIDs();
-                            applicationList = appListInfo.getByteArray("applicationList");
-                            applicationListPopulated = appListInfo.getBoolean("applicationListPopulated");
+                    if (isISOFileIDListPopulated == true) {
+                        if (position == lvISOFileIDList.getAdapter().getCount() - 1){
+                            Bundle appListInfo = mCallback.onFragmentGetISOFileIDs();
+                            ISOFileIDList = appListInfo.getByteArray("ISOFileIDList");
+                            isISOFileIDListPopulated = appListInfo.getBoolean("isISOFileIDListPopulated");
 
                             populateListView();
 
                         }else {
-                            applicationID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(applicationList, (position - 1) * 3, (position - 1) * 3 + 3)));
+                            ISOFileID.setText(ByteArray.byteArrayToHexStringNoSpace(Arrays.copyOfRange(ISOFileIDList, (position - 1) * 3, (position - 1) * 3 + 3)));
                         }
                     } else {
-                        Bundle appListInfo = mCallback.onFragmentGetApplicationIDs();
-                        applicationList = appListInfo.getByteArray("applicationList");
-                        applicationListPopulated = appListInfo.getBoolean("applicationListPopulated");
+                        Bundle appListInfo = mCallback.onFragmentGetISOFileIDs();
+                        ISOFileIDList = appListInfo.getByteArray("ISOFileIDList");
+                        isISOFileIDListPopulated = appListInfo.getBoolean("isISOFileIDListPopulated");
 
                         populateListView();
                     }
@@ -112,7 +112,7 @@ public class fISOSelectApplication extends Fragment {
         {}
         @Override
         public void afterTextChanged(Editable s) {
-            if (applicationID.getText().toString().length()==6) {
+            if (ISOFileID.getText().toString().length()==6) {
                 buttonGo.setEnabled(true);
             } else {
                 buttonGo.setEnabled(false);
@@ -121,39 +121,39 @@ public class fISOSelectApplication extends Fragment {
     };
 
     private void populateListView () {
-        lvApplicationList = (ListView) rootView.findViewById(R.id.lv_ApplicationList);
+        lvISOFileIDList = (ListView) rootView.findViewById(R.id.lv_ISOFileIDList);
 
         // Instanciating an array list (you don't need to do this,
         // you already have yours).
-        List<String> ListApplicationList = new ArrayList<String>();
+        List<String> ListISOFileIDList = new ArrayList<String>();
 
-        ListApplicationList.add("00 00 00");
+        ListISOFileIDList.add("00 00 00");
 
-        if (applicationListPopulated  == true) {
-            if  (applicationList.length %3 == 0) {
-                for (int i = 0; i < applicationList.length; i = i + 3) {
-                    ListApplicationList.add(ByteArray.byteArrayToHexString(applicationList, i, 3));
+        if (isISOFileIDListPopulated  == true) {
+            if  (ISOFileIDList.length %3 == 0) {
+                for (int i = 0; i < ISOFileIDList.length; i = i + 3) {
+                    ListISOFileIDList.add(ByteArray.byteArrayToHexString(ISOFileIDList, i, 3));
                 }
-                ListApplicationList.add("Update Application List");
+                ListISOFileIDList.add("Update Application List");
             }
         } else {
-            ListApplicationList.add("Call Get Application IDs");
+            ListISOFileIDList.add("Call Get Application IDs");
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                 getActivity(),
                 android.R.layout.simple_list_item_1,
-                ListApplicationList);
+                ListISOFileIDList);
 
-        lvApplicationList.setAdapter(arrayAdapter);
+        lvISOFileIDList.setAdapter(arrayAdapter);
 
     }
 
 
     private void onGoSelect(){
 
-        Log.d("onGoSelect", applicationID.getText().toString());
+        Log.d("onGoSelect", ISOFileID.getText().toString());
 
-        mCallback.onSelectApplicationReturn(ByteArray.hexStringToByteArray(applicationID.getText().toString()));
+        mCallback.onSelectApplicationReturn(ByteArray.hexStringToByteArray(ISOFileID.getText().toString()));
 
     }
 }
