@@ -48,11 +48,11 @@ public class MifareDesfire {
         return sendBytes((byte)0x6D, commMode.MAC);
     }
 
-    public DesfireResponse getFileIDs() throws IOException {
+    public DesfireResponse getFileIds() throws IOException {
         return sendBytes((byte)0x6F, commMode.MAC);
     }
 
-    public DesfireResponse getISOFileIDs() throws IOException {
+    public DesfireResponse getIsoFileIds() throws IOException {
         return sendBytes((byte)0x61, commMode.MAC);
     }
 
@@ -111,6 +111,13 @@ public class MifareDesfire {
 
         return sendBytes((byte)0x5a, applicationId, null, commMode.MAC).status;
     }
+
+    public statusType selectIsoFileId(byte[] fileId) throws IOException {
+        dfCrypto.reset();
+
+        return sendBytes((byte)0x5a, applicationId, null, commMode.MAC).status;
+    }
+
 
     public statusType createApplication(byte [] appId, byte bKeySetting1, byte bKeySetting2, byte [] bISOName, byte [] bDFName) throws IOException {
         // TODO: Sanity Checks

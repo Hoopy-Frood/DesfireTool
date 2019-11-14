@@ -12,8 +12,8 @@ public interface IMainActivityCallbacks {
     void onGetCardUID();
     void onGetApplicationIDs();
     Bundle onFragmentGetApplicationIDs();
-    Bundle onFragmentGetISOFileIDs();
-    Bundle onFragmentGetFileIDs();
+    Bundle onFragmentGetIsoFileIds();
+    Bundle onFragmentGetFileIds();
     void onGetDFNames();
     void onGetFreeMem();
 
@@ -31,8 +31,10 @@ public interface IMainActivityCallbacks {
     // Application
     void onSelectApplication();
     void onSelectApplicationReturn(byte [] appId);
-    void onGetFileIDs();
-    void onGetISOFileIDs();
+    void onSelectIsoFileId();
+    void onSelectIsoFileIdReturn(byte [] ISOFileId);
+    void onGetFileIds();
+    void onGetIsoFileIds();
     void onGetFileSettings();
     void onGetFileSettingsReturn(byte bFileID);
     Bundle onFragmentGetFileSettings (byte bFileID);

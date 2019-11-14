@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     fCommandMenu commandFragment;
     fSelectApplication selectFragment;
-    fSelectISOFileID isoSelectFragment;
+    fSelectIsoFileId selectIsoFragment;
     fCreateApplication createApplicationFragment;
     fGetKeyVersion getKeyVersionFragment;
     fDeleteApplication deleteApplicationFragment;
@@ -84,8 +84,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     private boolean applicationListPopulated;
     private byte[] baFileIDList;
     private boolean bFileIDListPopulated;
-    private byte[] baISOFileIDList;
-    private boolean isISOFileIDListPopulated;
+    private byte[] baIsoFileIdList;
+    private boolean bIsoFileIdListPopulated;
     Toolbar toolbar;
 
 
@@ -828,6 +828,57 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
+    //region Select ISO File ID
+    public void onSelectIsoFileId (){
+        scrollLog.appendTitle("Select ISO File ID");
+
+        getSupportActionBar().setTitle("Select ISO File ID");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        Bundle bundle = new Bundle();
+        bundle.putByteArray("baIsoFileIdList", baIsoFileIdList);
+        bundle.putBoolean("bIsoFileIdListPopulated", bIsoFileIdListPopulated);
+        selectIsoFragment = new fSelectIsoFileId();
+        selectIsoFragment.setArguments(bundle);
+
+        //getSupportFragmentManager().addToBackStack(null);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, selectIsoFragment).addToBackStack("commandview").commit();
+
+    }
+
+    public void onSelectIsoFileIdReturn(byte [] baIsoFileId) {
+        scrollLog.appendTitle("Select ISO File ID Return");
+
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+
+        baIsoFileIdList = null;
+        bIsoFileIdListPopulated = false;
+
+        scrollLog.appendData("ISO File ID returned = " + ByteArray.byteArrayToHexString(baIsoFileId));
+        if (baIsoFileId.length != 2) {
+            scrollLog.appendError("File ID not correct");
+        }
+
+        try {
+            MifareDesfire.statusType retValue = desfireCard.selectIsoFileId(baIsoFileId);
+            if (retValue != MifareDesfire.statusType.SUCCESS)
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            else
+                scrollLog.appendData("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+        } catch (Exception e) {
+            commandFragment.disableAllButtons();
+            scrollLog.appendError("DESFire Disconnected\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+
     //region Create Application
     public void onCreateApplication (){
         scrollLog.appendTitle("Create Application");
@@ -1116,16 +1167,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //endregion
 
     //region Get File IDs
-    public void onGetFileIDs() {
+    public void onGetFileIds() {
         try {
-            scrollLog.appendTitle("Get FileIDs");
-            MifareDesfire.DesfireResponse res = desfireCard.getFileIDs();
+            scrollLog.appendTitle("Get FileIds");
+            MifareDesfire.DesfireResponse res = desfireCard.getFileIds();
             if (res.status != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Get FileIDs Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("Get FileIds Failed: " + desfireCard.DesFireErrorMsg(res.status));
 
             if (res.data != null) {
                 if (res.data.length > 0) {
-                    scrollLog.appendData("FileIDs :" + ByteArray.byteArrayToHexString(res.data));
+                    scrollLog.appendData("FileIds :" + ByteArray.byteArrayToHexString(res.data));
                     baFileIDList = res.data;
                 }
             } else {
@@ -1137,12 +1188,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetFileIDs", e.getMessage(), e);
+            Log.e("onGetFileIds", e.getMessage(), e);
         }
     }
-    public Bundle onFragmentGetFileIDs (){
+    public Bundle onFragmentGetFileIds (){
 
-        onGetFileIDs();
+        onGetFileIds();
 
         Bundle FileListInfo = new Bundle();
         FileListInfo.putByteArray("baFileIDList",baFileIDList);
@@ -1152,44 +1203,44 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     }
 
-    public void onGetISOFileIDs(){
+    public void onGetIsoFileIds(){
         try {
-            ByteArray baISOFileIDs = new ByteArray();
+            ByteArray baIsoFileIds = new ByteArray();
 
             scrollLog.appendTitle("Get ISO File IDs");
-            MifareDesfire.DesfireResponse res = desfireCard.getISOFileIDs();
+            MifareDesfire.DesfireResponse res = desfireCard.getIsoFileIds();
             if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
 
                 //baISOFileIDList;
-                baISOFileIDs.append(res.data);
+                baIsoFileIds.append(res.data);
                 isISOFileIDListPopulated = true;
 
                 while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
                     res = desfireCard.getMoreData();
-                    baISOFileIDs.append(res.data);
+                    baIsoFileIds.append(res.data);
                 }
             }
-            baISOFileIDList = baISOFileIDs.toArray();
+            baISOFileIDList = baIsoFileIds.toArray();
 
-            if (baISOFileIDs.toArray().length > 0) {
+            if (baIsoFileIds.toArray().length > 0) {
 
-                scrollLog.appendData("ISO FileIDs :" +ByteArray.byteArrayToHexString(baISOFileIDList));
+                scrollLog.appendData("ISO FileIds :" +ByteArray.byteArrayToHexString(baISOFileIDList));
             } else {
-                scrollLog.appendData("No ISO FileIDs");
+                scrollLog.appendData("No ISO FileIds");
             }
 
         }
         catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onGetISOFileIDs", e.getMessage(), e);
+            Log.e("onGetIsoFileIds", e.getMessage(), e);
         }
     }
 
 
-    public Bundle onFragmentGetISOFileIDs (){
+    public Bundle onFragmentGetIsoFileIds (){
 
-        onGetISOFileIDs();
+        onGetIsoFileIds();
 
         Bundle appListInfo = new Bundle();
         appListInfo.putByteArray("ISOFileIDList", baISOFileIDList);

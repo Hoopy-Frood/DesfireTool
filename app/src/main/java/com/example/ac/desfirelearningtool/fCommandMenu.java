@@ -31,7 +31,7 @@ public class fCommandMenu extends Fragment{
     private Button buttonISOSelect;
     private Button buttonGetFileSettings;
     private Button buttonGetFileIDs;
-    private Button buttonGetISOFileIDs;
+    private Button buttonGetIsoFileIds;
     // Buttons - Data Manipulation
     private Button buttonReadData;
     private Button buttonWriteData;
@@ -96,7 +96,7 @@ public class fCommandMenu extends Fragment{
         buttonISOSelect = (Button) rootView.findViewById(R.id.button_ISOSelect);
         buttonGetFileSettings = (Button) rootView.findViewById(R.id.button_GetFileSettings);
         buttonGetFileIDs = (Button) rootView.findViewById(R.id.button_GetFileIDs);
-        buttonGetISOFileIDs = (Button) rootView.findViewById(R.id.button_GetISOFileIDs);
+        buttonGetIsoFileIds = (Button) rootView.findViewById(R.id.button_GetISOFileIDs);
         // Buttons - Data Manipulation
         buttonReadData = (Button) rootView.findViewById(R.id.button_ReadData);
         buttonWriteData = (Button) rootView.findViewById(R.id.button_WriteData);
@@ -187,16 +187,16 @@ public class fCommandMenu extends Fragment{
             }
         });
         buttonISOSelect.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onISOSelectApplication();
+            public void onClick(View v) {mCallback.onSelectIsoFileId();
             }
         });
         buttonGetFileIDs.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mCallback.onGetFileIDs();
+                mCallback.onGetFileIds();
             }
         });
-        buttonGetISOFileIDs.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {mCallback.onGetISOFileIDs();
+        buttonGetIsoFileIds.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onGetIsoFileIds();
             }
         });
         buttonGetFileSettings.setOnClickListener(new View.OnClickListener() {
@@ -339,7 +339,7 @@ public class fCommandMenu extends Fragment{
         buttonISOSelect.setEnabled(false);
         buttonGetFileSettings.setEnabled(false);
         buttonGetFileIDs.setEnabled(false);
-        buttonGetISOFileIDs.setEnabled(false);
+        buttonGetIsoFileIds.setEnabled(false);
         // Buttons - Data Manipulation
         buttonReadData.setEnabled(false);
         buttonWriteData.setEnabled(false);
@@ -387,7 +387,7 @@ public class fCommandMenu extends Fragment{
         buttonISOSelect.setEnabled(true);
         buttonGetFileSettings.setEnabled(true);
         buttonGetFileIDs.setEnabled(true);
-        buttonGetISOFileIDs.setEnabled(true);
+        buttonGetIsoFileIds.setEnabled(true);
         // Buttons - Data Manipulation
         buttonReadData.setEnabled(true);
         buttonWriteData.setEnabled(true);
