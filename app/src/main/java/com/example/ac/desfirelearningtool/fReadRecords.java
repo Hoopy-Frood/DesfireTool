@@ -152,7 +152,7 @@ public class fReadRecords extends Fragment {
     public void onGetFileIDs () {
         Log.d("fReadRecords", "onGetFileIDs");
 
-        Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+        Bundle fileListInfo = mCallback.onFragmentGetFileIds();
         fileList = fileListInfo.getByteArray("baFileIDList");
         fileListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
 

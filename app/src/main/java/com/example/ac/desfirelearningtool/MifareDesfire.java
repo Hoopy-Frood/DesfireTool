@@ -27,6 +27,36 @@ public class MifareDesfire {
     private ScrollLog scrollLog;
     DesfireCrypto dfCrypto;
 
+    public class ISOResponse {
+        public byte[] data;
+        public statusWord status;
+    }
+
+
+    public class DesfireResponse {
+        public byte[] data;
+        public statusType status;
+    }
+
+    public enum commMode {
+        PLAIN,
+        MAC,
+        ENCIPHERED;
+
+        public static byte getSetting(commMode cm){
+            switch (cm) {
+                case PLAIN:
+                    return 0x00;
+                case MAC:
+                    return 0x01;
+                case ENCIPHERED:
+                    return 0x03;
+                default:
+                    return 0x00;
+            }
+        }
+    }
+
     public MifareDesfire(ICardCommunicator cardCommunicator, byte[] uid, ScrollLog tv_scrollLog) throws NoSuchAlgorithmException {
         this.cardCommunicator = cardCommunicator;
         this.uid = uid;
@@ -112,10 +142,10 @@ public class MifareDesfire {
         return sendBytes((byte)0x5a, applicationId, null, commMode.MAC).status;
     }
 
-    public statusType selectIsoFileId(byte[] fileId) throws IOException {
+    public ISOResponse selectIsoFileId(byte[] isoFileId) throws IOException {
         dfCrypto.reset();
 
-        return sendBytes((byte)0x5a, applicationId, null, commMode.MAC).status;
+        return ISOSendBytes((byte)0xA4, (byte)0x00, (byte) 0x00, isoFileId, (byte) 0x00);
     }
 
 
@@ -390,57 +420,7 @@ public class MifareDesfire {
         return sendBytes((byte) 0xA7, commMode.MAC);
     }
 
-    public enum statusType {
-        SUCCESS,
-        NO_CHANGES,
-        OUT_OF_EEPROM_ERROR,
-        ILLEGAL_COMMAND_CODE,
-        INTEGRITY_ERROR,
-        NO_SUCH_KEY,
-        LENGTH_ERROR,
-        PERMISSION_DENIED,
-        PARAMETER_ERROR,
-        APPLICATION_NOT_FOUND,
-        APPL_INTEGRITY_ERROR,
-        AUTHENTICATION_ERROR,
-        ADDITONAL_FRAME,
-        BOUNDARY_ERROR,
-        PICC_INTEGRITY_ERROR,
-        COMMAND_ABORTED,
-        PICC_DISABLED_ERROR,
-        COUNT_ERROR,
-        DUPLICATE_ERROR,
-        EEPROM_ERROR,
-        FILE_NOT_FOUND,
-        FILE_INTEGRITY_ERROR,
-        PCD_AUTHENTICATION_ERROR,
-        PCD_ENCRYPTION_ERROR,
-        UNKNOWN_ERROR
-    }
 
-    public class DesfireResponse {
-        public byte[] data;
-        public statusType status;
-    }
-
-    public enum commMode {
-        PLAIN,
-        MAC,
-        ENCIPHERED;
-
-        public static byte getSetting(commMode cm){
-            switch (cm) {
-                case PLAIN:
-                    return 0x00;
-                case MAC:
-                    return 0x01;
-                case ENCIPHERED:
-                    return 0x03;
-                default:
-                    return 0x00;
-            }
-        }
-    }
 
     public DesfireResponse sendBytes (byte cmd, commMode expectedCommMode) throws IOException {
         return sendBytes(cmd, null, null, expectedCommMode);
@@ -635,6 +615,85 @@ public class MifareDesfire {
         return result;
     }
 
+    //region isoSendBytes
+    private ISOResponse ISOSendBytes(byte INS, byte P1, byte P2, byte[] cmdData, byte Le) throws IOException {
+        return ISOSendBytes(INS,P1,P2,cmdData,Le,false);
+    }
+
+    private ISOResponse ISOSendBytesISOSendBytes(byte INS, byte P1, byte P2, byte[] cmdData, byte Le, boolean sendLe) throws IOException {
+        ByteArray baCmdBuilder = new ByteArray();
+        baCmdBuilder.append((byte) 0x00).append(INS).append(P1).append(P2);
+        ISOResponse resp = new ISOResponse();
+
+        if (cmdData == null) {
+            //baCmdBuilder.append((byte) 0x00);
+        } else if (cmdData.length < 255) {
+            baCmdBuilder.append(cmdData.length, 1).append(cmdData);
+        } else {
+            return errorISOResponse ();
+        }
+        if ((cmdData == null) || (sendLe)){
+            baCmdBuilder.append(Le);
+        }
+
+        byte [] response = null;
+        try {
+            response = cardCommunicator.transceiveISO(baCmdBuilder.toArray());
+        } catch (IOException e) {
+            Log.e("sendBytes", "Card communication problem");
+            return errorISOResponse ();
+        }
+
+        if (response.length >= 2) {
+            short sStatus = (short) (response[response.length-2] + (response[response.length-1] << 8));
+            resp.status = findStatus(sStatus);
+            resp.data = new byte[response.length-2];
+            System.arraycopy(response, 0, resp.data, 0, response.length - 2);
+        } else {
+            return errorISOResponse ();
+        }
+        return resp;
+
+    }
+
+    private ISOResponse errorISOResponse () {
+        ISOResponse resp = new ISOResponse();
+        resp.status = findStatus( (short) 0x6F00);
+        resp.data = null;
+        return resp;
+    }
+
+    //endregion
+
+    //region Mifare Status
+    public enum statusType {
+        SUCCESS,
+        NO_CHANGES,
+        OUT_OF_EEPROM_ERROR,
+        ILLEGAL_COMMAND_CODE,
+        INTEGRITY_ERROR,
+        NO_SUCH_KEY,
+        LENGTH_ERROR,
+        PERMISSION_DENIED,
+        PARAMETER_ERROR,
+        APPLICATION_NOT_FOUND,
+        APPL_INTEGRITY_ERROR,
+        AUTHENTICATION_ERROR,
+        ADDITONAL_FRAME,
+        BOUNDARY_ERROR,
+        PICC_INTEGRITY_ERROR,
+        COMMAND_ABORTED,
+        PICC_DISABLED_ERROR,
+        COUNT_ERROR,
+        DUPLICATE_ERROR,
+        EEPROM_ERROR,
+        FILE_NOT_FOUND,
+        FILE_INTEGRITY_ERROR,
+        PCD_AUTHENTICATION_ERROR,
+        PCD_ENCRYPTION_ERROR,
+        UNKNOWN_ERROR
+    }
+
     private statusType findStatus(byte statusCode) {
         statusType retStatusType;
         switch (statusCode) {
@@ -792,6 +851,114 @@ public class MifareDesfire {
         }
         return returnString;
     }
+    //endregion
+
+
+    //region Mifare Status Word
+    public enum statusWord {
+        SUCCESS,                    // 9000
+        TMC_LIMIT_REACHED,          // 6283
+        WRONG_ADPU_LENGTH,          // 6700
+        WRAPPED_COMMNAD__ONGOING,   // 6985
+        FILE_NOT_FOUND,             // 6A82
+        WRONG_P1P2,                 // 6A86
+        WRONG_LC,                   // 6A87
+        WRONG_CLA,                  // 6E00
+
+        MEMORY_FAILURE,             // 6581
+        SECURITY_STATUS_NOT_SATISIFED, // 6982
+
+        READER_ISSUE,               // 0x6F00
+        UNKNOWN_ERROR               //
+    }
+
+    private statusWord findStatus(short sStatus) {
+        statusWord retStatusWord;
+        switch (sStatus) {
+            case (short) 0x9000:
+                retStatusWord = statusWord.SUCCESS;
+                break;
+            case (short) 0x6283:
+                retStatusWord = statusWord.TMC_LIMIT_REACHED;
+                break;
+            case (short) 0x6700:
+                retStatusWord = statusWord.WRONG_ADPU_LENGTH;
+                break;
+            case (short) 0x6985:
+                retStatusWord = statusWord.WRAPPED_COMMNAD__ONGOING;
+                break;
+            case (short) 0x6A82:
+                retStatusWord = statusWord.FILE_NOT_FOUND;
+                break;
+            case (short) 0x6A86:
+                retStatusWord = statusWord.WRONG_P1P2;
+                break;
+            case (short) 0x6A87:
+                retStatusWord = statusWord.WRONG_LC;
+                break;
+            case (short) 0x6E00:
+                retStatusWord = statusWord.WRONG_CLA;
+                break;
+            case (short) 0x6581:
+                retStatusWord = statusWord.MEMORY_FAILURE;
+                break;
+            case (short) 0x6982:
+                retStatusWord = statusWord.SECURITY_STATUS_NOT_SATISIFED;
+                break;
+            case (short) 0x6F00:
+                retStatusWord = statusWord.READER_ISSUE;
+                break;
+            default:
+                retStatusWord = statusWord.UNKNOWN_ERROR;
+                break;
+        }
+        return retStatusWord;
+    }
+
+    public String DesFireErrorMsg (statusWord swStatus) {
+        String returnString;
+
+        switch (swStatus) {
+            case SUCCESS:
+                returnString = "Command OK";
+                break;
+            case TMC_LIMIT_REACHED:
+                returnString = "TMCLimit / sesTMC maximum limit reached";
+                break;
+            case WRONG_ADPU_LENGTH:
+                returnString = "Wrong or inconsistent APDU Length";
+                break;
+            case WRAPPED_COMMNAD__ONGOING:
+                returnString = "Wrapped chained command or multiple pass command ongoing";
+                break;
+            case FILE_NOT_FOUND:
+                returnString = "Application or file not found, currently selected application remains selected";
+                break;
+            case WRONG_P1P2:
+                returnString = "Wrong parameter P1 and/or P2";
+                break;
+            case WRONG_LC:
+                returnString = "Wrong parameter Lc inconsistent with P1-P2";
+                break;
+            case WRONG_CLA:
+                returnString = "Wong CLA";
+                break;
+            case MEMORY_FAILURE:
+                returnString = "Memory failure";
+                break;
+            case SECURITY_STATUS_NOT_SATISIFED:
+                returnString = "Seucrity status not satisfied";
+                break;
+            case READER_ISSUE:
+                returnString = "Reader or connection issues";
+                break;
+            default:
+                returnString = "Unknown error";
+        }
+        return returnString;
+    }
+    //endregion
+
 
     public int currentAuthenticatedKey () {
         return dfCrypto.currentAuthenticatedKey;

@@ -148,7 +148,7 @@ public class fCredit extends Fragment {
     public void onGetFileIDs () {
         Log.d("fWriteData", "onGetFileIDs");
 
-        Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+        Bundle fileListInfo = mCallback.onFragmentGetFileIds();
         Log.d("onGetFileIDs", "going to fill list");
         fileList = fileListInfo.getByteArray("baFileIDList");
         fileListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");

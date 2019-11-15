@@ -247,7 +247,6 @@ public class ByteArray {
             } else {
                 index = i;
             }
-
             dst[from + index] = (byte)(n >> 8 * i);
         }
     }

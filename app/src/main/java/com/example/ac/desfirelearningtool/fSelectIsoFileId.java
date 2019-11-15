@@ -112,7 +112,7 @@ public class fSelectIsoFileId extends Fragment {
         {}
         @Override
         public void afterTextChanged(Editable s) {
-            if (IsoFileId.getText().toString().length()==6) {
+            if (IsoFileId.getText().toString().length()==4) {
                 buttonGo.setEnabled(true);
             } else {
                 buttonGo.setEnabled(false);

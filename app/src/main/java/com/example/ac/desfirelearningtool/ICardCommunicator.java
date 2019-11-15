@@ -8,6 +8,7 @@ import java.io.IOException;
 public interface ICardCommunicator {
 
     public byte[] transceive(byte[] data) throws IOException;
+    public byte[] transceiveISO(byte[] data) throws IOException;
 
     public void connect() throws IOException;
 

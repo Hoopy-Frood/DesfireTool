@@ -116,6 +116,22 @@ public class AndroidCommunicator implements ICardCommunicator {
         }
     }
 
+    public byte[] transceiveISO(String sData) throws IOException {
+        return transceiveISO(ByteArray.hexStringToByteArray(sData));
+    }
+
+    public byte[] transceiveISO(byte[] data) throws IOException {
+        Log.v("Transceive CMD:", ByteArray.byteArrayToHexString(data));
+        scrollLog.append("->" + ByteArray.byteArrayToHexString(data));
+        byte [] answer = isoDep.transceive(data);
+        Log.v("Transceive RSP:", ByteArray.byteArrayToHexString(answer));
+        scrollLog.append("<-" + ByteArray.byteArrayToHexString(answer));
+
+        return answer;
+    }
+
+
+
     public void connect() throws IOException {
         isoDep.connect();
         isoDep.setTimeout(500);

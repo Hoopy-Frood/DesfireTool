@@ -77,7 +77,7 @@ public class fClearRecordFile extends Fragment {
 
                 if (bFileIDListPopulated == true) {
                     if (position == lvFileIDList.getAdapter().getCount() - 1) {
-                        Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+                        Bundle fileListInfo = mCallback.onFragmentGetFileIds();
                         baFileIDList = fileListInfo.getByteArray("baFileIDList");
                         bFileIDListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
 
@@ -87,7 +87,7 @@ public class fClearRecordFile extends Fragment {
                         etFileID.setText(ByteArray.byteToHexString(baFileIDList[position]));
                     }
                 } else {
-                    Bundle fileListInfo = mCallback.onFragmentGetFileIDs();
+                    Bundle fileListInfo = mCallback.onFragmentGetFileIds();
                     baFileIDList = fileListInfo.getByteArray("baFileIDList");
                     bFileIDListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
 

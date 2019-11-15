@@ -150,9 +150,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         applicationList = null;
         baFileIDList = null;
-        baISOFileIDList = null;
+        baIsoFileIdList = null;
         boolWrapperMode = false;
-        isISOFileIDListPopulated = false;
+        bIsoFileIdListPopulated = false;
 
         buttonClearScreen.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -164,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("DESFire Tool", scrollLog.getText());
                 clipboard.setPrimaryClip(clip);
+                Toast.makeText(MainActivity.this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
                 Toast.makeText(MainActivity.this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
             }
         });
@@ -865,11 +866,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
 
         try {
-            MifareDesfire.statusType retValue = desfireCard.selectIsoFileId(baIsoFileId);
-            if (retValue != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            MifareDesfire.ISOResponse retValue = desfireCard.selectIsoFileId(baIsoFileId);
+            if (retValue.status != MifareDesfire.statusWord.SUCCESS)
+                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue.status));
             else
-                scrollLog.appendData("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
+                scrollLog.appendData("Select OK: " + ByteArray.byteArrayToHexString(baIsoFileId));
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1213,18 +1214,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
                 //baISOFileIDList;
                 baIsoFileIds.append(res.data);
-                isISOFileIDListPopulated = true;
+                bIsoFileIdListPopulated = true;
 
                 while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
                     res = desfireCard.getMoreData();
                     baIsoFileIds.append(res.data);
                 }
             }
-            baISOFileIDList = baIsoFileIds.toArray();
+            baIsoFileIdList = baIsoFileIds.toArray();
 
             if (baIsoFileIds.toArray().length > 0) {
 
-                scrollLog.appendData("ISO FileIds :" +ByteArray.byteArrayToHexString(baISOFileIDList));
+                scrollLog.appendData("ISO FileIds :" +ByteArray.byteArrayToHexString(baIsoFileIdList));
             } else {
                 scrollLog.appendData("No ISO FileIds");
             }
@@ -1243,8 +1244,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         onGetIsoFileIds();
 
         Bundle appListInfo = new Bundle();
-        appListInfo.putByteArray("ISOFileIDList", baISOFileIDList);
-        appListInfo.putBoolean("isISOFileIDListPopulated", isISOFileIDListPopulated);
+        appListInfo.putByteArray("ISOFileIDList", baIsoFileIdList);
+        appListInfo.putBoolean("isISOFileIDListPopulated", bIsoFileIdListPopulated);
 
         return appListInfo;
 
