@@ -620,7 +620,7 @@ public class MifareDesfire {
         return ISOSendBytes(INS,P1,P2,cmdData,Le,false);
     }
 
-    private ISOResponse ISOSendBytesISOSendBytes(byte INS, byte P1, byte P2, byte[] cmdData, byte Le, boolean sendLe) throws IOException {
+    private ISOResponse ISOSendBytes(byte INS, byte P1, byte P2, byte[] cmdData, byte Le, boolean sendLe) throws IOException {
         ByteArray baCmdBuilder = new ByteArray();
         baCmdBuilder.append((byte) 0x00).append(INS).append(P1).append(P2);
         ISOResponse resp = new ISOResponse();
