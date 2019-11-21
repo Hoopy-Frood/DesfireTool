@@ -645,7 +645,7 @@ public class MifareDesfire {
         }
 
         if (response.length >= 2) {
-            short sStatus = (short) (response[response.length-2] + (response[response.length-1] << 8));
+            short sStatus = (short) (response[response.length-1] + (response[response.length-2] << 8));
             resp.status = findStatus(sStatus);
             resp.data = new byte[response.length-2];
             System.arraycopy(response, 0, resp.data, 0, response.length - 2);
