@@ -970,6 +970,16 @@ public class MifareDesfire {
 
     public statusType authenticate(byte authType, byte keyNumber, byte[] key) throws Exception {
 
+        byte [] retainedTI = new byte[4];
+        ByteArray retainedTMI = new ByteArray();
+        int retainedCmdCtr = 0;
+        if (authType == 0x77) {
+            System.arraycopy(dfCrypto.EV2_TI, 0, retainedTI, 0, 4);
+            retainedCmdCtr = dfCrypto.EV2_CmdCtr;
+            retainedTMI.append(dfCrypto.baEV2_TMI.toArray());
+            Log.d("authenticate", "Retained baEV2_TMI = "+ retainedTMI.toHexString());
+        }
+
 
         dfCrypto.initialize(authType, key);
 
@@ -1003,8 +1013,15 @@ public class MifareDesfire {
             return statusType.PCD_AUTHENTICATION_ERROR;
         }
         dfCrypto.currentAuthenticatedKey = keyNumber;
-        return statusType.SUCCESS;
 
+        if (authType == 0x77) {
+            System.arraycopy(retainedTI, 0, dfCrypto.EV2_TI, 0, 4);
+            dfCrypto.EV2_CmdCtr = retainedCmdCtr;
+            dfCrypto.baEV2_TMI.clear();
+            dfCrypto.baEV2_TMI.append(retainedTMI.toArray());
+            Log.d("authenticate", "Restored baEV2_TMI = " + dfCrypto.baEV2_TMI.toHexString());
+        }
+        return statusType.SUCCESS;
     }
 
     public boolean connect() throws IOException {

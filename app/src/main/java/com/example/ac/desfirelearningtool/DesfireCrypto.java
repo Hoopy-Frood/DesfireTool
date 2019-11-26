@@ -23,10 +23,11 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class DesfireCrypto {
 
-    public final byte MODE_AUTHD40 = (byte) 0x0A;
-    public final byte MODE_AUTHISO = (byte) 0x1A;
-    public final byte MODE_AUTHAES = (byte) 0xAA;
-    public final byte MODE_AUTHEV2 = (byte) 0x71;
+    public final byte MODE_AUTHD40 = (byte) 0x0A;       // AuthenticateD40 DES, 3DES
+    public final byte MODE_AUTHISO = (byte) 0x1A;       // AuthenticateEV1 3DES, 3k3DES
+    public final byte MODE_AUTHAES = (byte) 0xAA;       // AuthenticateEV1 AES
+    public final byte MODE_AUTHEV2 = (byte) 0x71;       // AuthenticateEV2 First
+    public final byte MODE_AUTHEV2NF = (byte) 0x77;     // AuthenticateEV2 NonFirst
     public final byte KEYTYPE_DES = 0;
     public final byte KEYTYPE_3DES = 1;
     public final byte KEYTYPE_3K3DES = 2;
@@ -46,7 +47,8 @@ public class DesfireCrypto {
 
     private SecretKey EV2_KeySpecSesAuthENC, EV2_KeySpecSesAuthMAC; // EV2 Session key SPEC for Enc and Mac
     private byte[] EV2_K1, EV2_K2;
-    private byte[] EV2_TI;
+    private byte[]EV2_TMIK1,EV2_TMIK2;
+    protected byte[] EV2_TI;
     public int EV2_CmdCtr;
     private byte[] nullBytes8, nullBytes16;
 
@@ -57,6 +59,9 @@ public class DesfireCrypto {
     public int encryptedLength;  // specified dataLength at the first AF for Read Data
     public int currentAuthenticatedKey;
 
+    public boolean trackTMI;
+    public ByteArray baEV2_TMI;  // Txn MAC Input
+
 
     public DesfireCrypto() {
         this.randomGenerator = new SecureRandom();
@@ -65,6 +70,8 @@ public class DesfireCrypto {
         EV2_TI = new byte[4];
         nullBytes8 = new byte[8];
         nullBytes16 = new byte[16];
+        trackTMI = false;
+        baEV2_TMI = new ByteArray();
         reset();
 
 
@@ -83,6 +90,8 @@ public class DesfireCrypto {
         currentAuthenticatedKey = -1;
         Arrays.fill(EV2_TI, (byte) 0);
         EV2_CmdCtr = 0;
+        baEV2_TMI.clear();
+        trackTMI = false;
 
         Arrays.fill(nullBytes8, (byte) 0);
         Arrays.fill(nullBytes16, (byte) 0);
@@ -94,8 +103,10 @@ public class DesfireCrypto {
         boolean res;
 
         reset();
-        authMode = authToSet;
-
+        if (authToSet == MODE_AUTHEV2NF)
+            authMode = MODE_AUTHEV2;
+        else
+            authMode = authToSet;
         genKeySpec(key);
 
         return true;

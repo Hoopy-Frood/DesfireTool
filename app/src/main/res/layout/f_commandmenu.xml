@@ -564,6 +564,15 @@
                 android:textAllCaps="false"
                 android:textSize="12sp" />
 
+            <Button
+                android:id="@+id/button_TestDesfireLight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/button_CreateTestPerso"
+                android:layout_alignBottom="@+id/button_CreateTestPerso"
+                android:text="Test\nDesfire Light"
+                android:textAllCaps="false"
+                android:textSize="12sp" />
 
 
         </RelativeLayout>

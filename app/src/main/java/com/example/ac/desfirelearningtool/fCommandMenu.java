@@ -56,8 +56,9 @@ public class fCommandMenu extends Fragment{
     private Button buttonCreateFile;
     private Button buttonDeleteFile;
     private Button buttonChangeFileSettings;
-    // Buttons - File Management
+    // Buttons - Testing
     private Button buttonCreateTestPerso;
+    private Button buttonTestDesfireLight;
     // TEST
     private Button buttonTestAll;
     private Button buttonTestCurrent;
@@ -121,9 +122,9 @@ public class fCommandMenu extends Fragment{
         buttonCreateFile = (Button) rootView.findViewById(R.id.button_CreateFile);
         buttonDeleteFile = (Button) rootView.findViewById(R.id.button_DeleteFile);
         buttonChangeFileSettings = (Button) rootView.findViewById(R.id.button_ChangeFileSettings);
-        // Buttons - File Management
+        // Buttons - Testing
         buttonCreateTestPerso = (Button) rootView.findViewById(R.id.button_CreateTestPerso);
-
+        buttonTestDesfireLight = (Button) rootView.findViewById(R.id.button_TestDesfireLight);
         //Button - Test
         buttonTestAll = (Button) rootView.findViewById(R.id.button_TestAll);
         buttonTestCurrent = (Button) rootView.findViewById(R.id.button_TestCurrent);
@@ -301,6 +302,9 @@ public class fCommandMenu extends Fragment{
         buttonCreateTestPerso.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { mCallback.onCreateTestPerso(); }
         });
+        buttonTestDesfireLight.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { mCallback.onTestDesfireLight(); }
+        });
         buttonSetConfiguration.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { mCallback.onSetConfiguration();
             }
@@ -366,6 +370,7 @@ public class fCommandMenu extends Fragment{
         buttonChangeFileSettings.setEnabled(false);
         // Buttons - Test Perso
         buttonCreateTestPerso.setEnabled(false);
+        buttonTestDesfireLight.setEnabled(false);
         buttonTestAll.setEnabled(false);
         buttonTestCurrent.setEnabled(false);
 
@@ -414,6 +419,7 @@ public class fCommandMenu extends Fragment{
         buttonChangeFileSettings.setEnabled(false);
         // Buttons - Test Perso
         buttonCreateTestPerso.setEnabled(true);
+        buttonTestDesfireLight.setEnabled(true);
         buttonTestAll.setEnabled(true);
         buttonTestCurrent.setEnabled(true);
     }

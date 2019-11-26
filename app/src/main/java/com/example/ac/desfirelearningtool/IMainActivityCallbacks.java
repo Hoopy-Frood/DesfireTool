@@ -84,6 +84,7 @@ public interface IMainActivityCallbacks {
 
     // Testing
     void onCreateTestPerso();
+    void onTestDesfireLight();
     void onAuthISOTest(int keySize);
     void onAuthAESTest();
     void onAuthEV2Test();
