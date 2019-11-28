@@ -153,6 +153,9 @@ public class fAuthenticate extends Fragment {
             case R.id.radio_authEV2:
                 bAuthCmd = (byte)0x71;
                 break;
+            case R.id.radio_authEV2NF:
+                bAuthCmd = (byte)0x77;
+                break;
         }
     }
 
@@ -178,6 +181,7 @@ public class fAuthenticate extends Fragment {
                     break;
                 case (byte) 0xAA:
                 case (byte) 0x71:
+                case (byte) 0x77:
                     etKey.setText("00000000000000000000000000000000");
                     inputKeyLength = 32;
                     break;
@@ -204,6 +208,7 @@ public class fAuthenticate extends Fragment {
                 break;
             case (byte)0xAA:
             case (byte)0x71:
+            case (byte)0x77:
                 if ((inputKeyLength != 32)) {
                     Toast.makeText(getActivity().getApplicationContext(), "Please ensure Key is 16 bytes", Toast.LENGTH_SHORT).show();
                     isIncompleteForm = true;

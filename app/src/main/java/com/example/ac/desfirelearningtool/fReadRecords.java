@@ -32,7 +32,7 @@ public class fReadRecords extends Fragment {
     private EditText etNumOfRecords;
     private RadioGroup commModeGroup;
     private Button buttonGetFileID;
-    private MifareDesfire.commMode selCommMode;
+    private Desfire.commMode selCommMode;
     private int iOffsetRecord, iNumOfRecords;
 
     private byte [] fileList;
@@ -79,7 +79,7 @@ public class fReadRecords extends Fragment {
 
         }
 
-        selCommMode = MifareDesfire.commMode.PLAIN;
+        selCommMode = Desfire.commMode.PLAIN;
 
         scrollLog = mCallback.getScrollLogObject ();
 
@@ -136,13 +136,13 @@ public class fReadRecords extends Fragment {
         // Check which radio button was clicked
         switch(checkedId) {
             case R.id.radio_PlainCommunication:
-                selCommMode = MifareDesfire.commMode.PLAIN;
+                selCommMode = Desfire.commMode.PLAIN;
                 break;
             case R.id.radio_MACCommunication:
-                selCommMode = MifareDesfire.commMode.MAC;
+                selCommMode = Desfire.commMode.MAC;
                 break;
             case R.id.radio_EncryptedCommunication:
-                selCommMode = MifareDesfire.commMode.ENCIPHERED;
+                selCommMode = Desfire.commMode.ENCIPHERED;
                 break;
         }
     }

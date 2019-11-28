@@ -33,11 +33,12 @@ import com.google.android.gms.ads.MobileAds;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.sql.Array;
 import java.util.Arrays;
 
-import static com.example.ac.desfirelearningtool.MifareDesfire.commMode.ENCIPHERED;
-import static com.example.ac.desfirelearningtool.MifareDesfire.commMode.MAC;
-import static com.example.ac.desfirelearningtool.MifareDesfire.commMode.PLAIN;
+import static com.example.ac.desfirelearningtool.Desfire.commMode.ENCIPHERED;
+import static com.example.ac.desfirelearningtool.Desfire.commMode.MAC;
+import static com.example.ac.desfirelearningtool.Desfire.commMode.PLAIN;
 
 
 public class MainActivity extends AppCompatActivity implements IMainActivityCallbacks {
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     protected NfcAdapter nfcAdapter;
 
     private AndroidCommunicator communicator;
-    private MifareDesfire desfireCard;
+    private Desfire desfireCard;
 
     private Button buttonClearScreen;
     private Button buttonCopyLog;
@@ -462,9 +463,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         scrollLog.appendTitle("Get Card UID");
         try {
 
-            MifareDesfire.DesfireResponse res = desfireCard.getCardUID();
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get Card UID Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.getCardUID();
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
             scrollLog.appendData("Decrypted Card UID: " + ByteArray.byteArrayToHexString(res.data));
@@ -481,9 +482,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Get Application ID");
-            MifareDesfire.DesfireResponse res = desfireCard.getApplicationIDs();
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get Application ID Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.getApplicationIDs();
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
             applicationList = res.data;
@@ -520,8 +521,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onGetFreeMem() {
 
         try {
-            scrollLog.appendTitle("Get Get Free Memory");
-            MifareDesfire.DesfireResponse res = desfireCard.getFreeMem();
+            scrollLog.appendTitle("Get Free Memory");
+            Desfire.DesfireResponse res = desfireCard.getFreeMem();
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
+                return;
+            }
 
             ByteBuffer bb = ByteBuffer.wrap(res.data);
             bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -540,10 +545,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Get Key Settings");
-            MifareDesfire.DesfireResponse res = desfireCard.getKeySettings();
+            Desfire.DesfireResponse res = desfireCard.getKeySettings();
 
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get Key Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get Key Settings Failed: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
             scrollLog.appendStatus("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
@@ -589,13 +594,13 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public byte[] onFragmentGetKeySettings() {
-        MifareDesfire.DesfireResponse res;
+        Desfire.DesfireResponse res;
         try {
             scrollLog.appendTitle("Get Key Settings");
             res = desfireCard.getKeySettings();
 
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get Key Settins Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get Key Settins Failed: " + Desfire.DesfireErrorMsg(res.status));
                 return null;
             }
             scrollLog.appendStatus("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
@@ -647,9 +652,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Get DF Names");
-            MifareDesfire.DesfireResponse res = desfireCard.getDFNames();
+            Desfire.DesfireResponse res = desfireCard.getDFNames();
 
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+            if ((res.status == Desfire.statusType.SUCCESS) || (res.status == Desfire.statusType.ADDITONAL_FRAME)) {
                 if ((res.data == null) || (res.data.length == 0)) {
                     scrollLog.appendData("No DF name returned");
                     return;
@@ -657,12 +662,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
                 scrollLog.appendData("Application 1: " + ByteArray.byteArrayToHexString(res.data));
             } else {
-                scrollLog.appendError("Error: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
 
             int i = 2;
-            while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+            while (res.status == Desfire.statusType.ADDITONAL_FRAME) {
                 res = desfireCard.getMoreData();
                 scrollLog.appendData("Application " + i + ": " + ByteArray.byteArrayToHexString(res.data));
                 i++;
@@ -711,9 +716,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.statusType retValue = desfireCard.changeKey(bKeyToChange, bKeyVersion, baNewKey, baOldKey);
-            if (retValue != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Change Key Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            Desfire.statusType retValue = desfireCard.changeKey(bKeyToChange, bKeyVersion, baNewKey, baOldKey);
+            if (retValue != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Change Key Failed: " + Desfire.DesfireErrorMsg(retValue));
             else
                 scrollLog.appendStatus("Change Key Success");
 
@@ -748,9 +753,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.statusType res = desfireCard.authenticate(bAuthCmd, bKeyNo, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            Desfire.statusType res = desfireCard.authenticate(bAuthCmd, bKeyNo, key);
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
             } else {
                 scrollLog.appendStatus("Authentication Successful");
 
@@ -802,9 +807,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
 
         try {
-            MifareDesfire.statusType retValue = desfireCard.selectApplication(baAppId);
-            if (retValue != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            Desfire.statusType retValue = desfireCard.selectApplication(baAppId);
+            if (retValue != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(retValue));
             else
                 scrollLog.appendData("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
         } catch (Exception e) {
@@ -852,9 +857,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
 
         try {
-            MifareDesfire.ISOResponse retValue = desfireCard.selectIsoFileId(baIsoFileId);
-            if (retValue.status != MifareDesfire.statusWord.SUCCESS)
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(retValue.status));
+            Desfire.ISOResponse retValue = desfireCard.selectIsoFileId(baIsoFileId);
+            if (retValue.status != Desfire.statusWord.SUCCESS)
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(retValue.status));
             else
                 scrollLog.appendData("Select OK: " + ByteArray.byteArrayToHexString(baIsoFileId));
         } catch (Exception e) {
@@ -897,9 +902,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
 
         try {
-            MifareDesfire.statusType mfResult = desfireCard.createApplication(baAppId, bKeySetting1, bKeySetting2, baISOName, DFName);
-            if (mfResult != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(mfResult));
+            Desfire.statusType mfResult = desfireCard.createApplication(baAppId, bKeySetting1, bKeySetting2, baISOName, DFName);
+            if (mfResult != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Create Application Failed: " + Desfire.DesfireErrorMsg(mfResult));
             else
                 scrollLog.appendData("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
         } catch (Exception e) {
@@ -944,9 +949,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
 
         try {
-            MifareDesfire.statusType retValue = desfireCard.deleteApplication(baAppId);
-            if (retValue != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Delete Application Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            Desfire.statusType retValue = desfireCard.deleteApplication(baAppId);
+            if (retValue != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Delete Application Failed: " + Desfire.DesfireErrorMsg(retValue));
             else
                 scrollLog.appendData("Delete Application OK: " + ByteArray.byteArrayToHexString(baAppId));
         } catch (Exception e) {
@@ -983,9 +988,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         commandFragment.enableAllButtons();
 
         try {
-            MifareDesfire.DesfireResponse retValue = desfireCard.getKeyVersion(iKeyToInquire);
-            if (retValue.status != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Get Key Version Failed: " + desfireCard.DesFireErrorMsg(retValue.status));
+            Desfire.DesfireResponse retValue = desfireCard.getKeyVersion(iKeyToInquire);
+            if (retValue.status != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Get Key Version Failed: " + Desfire.DesfireErrorMsg(retValue.status));
             else
                 scrollLog.appendData("Key " + iKeyToInquire + " version is " + ByteArray.byteArrayToHexString(retValue.data));
 
@@ -1002,11 +1007,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Format PICC");
-            MifareDesfire.statusType res = desfireCard.formatPICC();
+            Desfire.statusType res = desfireCard.formatPICC();
 
-            if (res == MifareDesfire.statusType.AUTHENTICATION_ERROR)
+            if (res == Desfire.statusType.AUTHENTICATION_ERROR)
                 scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
-            if (res == MifareDesfire.statusType.SUCCESS)
+            if (res == Desfire.statusType.SUCCESS)
                 scrollLog.appendStatus("Format PICC Successful");
         } catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1021,11 +1026,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Commit Transaction");
-            MifareDesfire.DesfireResponse res = desfireCard.commitTransaction();
+            Desfire.DesfireResponse res = desfireCard.commitTransaction();
 
-            if (res.status == MifareDesfire.statusType.AUTHENTICATION_ERROR)
+            if (res.status == Desfire.statusType.AUTHENTICATION_ERROR)
                 scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
-            if (res.status == MifareDesfire.statusType.SUCCESS)
+            if (res.status == Desfire.statusType.SUCCESS)
                 scrollLog.appendStatus("Commit Successful");
         } catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1040,11 +1045,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Abort Transaction");
-            MifareDesfire.DesfireResponse res = desfireCard.abortTransaction();
+            Desfire.DesfireResponse res = desfireCard.abortTransaction();
 
-            if (res.status == MifareDesfire.statusType.AUTHENTICATION_ERROR)
+            if (res.status == Desfire.statusType.AUTHENTICATION_ERROR)
                 scrollLog.appendError("Authentication Error: PICC Master Key is not authenticated");
-            if (res.status == MifareDesfire.statusType.SUCCESS)
+            if (res.status == Desfire.statusType.SUCCESS)
                 scrollLog.appendStatus("Abort Successful");
         } catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -1084,9 +1089,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("MainActivity", "AccessRights " + ByteArray.byteArrayToHexString(baAccessBytes));
         Log.d("MainActivity", "iFileSize = " + iFileSize);
         try {
-            MifareDesfire.statusType retValue = desfireCard.createDataFile(bFileType, bFileId, baISOName, bCommSetting, baAccessBytes, iFileSize);
-            if (retValue != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            Desfire.statusType retValue = desfireCard.createDataFile(bFileType, bFileId, baISOName, bCommSetting, baAccessBytes, iFileSize);
+            if (retValue != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Create Data File Failed: " + Desfire.DesfireErrorMsg(retValue));
             else
                 scrollLog.appendData("Create Data File OK");
         } catch (Exception e) {
@@ -1110,9 +1115,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("MainActivity", "iRecordSize = " + iRecordSize);
         Log.d("MainActivity", "iNumOfRecords = " + iNumOfRecords);
         try {
-            MifareDesfire.statusType retValue = desfireCard.createRecordFile(bFileType, bFileId, baISOName, bCommSetting, baAccessBytes, iRecordSize, iNumOfRecords);
-            if (retValue != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            Desfire.statusType retValue = desfireCard.createRecordFile(bFileType, bFileId, baISOName, bCommSetting, baAccessBytes, iRecordSize, iNumOfRecords);
+            if (retValue != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Create Record File Failed: " + Desfire.DesfireErrorMsg(retValue));
             else
                 scrollLog.appendData("Create Record File OK");
         } catch (Exception e) {
@@ -1137,9 +1142,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("MainActivity", "bOptionByte " + ByteArray.byteArrayToHexString(new byte[]{bOptionByte}));
 
         try {
-            MifareDesfire.statusType retValue = desfireCard.createValueFile(bFileId, bCommSetting, baAccessBytes, iLowerLimit, iUpperLimit, iValue, bOptionByte);
-            if (retValue != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            Desfire.statusType retValue = desfireCard.createValueFile(bFileId, bCommSetting, baAccessBytes, iLowerLimit, iUpperLimit, iValue, bOptionByte);
+            if (retValue != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Create Value File Failed: " + Desfire.DesfireErrorMsg(retValue));
             else
                 scrollLog.appendData("Create Value File OK");
         } catch (Exception e) {
@@ -1154,9 +1159,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onGetFileIds() {
         try {
             scrollLog.appendTitle("Get FileIds");
-            MifareDesfire.DesfireResponse res = desfireCard.getFileIds();
-            if (res.status != MifareDesfire.statusType.SUCCESS)
-                scrollLog.appendError("Get FileIds Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.getFileIds();
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
+                baFileIDList = null;
+                return;
+            }
 
             if (res.data != null) {
                 if (res.data.length > 0) {
@@ -1192,17 +1200,20 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             ByteArray baIsoFileIds = new ByteArray();
 
             scrollLog.appendTitle("Get ISO File IDs");
-            MifareDesfire.DesfireResponse res = desfireCard.getIsoFileIds();
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+            Desfire.DesfireResponse res = desfireCard.getIsoFileIds();
+            if ((res.status == Desfire.statusType.SUCCESS) || (res.status == Desfire.statusType.ADDITONAL_FRAME)) {
 
                 //baISOFileIDList;
                 baIsoFileIds.append(res.data);
                 bIsoFileIdListPopulated = true;
 
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                while (res.status == Desfire.statusType.ADDITONAL_FRAME) {
                     res = desfireCard.getMoreData();
                     baIsoFileIds.append(res.data);
                 }
+            } else {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
+                return;
             }
             baIsoFileIdList = baIsoFileIds.toArray();
 
@@ -1276,9 +1287,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse res = desfireCard.getFileSettings(bFileID);
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get File Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.getFileSettings(bFileID);
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get File Settings Failed: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
 
@@ -1373,9 +1384,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Bundle bundleFileSettings = new Bundle();
         try {
 
-            MifareDesfire.DesfireResponse res = desfireCard.getFileSettings(bFileID);
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get File Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.getFileSettings(bFileID);
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get File Settings Failed: " + Desfire.DesfireErrorMsg(res.status));
                 bundleFileSettings.putBoolean("boolCommandSuccess", false);
                 return bundleFileSettings;
             }
@@ -1464,9 +1475,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse res = desfireCard.deleteFile(bFileID);
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Delete File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.deleteFile(bFileID);
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Delete File Failed: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
 
@@ -1499,7 +1510,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
-    public void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode selCommMode) {
+    public void onReadDataReturn(byte bFileID, int iOffset, int iLength, Desfire.commMode selCommMode) {
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1509,10 +1520,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
             ByteArray baRecvData = new ByteArray();
 
-            MifareDesfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+            Desfire.DesfireResponse res = desfireCard.readData(bFileID, iOffset, iLength, selCommMode);
+            if ((res.status == Desfire.statusType.SUCCESS) || (res.status == Desfire.statusType.ADDITONAL_FRAME)) {
 
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                while (res.status == Desfire.statusType.ADDITONAL_FRAME) {
                     res = desfireCard.getMoreData(selCommMode);
                 }
                 baRecvData.append(res.data);
@@ -1522,8 +1533,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (baRecvData.toArray().length > 0)
                 scrollLog.appendData("Read Data:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
             else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                if (res.status != Desfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read File Failed: " + Desfire.DesfireErrorMsg(res.status));
                     return;
                 }
 
@@ -1556,7 +1567,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 .replace(R.id.fragment_container, getWriteDataFragment).addToBackStack("commandview").commit();
     }
 
-    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte[] bDataToWrite, MifareDesfire.commMode selCommMode) {
+    public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte[] bDataToWrite, Desfire.commMode selCommMode) {
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1566,12 +1577,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             // TODO: separate data blocks if too long
-            MifareDesfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS)) {
+            Desfire.DesfireResponse res = desfireCard.writeData(bFileID, iOffset, iLength, bDataToWrite, selCommMode);
+            if ((res.status == Desfire.statusType.SUCCESS)) {
                 scrollLog.appendStatus("Write Data File Success");
             } else {
-                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                Log.d("onWriteDataReturn", "writeData return: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("WriteFile Failed: " + Desfire.DesfireErrorMsg(res.status));
+                Log.d("onWriteDataReturn", "writeData return: " + Desfire.DesfireErrorMsg(res.status));
             }
 
         } catch (Exception e) {
@@ -1601,7 +1612,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
-    public void onReadRecordsReturn(byte bFileID, int iOffsetRecord, int iNumOfRecords, MifareDesfire.commMode selCommMode) {
+    public void onReadRecordsReturn(byte bFileID, int iOffsetRecord, int iNumOfRecords, Desfire.commMode selCommMode) {
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1613,14 +1624,14 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
             ByteArray baRecvData = new ByteArray();
 
-            if (selCommMode == MifareDesfire.commMode.ENCIPHERED) {
+            if (selCommMode == Desfire.commMode.ENCIPHERED) {
                 recordLength = desfireCard.getRecordLength(bFileID);
             }
 
-            MifareDesfire.DesfireResponse res = desfireCard.readRecords(bFileID, iOffsetRecord, iNumOfRecords, selCommMode, recordLength);
-            if ((res.status == MifareDesfire.statusType.SUCCESS) || (res.status == MifareDesfire.statusType.ADDITONAL_FRAME)) {
+            Desfire.DesfireResponse res = desfireCard.readRecords(bFileID, iOffsetRecord, iNumOfRecords, selCommMode, recordLength);
+            if ((res.status == Desfire.statusType.SUCCESS) || (res.status == Desfire.statusType.ADDITONAL_FRAME)) {
 
-                while (res.status == MifareDesfire.statusType.ADDITONAL_FRAME) {
+                while (res.status == Desfire.statusType.ADDITONAL_FRAME) {
                     res = desfireCard.getMoreData(selCommMode);
                 }
                 baRecvData.append(res.data);
@@ -1630,8 +1641,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             if (baRecvData.toArray().length > 0)
                 scrollLog.appendData("Read Record:" + ByteArray.byteArrayToHexString(baRecvData.toArray()));
             else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Read Record File Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                if (res.status != Desfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Read Record File Failed: " + Desfire.DesfireErrorMsg(res.status));
                     return;
                 }
 
@@ -1665,7 +1676,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
-    public void onWriteRecordReturn(byte bFileID, int iRecordNum, int iSizeToWrite, byte[] bDataToWrite, MifareDesfire.commMode selCommMode) {
+    public void onWriteRecordReturn(byte bFileID, int iRecordNum, int iSizeToWrite, byte[] bDataToWrite, Desfire.commMode selCommMode) {
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1675,11 +1686,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
 
             // TODO: separate data blocks if too long
-            MifareDesfire.DesfireResponse res = desfireCard.writeRecord(bFileID, iRecordNum, iSizeToWrite, bDataToWrite, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS)) {
+            Desfire.DesfireResponse res = desfireCard.writeRecord(bFileID, iRecordNum, iSizeToWrite, bDataToWrite, selCommMode);
+            if ((res.status == Desfire.statusType.SUCCESS)) {
                 scrollLog.appendStatus("Write Record File Success");
             } else {
-                scrollLog.appendError("WriteFile Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("WriteFile Failed: " + Desfire.DesfireErrorMsg(res.status));
             }
 
         } catch (Exception e) {
@@ -1718,9 +1729,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse res = desfireCard.clearRecordFile(bFileID);
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Clear Record Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.clearRecordFile(bFileID);
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Clear Record Failed: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
 
@@ -1753,16 +1764,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     //
-    public void onGetValueReturn(byte bFileID, MifareDesfire.commMode curCommMode) {
+    public void onGetValueReturn(byte bFileID, Desfire.commMode curCommMode) {
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse res = desfireCard.getValue(bFileID, curCommMode);
-            if (res.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get File Settings Failed: " + desfireCard.DesFireErrorMsg(res.status));
+            Desfire.DesfireResponse res = desfireCard.getValue(bFileID, curCommMode);
+            if (res.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get File Settings Failed: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
 
@@ -1770,8 +1781,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 Log.d("onGetValueReturn", "Value Byte: " + ByteArray.byteArrayToHexString(res.data));
                 scrollLog.appendData("Value:" + ByteBuffer.wrap(res.data).order(ByteOrder.LITTLE_ENDIAN).getInt());
             } else {
-                if (res.status != MifareDesfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Get Value Failed: " + desfireCard.DesFireErrorMsg(res.status));
+                if (res.status != Desfire.statusType.SUCCESS) {
+                    scrollLog.appendError("Get Value Failed: " + Desfire.DesfireErrorMsg(res.status));
                     return;
                 }
                 scrollLog.appendData("No data returned");
@@ -1804,7 +1815,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
-    public void onCreditReturn(byte bFileID, int iCreditValue, MifareDesfire.commMode selCommMode) {
+    public void onCreditReturn(byte bFileID, int iCreditValue, Desfire.commMode selCommMode) {
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1812,12 +1823,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse res = desfireCard.credit(bFileID, iCreditValue, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS)) {
+            Desfire.DesfireResponse res = desfireCard.credit(bFileID, iCreditValue, selCommMode);
+            if ((res.status == Desfire.statusType.SUCCESS)) {
                 scrollLog.appendStatus("Credit Success");
             } else {
-                scrollLog.appendError("Credit Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                Log.d("onCreditReturn", "Error returned: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("Credit Failed: " + Desfire.DesfireErrorMsg(res.status));
+                Log.d("onCreditReturn", "Error returned: " + Desfire.DesfireErrorMsg(res.status));
             }
 
         } catch (Exception e) {
@@ -1848,7 +1859,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
-    public void onDebitReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode selCommMode) {
+    public void onDebitReturn(byte bFileID, int iDebitValue, Desfire.commMode selCommMode) {
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1856,12 +1867,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse res = desfireCard.debit(bFileID, iDebitValue, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS)) {
+            Desfire.DesfireResponse res = desfireCard.debit(bFileID, iDebitValue, selCommMode);
+            if ((res.status == Desfire.statusType.SUCCESS)) {
                 scrollLog.appendStatus("Debit Success");
             } else {
-                scrollLog.appendError("Debit Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                Log.d("onDebitReturn", "Error returned: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("Debit Failed: " + Desfire.DesfireErrorMsg(res.status));
+                Log.d("onDebitReturn", "Error returned: " + Desfire.DesfireErrorMsg(res.status));
             }
 
         } catch (Exception e) {
@@ -1892,7 +1903,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
 
-    public void onLimitedCreditReturn(byte bFileID, int iLCValue, MifareDesfire.commMode selCommMode) {
+    public void onLimitedCreditReturn(byte bFileID, int iLCValue, Desfire.commMode selCommMode) {
 
         getSupportActionBar().setTitle("DESFire Tool");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -1900,12 +1911,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         getSupportFragmentManager().popBackStack();
 
         try {
-            MifareDesfire.DesfireResponse res = desfireCard.limitedCredit(bFileID, iLCValue, selCommMode);
-            if ((res.status == MifareDesfire.statusType.SUCCESS)) {
+            Desfire.DesfireResponse res = desfireCard.limitedCredit(bFileID, iLCValue, selCommMode);
+            if ((res.status == Desfire.statusType.SUCCESS)) {
                 scrollLog.appendStatus("Limited Credit Success");
             } else {
-                scrollLog.appendError("Limited Credit Failed: " + desfireCard.DesFireErrorMsg(res.status));
-                Log.d("onLimitedCreditReturn", "Error returned: " + desfireCard.DesFireErrorMsg(res.status));
+                scrollLog.appendError("Limited Credit Failed: " + Desfire.DesfireErrorMsg(res.status));
+                Log.d("onLimitedCreditReturn", "Error returned: " + Desfire.DesfireErrorMsg(res.status));
             }
 
         } catch (Exception e) {
@@ -1924,9 +1935,9 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Authentication");
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte) 0, zeroKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            Desfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte) 0, zeroKey);
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
             } else {
 
                 scrollLog.appendStatus("Authentication Successful");
@@ -1951,18 +1962,18 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         scrollLog.appendTitle("AuthenticateISO Test");
 
         try {
-            MifareDesfire.statusType res = desfireCard.selectApplication(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00});
+            Desfire.statusType res = desfireCard.selectApplication(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00});
             res = desfireCard.selectApplication(new byte[]{(byte) 0x15, (byte) 0x0D, (byte) 0xE5});
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendData("Select OK: 15 0D E5");
 
 
             res = desfireCard.authenticate((byte) 0x1A, (byte) 0, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
@@ -1979,10 +1990,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             // Select Application
-            MifareDesfire.statusType res = desfireCard.selectApplication(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00});
+            Desfire.statusType res = desfireCard.selectApplication(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00});
             res = desfireCard.selectApplication(new byte[]{(byte) 0x15, (byte) 0x0A, (byte) 0xE5});
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: 15 0A E5");
@@ -1993,8 +2004,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             scrollLog.appendTitle("Authentication");
             res = desfireCard.authenticate((byte) 0xAA, (byte) 0, zeroKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
@@ -2013,10 +2024,10 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         try {
             // Select Application
 
-            MifareDesfire.statusType res = desfireCard.selectApplication(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00});
+            Desfire.statusType res = desfireCard.selectApplication(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00});
             res = desfireCard.selectApplication(new byte[]{(byte) 0x15, (byte) 0x0A, (byte) 0xE5});
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: 15 0A E5");
@@ -2027,8 +2038,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             scrollLog.appendTitle("Authentication");
             res = desfireCard.authenticate((byte) 0x71, (byte) 0, zeroKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
@@ -2055,17 +2066,17 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             byte[] AESKey = new byte[16];
             Arrays.fill(AESKey, (byte) 0);
 
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte) 0, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            Desfire.statusType res = desfireCard.authenticate((byte) 0x0A, (byte) 0, key);
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
 
             res = desfireCard.formatPICC();
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Format PICC Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Format PICC Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Format PICC Successful");
@@ -2074,8 +2085,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             byte[] baAppId = new byte[]{(byte) 0xD4, (byte) 0x0D, (byte) 0xE5};
             byte[] baNull = new byte[]{};
             res = desfireCard.createApplication(baAppId, (byte) 0x0F, (byte) 0x03, baNull, baNull);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Application Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
@@ -2083,16 +2094,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             // Select Application
             res = desfireCard.selectApplication(baAppId);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0x0A, (byte) 0, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
@@ -2105,16 +2116,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             // Select Application
             baAppId = new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00};
             res = desfireCard.selectApplication(baAppId);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate main key
             res = desfireCard.authenticate((byte) 0x0A, (byte) 0, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
@@ -2122,8 +2133,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             baAppId = new byte[]{(byte) 0x15, (byte) 0x0D, (byte) 0xE5};
             res = desfireCard.createApplication(baAppId, (byte) 0x0F, (byte) 0x43, baNull, baNull);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Application Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
@@ -2131,16 +2142,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             // Select Application
             res = desfireCard.selectApplication(baAppId);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0x1A, (byte) 0, T3DESKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
@@ -2152,16 +2163,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             // Select Application
             baAppId = new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00};
             res = desfireCard.selectApplication(baAppId);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate main key
             res = desfireCard.authenticate((byte) 0x0A, (byte) 0, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
@@ -2169,8 +2180,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             baAppId = new byte[]{(byte) 0x15, (byte) 0x0A, (byte) 0xE5};
             res = desfireCard.createApplication(baAppId, (byte) 0x0F, (byte) 0x83, baNull, baNull);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Application Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
@@ -2178,16 +2189,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             // Select Application
             res = desfireCard.selectApplication(baAppId);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0xAA, (byte) 0, AESKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
@@ -2199,16 +2210,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             // Select Application
             baAppId = new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x00};
             res = desfireCard.selectApplication(baAppId);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendTitle("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate main key
             res = desfireCard.authenticate((byte) 0x0A, (byte) 0, key);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
@@ -2216,8 +2227,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             baAppId = new byte[]{(byte) 0xAE, (byte) 0x2A, (byte) 0xE5};
             res = desfireCard.createApplication(baAppId, (byte) 0x0F, (byte) 0x83, baNull, baNull);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Application Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Application Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Create Application OK: " + ByteArray.byteArrayToHexString(baAppId));
@@ -2225,16 +2236,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             // Select Application
             res = desfireCard.selectApplication(baAppId);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Select Failed: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Select Failed: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else
                 scrollLog.appendStatus("Select OK: " + ByteArray.byteArrayToHexString(baAppId));
 
             // Authenticate
             res = desfireCard.authenticate((byte) 0xAA, (byte) 0, AESKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
@@ -2258,49 +2269,48 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             byte[] baFileId = new byte[]{(byte) 0xDF, (byte) 0x01};
             byte[] baNull = new byte[]{};
-            MifareDesfire.ISOResponse isoResp = desfireCard.selectIsoFileId(baFileId);
-            if (isoResp.status != MifareDesfire.statusWord.SUCCESS) {
-                scrollLog.appendError("Select DF01 Failed: " + desfireCard.DesFireErrorMsg(isoResp.status));
+            Desfire.ISOResponse isoResp = desfireCard.selectIsoFileId(baFileId);
+            if (isoResp.status != Desfire.statusWord.SUCCESS) {
+                scrollLog.appendError("Select DF01 Failed: " + Desfire.DesfireErrorMsg(isoResp.status));
                 return;
             } else {
                 scrollLog.appendStatus("Select DF01 OK: " + ByteArray.byteArrayToHexString(baFileId));
             }
 
-
-
             scrollLog.appendTitle("Authentication EV2");
             byte[] AESKey = new byte[16];
             Arrays.fill(AESKey, (byte) 0);
 
-            MifareDesfire.statusType res = desfireCard.authenticate((byte) 0x71, (byte) 0x03, AESKey);
-            if (res != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Authentication Error: " + desfireCard.DesFireErrorMsg(res));
+            Desfire.statusType res = desfireCard.authenticate((byte) 0x71, (byte) 0x03, AESKey);
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
                 return;
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
 
-
             scrollLog.appendTitle("Get Card UID");
-            MifareDesfire.DesfireResponse dfresp = desfireCard.getCardUID();
-            if (dfresp.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("GetCardUID Error: " + desfireCard.DesFireErrorMsg(dfresp.status));
+            Desfire.DesfireResponse dfresp = desfireCard.getCardUID();
+            if (dfresp.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("GetCardUID Error: " + Desfire.DesfireErrorMsg(dfresp.status));
                 return;
             }
+            byte [] cardUID = new byte[7];
+            System.arraycopy(dfresp.data,0,cardUID,0,7);
 
             scrollLog.appendTitle("Get Value");
             dfresp = desfireCard.getValue((byte)0x03, PLAIN);
-            if (dfresp.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get Value: " + desfireCard.DesFireErrorMsg(dfresp.status));
+            if (dfresp.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Get Value: " + Desfire.DesfireErrorMsg(dfresp.status));
                 return;
             } else {
-                scrollLog.appendStatus("Get Value: " + ByteArray.byteArrayToHexString(dfresp.data));
+                scrollLog.appendStatus("Get Value: " + ByteBuffer.wrap(dfresp.data).order(ByteOrder.LITTLE_ENDIAN).getInt());
             }
 
             scrollLog.appendTitle("Credit - 100");
             dfresp = desfireCard.credit((byte)0x03, 100, ENCIPHERED);
-            if (dfresp.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Credit: " + desfireCard.DesFireErrorMsg(dfresp.status));
+            if (dfresp.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Credit: " + Desfire.DesfireErrorMsg(dfresp.status));
                 return;
             } else {
                 scrollLog.appendStatus("Credit Ok ");
@@ -2308,73 +2318,109 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
             scrollLog.appendTitle("" + "Debit - 100");
             dfresp = desfireCard.debit((byte)0x03, 100, ENCIPHERED);
-            if (dfresp.status != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Debit: " + desfireCard.DesFireErrorMsg(dfresp.status));
+            if (dfresp.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Debit: " + Desfire.DesfireErrorMsg(dfresp.status));
                 return;
             } else {
                 scrollLog.appendStatus("Debit Ok ");
             }
 
+            scrollLog.appendTitle("Authenticate EV2 Non-First");
+            res = desfireCard.authenticate((byte) 0x77, (byte) 0x01, AESKey);
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Authentication Error: " + Desfire.DesfireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("Authentication Successful");
+            }
+
+            scrollLog.appendTitle("Commit Reader ID");
+            dfresp = desfireCard.commitReaderID(AESKey);
+            if (dfresp.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("CommitReaderID: " + Desfire.DesfireErrorMsg(dfresp.status));
+                return;
+            } else {
+                scrollLog.appendStatus("CommitReaderID Ok ");
+            }
+
+            scrollLog.appendTitle("Commit Transaction");
+            dfresp = desfireCard.commitTransaction((byte) 0x01);
+            if (dfresp.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("CommitTransaction: " + Desfire.DesfireErrorMsg(dfresp.status));
+                return;
+            } else {
+                scrollLog.appendStatus("CommitTransacation Ok ");
+            }
+
+            scrollLog.appendTitle("Transaction MAC Verification");
+            res = desfireCard.txnMacVerification(AESKey, cardUID, dfresp.data);
+            if (res != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("txnMacVerification: " + Desfire.DesfireErrorMsg(res));
+                return;
+            } else {
+                scrollLog.appendStatus("txnMacVerification Ok ");
+            }
 
 
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("onAuthenticate", e.getMessage(), e);
+            Log.e("onTestDesfireLight", e.getMessage(), e);
         }
     }
+    //endregion
 
     //region Testing
     public void createTestPersoFiles () {
         try {
             byte[] baNull = new byte[]{};
 
-            MifareDesfire.statusType retValue;
+            Desfire.statusType retValue;
             // Create Data File
-            retValue = desfireCard.createStdDataFile((byte) 0x01, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createStdDataFile((byte) 0x01, baNull, Desfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 32);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createStdDataFile((byte) 0x02, baNull, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createStdDataFile((byte) 0x02, baNull, Desfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
 
-            retValue = desfireCard.createStdDataFile((byte) 0x03, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Data File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createStdDataFile((byte) 0x03, baNull, Desfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 32);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Data File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createLinearRecordFile((byte) 0x04, baNull, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 8, 3);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createLinearRecordFile((byte) 0x04, baNull, Desfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 8, 3);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Record File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createLinearRecordFile((byte) 0x05, baNull, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createLinearRecordFile((byte) 0x05, baNull, Desfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Record File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createLinearRecordFile((byte) 0x06, baNull, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Record File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createLinearRecordFile((byte) 0x06, baNull, Desfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 8, 3);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Record File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createValueFile((byte) 0x07, MifareDesfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 0, 1000, 0, (byte) 0x01);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createValueFile((byte) 0x07, Desfire.commMode.getSetting(PLAIN), new byte[]{(byte) 0xEE, (byte) 0xEE}, 0, 1000, 0, (byte) 0x01);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Value File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createValueFile((byte) 0x08, MifareDesfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x01);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createValueFile((byte) 0x08, Desfire.commMode.getSetting(MAC), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x01);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Value File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
-            retValue = desfireCard.createValueFile((byte) 0x09, MifareDesfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x01);
-            if (retValue != MifareDesfire.statusType.SUCCESS) {
-                scrollLog.appendError("Create Value File Failed: " + desfireCard.DesFireErrorMsg(retValue));
+            retValue = desfireCard.createValueFile((byte) 0x09, Desfire.commMode.getSetting(ENCIPHERED), new byte[]{(byte) 0x00, (byte) 0x00}, 0, 1000, 0, (byte) 0x01);
+            if (retValue != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Create Value File Failed: " + Desfire.DesfireErrorMsg(retValue));
                 return;
             }
             scrollLog.appendStatus("Create Data File OK");
@@ -2404,7 +2450,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         scrollLog.appendTitle("***** TEST MAC Data");
         Log.d("TestAll", "*** Write MAC Data **************************");
-        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, MifareDesfire.commMode.MAC);
+        onWriteDataReturn((byte) 0x02, 0, 3, new byte [] {(byte) 0xaa, (byte) 0xbb, (byte) 0xcc}, Desfire.commMode.MAC);
         Log.d("TestAll", "*** Read MAC Data **************************");
         onReadDataReturn((byte) 0x02, 0, 0, MAC);
 
@@ -2412,7 +2458,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
         Log.d("TestAll", "*** Write Encrypted Data **************************");
-        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, MifareDesfire.commMode.ENCIPHERED);
+        onWriteDataReturn((byte) 0x03, 0, 4, new byte [] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0x00}, Desfire.commMode.ENCIPHERED);
         Log.d("TestAll", "*** Read Encrypted Data **************************");
         onReadDataReturn((byte) 0x03, 0, 10, ENCIPHERED);
 

@@ -16,7 +16,7 @@ import java.security.NoSuchAlgorithmException;
  * 
  * Commands and parameters from libfreefare (https://github.com/nfc-tools) 
  */
-public class MifareDesfire {
+public class Desfire {
 
     private final int macSize = 4;
     private final int maxDataSize = 52 - macSize;
@@ -57,7 +57,7 @@ public class MifareDesfire {
         }
     }
 
-    public MifareDesfire(ICardCommunicator cardCommunicator, byte[] uid, ScrollLog tv_scrollLog) throws NoSuchAlgorithmException {
+    public Desfire(ICardCommunicator cardCommunicator, byte[] uid, ScrollLog tv_scrollLog) throws NoSuchAlgorithmException {
         this.cardCommunicator = cardCommunicator;
         this.uid = uid;
 
@@ -121,7 +121,7 @@ public class MifareDesfire {
         ByteArrayOutputStream appIDs = new ByteArrayOutputStream();
         DesfireResponse result = sendBytes((byte)0x6a, commMode.MAC);
 
-        if (result.status != MifareDesfire.statusType.SUCCESS) {
+        if (result.status != Desfire.statusType.SUCCESS) {
             return result;
         }
 
@@ -338,7 +338,6 @@ public class MifareDesfire {
         return sendBytes((byte)0xAF, null, null, commMode.PLAIN);
     }
 
-    public DesfireResponse getMoreData(commMode curCommMode) throws IOException {
         return sendBytes((byte)0xAF, null, null, curCommMode);
     }
 

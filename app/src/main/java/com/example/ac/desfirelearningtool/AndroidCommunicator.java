@@ -21,15 +21,15 @@ public class AndroidCommunicator implements ICardCommunicator {
         this.scrollLog = tv_scrollLog;
     }
 
-    // Factory method to correctly initialize a MifareDesfire card from a generic tag
-    // Returns "null" upon failure (including cases where the tag is not a MifareDesfire
+    // Factory method to correctly initialize a Desfire card from a generic tag
+    // Returns "null" upon failure (including cases where the tag is not a Desfire
     // card)
-    public MifareDesfire get(Tag tag) {
+    public Desfire get(Tag tag) {
         try {
             String[] tagList = tag.getTechList();
             for (String tagTech : tagList) {
                 if (tagTech.equals(IsoDep.class.getName())) {
-                    return new MifareDesfire(this, tag.getId(),this.scrollLog);
+                    return new Desfire(this, tag.getId(),this.scrollLog);
                 }
             }
         } catch (Exception ex) {

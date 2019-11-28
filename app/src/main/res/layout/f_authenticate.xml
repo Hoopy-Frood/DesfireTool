@@ -45,7 +45,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Authenticate EV2"/>
-
+                <RadioButton android:id="@+id/radio_authEV2NF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Authenticate EV2 Non-First"/>
             </RadioGroup>
 
             <TextView

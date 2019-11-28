@@ -56,27 +56,27 @@ public interface IMainActivityCallbacks {
 
     // Data Manipulation - DATA File
     void onReadData();
-    void onReadDataReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
+    void onReadDataReturn(byte bFileID, int iOffset, int iLength, Desfire.commMode iCommMode);
     void onWriteData();
-    void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
+    void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, Desfire.commMode iCommMode);
 
     // Data Manipulation - RECORD File
     void onReadRecords();
-    void onReadRecordsReturn(byte bFileID, int iOffset, int iLength, MifareDesfire.commMode iCommMode);
+    void onReadRecordsReturn(byte bFileID, int iOffset, int iLength, Desfire.commMode iCommMode);
     void onWriteRecord();
-    void onWriteRecordReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, MifareDesfire.commMode iCommMode);
+    void onWriteRecordReturn(byte bFileID, int iOffset, int iLength, byte [] bDataToWrite, Desfire.commMode iCommMode);
     void onClearRecordFile();
     void onClearRecordFileReturn(byte bFileID);
 
     // Data Manipulation - VALUE File
     void onGetValue();
-    void onGetValueReturn(byte bFileID, MifareDesfire.commMode iCommMode);
+    void onGetValueReturn(byte bFileID, Desfire.commMode iCommMode);
     void onCredit();
-    void onCreditReturn(byte bFileID, int iCreditValue, MifareDesfire.commMode iCommMode);
+    void onCreditReturn(byte bFileID, int iCreditValue, Desfire.commMode iCommMode);
     void onDebit();
-    void onDebitReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode iCommMode);
+    void onDebitReturn(byte bFileID, int iDebitValue, Desfire.commMode iCommMode);
     void onLimitedCredit();
-    void onLimitedCreditReturn(byte bFileID, int iDebitValue, MifareDesfire.commMode iCommMode);
+    void onLimitedCreditReturn(byte bFileID, int iDebitValue, Desfire.commMode iCommMode);
 
     // Data Manipulation - Commit
     void onCommitTransaction ();

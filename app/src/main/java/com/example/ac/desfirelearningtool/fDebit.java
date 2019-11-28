@@ -31,7 +31,7 @@ public class fDebit extends Fragment {
     private EditText etDebitValue;
     private RadioGroup commModeGroup;
     private Button buttonGetFileID;
-    private MifareDesfire.commMode selCommMode;
+    private Desfire.commMode selCommMode;
 
 
     private byte [] fileList;
@@ -77,7 +77,7 @@ public class fDebit extends Fragment {
 
         }
 
-        selCommMode = MifareDesfire.commMode.PLAIN;
+        selCommMode = Desfire.commMode.PLAIN;
 
         scrollLog = mCallback.getScrollLogObject ();
 
@@ -132,13 +132,13 @@ public class fDebit extends Fragment {
         // Check which radio button was clicked
         switch(checkedId) {
             case R.id.radio_PlainCommunication:
-                selCommMode = MifareDesfire.commMode.PLAIN;
+                selCommMode = Desfire.commMode.PLAIN;
                 break;
             case R.id.radio_MACCommunication:
-                selCommMode = MifareDesfire.commMode.MAC;
+                selCommMode = Desfire.commMode.MAC;
                 break;
             case R.id.radio_EncryptedCommunication:
-                selCommMode = MifareDesfire.commMode.ENCIPHERED;
+                selCommMode = Desfire.commMode.ENCIPHERED;
                 break;
         }
     }

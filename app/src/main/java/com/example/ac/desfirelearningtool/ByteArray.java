@@ -1,5 +1,6 @@
 package com.example.ac.desfirelearningtool;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -11,11 +12,7 @@ public class ByteArray {
     private static HashMap<String, Byte> hexMap = null;
 
 
-    /**
-     * Returns the padding count
-     * @param in
-     * @return
-     */
+
     public static int ISO9797m2PadCount (byte [] in) {
         int count = in.length - 1;
         while (count > 0 && in[count] == 0) {
@@ -27,6 +24,15 @@ public class ByteArray {
         return in.length - count;
     }
 
+    public static byte [] addZeroPadding (int dataLen, int blockLength) {
+        int iPaddingLen = (blockLength - (dataLen %blockLength)) % blockLength;
+        byte[] bPadding = new byte[iPaddingLen];
+
+        Arrays.fill(bPadding, (byte) 0);
+
+        return bPadding;
+    }
+
     public static byte[] appendCut(byte[] first, byte[] last) {
         byte[] ret;
         if (last == null || last.length == 0) {
@@ -35,7 +41,7 @@ public class ByteArray {
         if (first == null || first.length == 0) {
             ret = new byte[last.length - 1];
             if (last.length == 1 && last[0] == 0x00)
-                return null;
+                return new byte[0];
             System.arraycopy(last, 1, ret, 0, last.length - 1);
             return ret;
         }
@@ -43,6 +49,20 @@ public class ByteArray {
         ret = new byte[first.length + last.length - 1];
         System.arraycopy(first, 0, ret, 0, first.length);
         System.arraycopy(last, 1, ret, first.length, last.length - 1);
+        return ret;
+    }
+    public static byte[] cut9000 ( byte[] data) {
+        byte[] ret;
+        if (data == null || data.length < 3) {
+            return data;
+        }
+
+        if ((data[data.length -2] != (byte) 0x90) || (data[data.length -1] != (byte) 0x00)) {
+            return data;
+        }
+
+        ret = new byte[data.length - 2];
+        System.arraycopy(data, 0, ret, 0, data.length - 2);
         return ret;
     }
 
@@ -228,25 +248,26 @@ public class ByteArray {
         return new ByteArray().append(b);
     }
 
-    public static byte[] fromInt(int n, int bytes) {
-        return fromInt(n, false, bytes);
+    public static byte[] fromInt(int n, int numBytes) {
+        return fromInt(n, false, numBytes);
     }
 
-    public static byte[] fromInt(int n, boolean littleEndian, int bytes) {
-        byte[] ret = new byte[bytes];
-        fromInt(ret, 0, n, littleEndian, bytes);
+    public static byte[] fromInt(int n, boolean littleEndian, int numBytes) {
+        byte[] ret = new byte[numBytes];
+        fromInt(ret, 0, n, littleEndian, numBytes);
         return ret;
     }
 
-    private static void fromInt(byte[] dst, int from, int n, boolean littleEndian, int bytes) {
-        for (int i = 0; i < bytes; ++i) {
+    private static void fromInt(byte[] dst, int from, int n, boolean littleEndian, int numBytes) {
+        for (int i = 0; i < numBytes; ++i) {
             // Java is big Endian. Do we want little Endian?
             int index;
             if (littleEndian) {
-                index = bytes - i - 1;
+                index = numBytes - i - 1;
             } else {
                 index = i;
             }
+
             dst[from + index] = (byte)(n >> 8 * i);
         }
     }
@@ -290,8 +311,13 @@ public class ByteArray {
 
     public ByteArray append(byte[] b) {
         if (b == null) return this;
-
         return append(b, 0, b.length);
+    }
+
+    public ByteArray append(String b) {
+        if (b == null) return this;
+        byte [] bb = hexStringToByteArray(b);
+        return append(bb, 0, bb.length);
     }
 
     public ByteArray append(byte[] a, int start, int n) {
