@@ -182,6 +182,10 @@ public class fCommandMenu extends Fragment{
             public void onClick(View v) {mCallback.onChangeKey();
             }
         });
+        buttonChangeKeySettings.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {mCallback.onChangeKeySettings();
+            }
+        });
         // Buttons - Application
         buttonSelect.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {mCallback.onSelectApplication();
@@ -357,7 +361,7 @@ public class fCommandMenu extends Fragment{
         buttonCommitTransaction.setEnabled(false);
         buttonAbortTransaction.setEnabled(false);
         // Buttons - Perso
-        buttonCreateApplication.setEnabled(true);
+        buttonCreateApplication.setEnabled(false);
         buttonDeleteApplication.setEnabled(false);
         buttonFormatPICC.setEnabled(false);
         // Buttons - Key Management
@@ -365,7 +369,7 @@ public class fCommandMenu extends Fragment{
         buttonChangeKey.setEnabled(false);
         buttonChangeKeySettings.setEnabled(false);
         // Buttons - File Management
-        buttonCreateFile.setEnabled(true);
+        buttonCreateFile.setEnabled(false);
         buttonDeleteFile.setEnabled(false);
         buttonChangeFileSettings.setEnabled(false);
         // Buttons - Test Perso

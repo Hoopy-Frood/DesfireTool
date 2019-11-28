@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     fDebit debitFragment;
     fLimitedCredit limitedCreditFragment;
     fChangeKey changeKeyFragment;
+    fChangeKeySettings changeKeySettingsFragment;
 
     protected PendingIntent pendingIntent;
     protected IntentFilter[] intentFiltersArray;
@@ -177,7 +178,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                     boolWrapperMode = true;
                 else
                     boolWrapperMode = false;
-            }
+
+                if (communicator != null ) {
+                    communicator.setIsoMode(boolWrapperMode);
+                }
+             }
         });
 
         // Initialize additional data for foreground dispatching of Nfc intents
@@ -331,10 +336,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
 
-            getSupportActionBar().setTitle("DESFire Tool");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-            getSupportActionBar().setDisplayShowHomeEnabled(false);
-            getSupportFragmentManager().popBackStack();
+            setHomeStatusBar();
             Log.d("onBackPressed", "popBackStack");
         } else {
             super.onBackPressed();
@@ -343,6 +345,23 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             getSupportActionBar().setDisplayShowHomeEnabled(false);
             Log.d("onBackPressed", "onBackPressed()");
         }
+    }
+
+    private void setHomeStatusBar (){
+        getSupportActionBar().setTitle("DESFire Tool");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportFragmentManager().popBackStack();
+    }
+
+    private void setStatusBar (String title) {
+        try {
+            getSupportActionBar().setTitle(title);
+        } catch (NullPointerException e) {
+            Log.e("setStatusBar", "Null title");
+        }
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
     }
 
     @Override
@@ -415,6 +434,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         }
         return super.dispatchTouchEvent(event);
     }
+
     //endregion
 
     public ScrollLog getScrollLogObject() {
@@ -426,11 +446,26 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         try {
             scrollLog.appendTitle("Get Version");
-            byte[] hwInfo = desfireCard.getVersion().data;
-            byte[] swInfo = desfireCard.getMoreData().data;
-            byte[] UIDInfo = desfireCard.getMoreData().data;
+            Desfire.DesfireResponse dfresp = desfireCard.getVersion();
+            if (dfresp.status != Desfire.statusType.ADDITONAL_FRAME) {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(dfresp.status) );
+                return;
+            }
+            byte[] hwInfo = dfresp.data;
+            dfresp = desfireCard.getMoreData();
+            if (dfresp.status != Desfire.statusType.ADDITONAL_FRAME) {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(dfresp.status) );
+                return;
+            }
+            byte[] swInfo = dfresp.data;
+            dfresp = desfireCard.getMoreData();
+            if (dfresp.status != Desfire.statusType.SUCCESS) {
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(dfresp.status) );
+                return;
+            }
+            byte[] UIDInfo = dfresp.data;
 
-            scrollLog.appendStatus("Hardware related information:");
+                    scrollLog.appendStatus("Hardware related information:");
             scrollLog.appendData("Vendor ID:           " + ByteArray.byteArrayToHexString(hwInfo, 0, 1));
             scrollLog.appendData("Type:                " + ByteArray.byteArrayToHexString(hwInfo, 1, 1));
             scrollLog.appendData("Sub-type             " + ByteArray.byteArrayToHexString(hwInfo, 2, 1));
@@ -600,7 +635,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             res = desfireCard.getKeySettings();
 
             if (res.status != Desfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get Key Settins Failed: " + Desfire.DesfireErrorMsg(res.status));
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
                 return null;
             }
             scrollLog.appendStatus("Key Settings: " + ByteArray.byteArrayToHexString(res.data));
@@ -691,10 +726,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onChangeKey() {
         scrollLog.appendTitle("Change Key");
 
-        getSupportActionBar().setTitle("Get Key Version");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
+        setStatusBar("Change Key");
+        
         changeKeyFragment = new fChangeKey();
 
         Bundle bundle = new Bundle();
@@ -710,10 +743,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onChangeKeyReturn(byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
             Desfire.statusType retValue = desfireCard.changeKey(bKeyToChange, bKeyVersion, baNewKey, baOldKey);
@@ -729,11 +759,46 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
     //endregion
 
+    //region Change Key
+    public void onChangeKeySettings() {
+        scrollLog.appendTitle("Change Key Settings");
+
+        setStatusBar("Change Key Settings");
+
+        changeKeySettingsFragment = new fChangeKeySettings();
+
+        Bundle bundle = new Bundle();
+        bundle.putInt("currentAuthenticatedKey", desfireCard.currentAuthenticatedKey());
+        bundle.putByte("currentAuthenticationMode", desfireCard.currentAuthenticationMode());
+
+        changeKeySettingsFragment.setArguments(bundle);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, changeKeySettingsFragment).addToBackStack("commandview").commit();
+
+    }
+
+    public void onChangeKeySettingsReturn(int iChangeKeyKey, boolean boolKeySettingChangeable, boolean boolFreeCreateDelete, boolean boolFreeDirInfoAccess, boolean boolMasterKeyChangable) {
+        setHomeStatusBar();
+
+        try {
+            Desfire.statusType retValue = desfireCard.changeKeySettings(iChangeKeyKey, boolKeySettingChangeable, boolFreeCreateDelete, boolFreeDirInfoAccess, boolMasterKeyChangable);
+            if (retValue != Desfire.statusType.SUCCESS)
+                scrollLog.appendError("Error : " + Desfire.DesfireErrorMsg(retValue));
+            else
+                scrollLog.appendStatus("Change Key Settings Success");
+
+        } catch (Exception e) {
+            scrollLog.appendError("DESFire Error\n");
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
+    }
+    //endregion
+
+
     //region Authenticate
     public void onAuthenticate() {
-        getSupportActionBar().setTitle("Authenticate");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Authenticate");
+
 
         authenticateFragment = new fAuthenticate();
         authenticateFragment.setArguments(getIntent().getExtras());
@@ -746,9 +811,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onAuthenticateReturn(byte bAuthCmd, byte bKeyNo, byte[] key) {
         scrollLog.appendTitle("Authenticate");
 
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        setHomeStatusBar();
 
         getSupportFragmentManager().popBackStack();
 
@@ -773,9 +836,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onSelectApplication() {
         scrollLog.appendTitle("Select Application");
 
-        getSupportActionBar().setTitle("Select Application");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Select Application");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("applicationList", applicationList);
@@ -792,10 +854,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onSelectApplicationReturn(byte[] baAppId) {
         scrollLog.appendTitle("SelectApplication Return");
 
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         baFileIDList = null;
         bFileIDListPopulated = false;
@@ -824,9 +883,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onSelectIsoFileId() {
         scrollLog.appendTitle("Select ISO File ID");
 
-        getSupportActionBar().setTitle("Select ISO File ID");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Select ISO File ID");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baIsoFileIdList", baIsoFileIdList);
@@ -843,10 +901,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onSelectIsoFileIdReturn(byte[] baIsoFileId) {
         scrollLog.appendTitle("Select ISO File ID Return");
 
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         baIsoFileIdList = null;
         bIsoFileIdListPopulated = false;
@@ -875,9 +930,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onCreateApplication() {
         scrollLog.appendTitle("Create Application");
 
-        getSupportActionBar().setTitle("Create Application");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Create Application");
+
 
         createApplicationFragment = new fCreateApplication();
         createApplicationFragment.setArguments(getIntent().getExtras());
@@ -890,11 +944,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onCreateApplicationReturn(byte[] baAppId, byte bKeySetting1, byte bKeySetting2, byte[] baISOName, byte[] DFName) {
         scrollLog.appendTitle("Create Application Return");
 
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
         scrollLog.appendData("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
         if (baAppId.length != 3) {
             scrollLog.appendError("Application ID too short");
@@ -919,9 +969,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onDeleteApplication() {
         scrollLog.appendTitle("Delete Application");
 
-        getSupportActionBar().setTitle("Delete Application");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Delete Application");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("applicationList", applicationList);
@@ -937,10 +986,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onDeleteApplicationReturn(byte[] baAppId) {
         scrollLog.appendTitle("Delete Application Return");
 
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         scrollLog.appendData("Application ID returned = " + ByteArray.byteArrayToHexString(baAppId));
         if (baAppId.length != 3) {
@@ -966,9 +1012,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onGetKeyVersion() {
         scrollLog.appendTitle("Get Key Version");
 
-        getSupportActionBar().setTitle("Get Key Version");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Get Key Version");
+
 
         getKeyVersionFragment = new fGetKeyVersion();
 
@@ -981,10 +1026,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onGoGetKeyVersionReturn(byte iKeyToInquire) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
         commandFragment.enableAllButtons();
 
         try {
@@ -1063,9 +1105,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onCreateFile() {
         scrollLog.appendTitle("Create File");
 
-        getSupportActionBar().setTitle("Create File");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Create File");
 
         createFileFragment = new fCreateFile();
 
@@ -1076,11 +1116,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onCreateFileDataReturn(byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iFileSize) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
+        setHomeStatusBar();
 
         Log.d("MainActivity", "bFileType " + ByteArray.byteArrayToHexString(new byte[]{bFileType}));
         Log.d("MainActivity", "bFileID " + ByteArray.byteArrayToHexString(new byte[]{bFileId}));
@@ -1102,11 +1138,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onCreateFileRecordReturn(byte bFileType, byte bFileId, byte[] baISOName, byte bCommSetting, byte[] baAccessBytes, int iRecordSize, int iNumOfRecords) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
+        setHomeStatusBar();
+        
         Log.d("MainActivity", "bFileType " + ByteArray.byteArrayToHexString(new byte[]{bFileType}));
         Log.d("MainActivity", "bFileID " + ByteArray.byteArrayToHexString(new byte[]{bFileId}));
         Log.d("MainActivity", "ISOName " + ByteArray.byteArrayToHexString(baISOName));
@@ -1128,10 +1161,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onCreateFileValueReturn(byte bFileId, byte bCommSetting, byte[] baAccessBytes, int iLowerLimit, int iUpperLimit, int iValue, byte bOptionByte) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         Log.d("MainActivity", "bFileID " + ByteArray.byteArrayToHexString(new byte[]{bFileId}));
         Log.d("MainActivity", "bCommSetting " + ByteArray.byteArrayToHexString(new byte[]{bCommSetting}));
@@ -1250,9 +1280,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onGetFileSettings() {
         scrollLog.appendTitle("Get File Settings");
 
-        getSupportActionBar().setTitle("Get File Settings");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Get File Settings");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1281,10 +1310,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     //
     public void onGetFileSettingsReturn(byte bFileID) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
             Desfire.DesfireResponse res = desfireCard.getFileSettings(bFileID);
@@ -1451,9 +1477,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onDeleteFile() {
         scrollLog.appendTitle("Delete File");
 
-        getSupportActionBar().setTitle("Delete File");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Delete File");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1468,11 +1493,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onDeleteFileReturn(byte bFileID) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
             Desfire.DesfireResponse res = desfireCard.deleteFile(bFileID);
@@ -1495,9 +1516,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onReadData() {
         scrollLog.appendTitle("Read Data");
 
-        getSupportActionBar().setTitle("Read Data");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Read Data");
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1511,11 +1530,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onReadDataReturn(byte bFileID, int iOffset, int iLength, Desfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
             ByteArray baRecvData = new ByteArray();
@@ -1553,9 +1568,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onWriteData() {
         scrollLog.appendTitle("Write Data");
 
-        getSupportActionBar().setTitle("Write Data");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Write Data");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1568,11 +1582,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     }
 
     public void onWriteDataReturn(byte bFileID, int iOffset, int iLength, byte[] bDataToWrite, Desfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
 
@@ -1597,9 +1607,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onReadRecords() {
         scrollLog.appendTitle("Read Records");
 
-        getSupportActionBar().setTitle("Read Records");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Read Records");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1613,11 +1622,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onReadRecordsReturn(byte bFileID, int iOffsetRecord, int iNumOfRecords, Desfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         int recordLength = 0;
 
@@ -1645,10 +1650,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                     scrollLog.appendError("Read Record File Failed: " + Desfire.DesfireErrorMsg(res.status));
                     return;
                 }
-
                 scrollLog.appendData("No data returned");
             }
-
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1661,9 +1664,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onWriteRecord() {
         scrollLog.appendTitle("Write Record");
 
-        getSupportActionBar().setTitle("Write Record");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Write Record");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1677,22 +1679,16 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onWriteRecordReturn(byte bFileID, int iRecordNum, int iSizeToWrite, byte[] bDataToWrite, Desfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
-
             // TODO: separate data blocks if too long
             Desfire.DesfireResponse res = desfireCard.writeRecord(bFileID, iRecordNum, iSizeToWrite, bDataToWrite, selCommMode);
             if ((res.status == Desfire.statusType.SUCCESS)) {
                 scrollLog.appendStatus("Write Record File Success");
             } else {
-                scrollLog.appendError("WriteFile Failed: " + Desfire.DesfireErrorMsg(res.status));
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
             }
-
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1705,9 +1701,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onClearRecordFile() {
         scrollLog.appendTitle("Clear Record File");
 
-        getSupportActionBar().setTitle("Clear Record File");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Clear Record File");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1723,18 +1718,13 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     //
     public void onClearRecordFileReturn(byte bFileID) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
             Desfire.DesfireResponse res = desfireCard.clearRecordFile(bFileID);
             if (res.status != Desfire.statusType.SUCCESS) {
-                scrollLog.appendError("Clear Record Failed: " + Desfire.DesfireErrorMsg(res.status));
-                return;
-            }
-
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
+                }
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
@@ -1747,9 +1737,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onGetValue() {
         scrollLog.appendTitle("Get Value");
 
-        getSupportActionBar().setTitle("Get Value");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Get Value");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1765,15 +1754,11 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
     //
     public void onGetValueReturn(byte bFileID, Desfire.commMode curCommMode) {
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
+        setHomeStatusBar();
         try {
             Desfire.DesfireResponse res = desfireCard.getValue(bFileID, curCommMode);
             if (res.status != Desfire.statusType.SUCCESS) {
-                scrollLog.appendError("Get File Settings Failed: " + Desfire.DesfireErrorMsg(res.status));
+                scrollLog.appendError("Error: " + Desfire.DesfireErrorMsg(res.status));
                 return;
             }
 
@@ -1781,10 +1766,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 Log.d("onGetValueReturn", "Value Byte: " + ByteArray.byteArrayToHexString(res.data));
                 scrollLog.appendData("Value:" + ByteBuffer.wrap(res.data).order(ByteOrder.LITTLE_ENDIAN).getInt());
             } else {
-                if (res.status != Desfire.statusType.SUCCESS) {
-                    scrollLog.appendError("Get Value Failed: " + Desfire.DesfireErrorMsg(res.status));
-                    return;
-                }
                 scrollLog.appendData("No data returned");
             }
 
@@ -1800,9 +1781,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onCredit() {
         scrollLog.appendTitle("Credit");
 
-        getSupportActionBar().setTitle("Credit");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Credit");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1816,11 +1796,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onCreditReturn(byte bFileID, int iCreditValue, Desfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
+        setHomeStatusBar();
 
         try {
             Desfire.DesfireResponse res = desfireCard.credit(bFileID, iCreditValue, selCommMode);
@@ -1843,9 +1819,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onDebit() {
         scrollLog.appendTitle("Debit");
 
-        getSupportActionBar().setTitle("Debit");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Debit");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1860,12 +1835,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onDebitReturn(byte bFileID, int iDebitValue, Desfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
+        setHomeStatusBar();
         try {
             Desfire.DesfireResponse res = desfireCard.debit(bFileID, iDebitValue, selCommMode);
             if ((res.status == Desfire.statusType.SUCCESS)) {
@@ -1887,9 +1857,8 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     public void onLimitedCredit() {
         scrollLog.appendTitle("Limited Credit");
 
-        getSupportActionBar().setTitle("Limited Credit");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setStatusBar("Limited Credit");
+
 
         Bundle bundle = new Bundle();
         bundle.putByteArray("baFileIDList", baFileIDList);
@@ -1904,12 +1873,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
 
     public void onLimitedCreditReturn(byte bFileID, int iLCValue, Desfire.commMode selCommMode) {
-
-        getSupportActionBar().setTitle("DESFire Tool");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportFragmentManager().popBackStack();
-
+        setHomeStatusBar();
         try {
             Desfire.DesfireResponse res = desfireCard.limitedCredit(bFileID, iLCValue, selCommMode);
             if ((res.status == Desfire.statusType.SUCCESS)) {
@@ -1955,7 +1919,6 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         Arrays.fill(zeroKey, (byte) 0);
 
         onAuthISOTest(keySize, zeroKey);
-        return;
     }
 
     public void onAuthISOTest(int keySize, byte[] key) {
@@ -2109,7 +2072,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendStatus("Authentication Successful");
             }
 
-            createTestPersoFiles();
+            createTestDirFiles();
             //endregion
 
             //region  Create Application ISO DES (15 0D E5)
@@ -2156,7 +2119,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
-            createTestPersoFiles();
+            createTestDirFiles();
             //endregion
 
             //region  Create Application ISO AES (15 0A E5)
@@ -2203,7 +2166,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
-            createTestPersoFiles();
+            createTestDirFiles();
             //endregion
 
             //region  Create Application AuthEV2 AES (AE 2A E5)
@@ -2250,7 +2213,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
             } else {
                 scrollLog.appendStatus("Authentication Successful");
             }
-            createTestPersoFiles();
+            createTestDirFiles();
             //endregion
         } catch (Exception e) {
             commandFragment.disableAllButtons();
@@ -2371,7 +2334,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
     //endregion
 
     //region Testing
-    public void createTestPersoFiles () {
+    public void createTestDirFiles () {
         try {
             byte[] baNull = new byte[]{};
 
@@ -2427,7 +2390,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
         } catch (Exception e) {
             commandFragment.disableAllButtons();
             scrollLog.appendError("DESFire Disconnected\n");
-            Log.e("createTestPersoFiles", e.getMessage(), e);
+            Log.e("createTestDirFiles", e.getMessage(), e);
         }
     }
 

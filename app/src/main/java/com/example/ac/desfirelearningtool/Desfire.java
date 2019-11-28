@@ -104,9 +104,7 @@ public class Desfire {
      * @throws IOException Thrown if problem with the smart card connection
      */
     public DesfireResponse getVersion() throws IOException {
-        DesfireResponse result = sendBytes((byte) 0x60, commMode.MAC);
-
-        return result;
+        return sendBytes((byte) 0x60, commMode.MAC);
     }
 
     /**

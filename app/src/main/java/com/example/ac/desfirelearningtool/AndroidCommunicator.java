@@ -21,6 +21,10 @@ public class AndroidCommunicator implements ICardCommunicator {
         this.scrollLog = tv_scrollLog;
     }
 
+    public void setIsoMode (boolean setMode) {
+        useIsoMode = setMode;
+    }
+
     // Factory method to correctly initialize a Desfire card from a generic tag
     // Returns "null" upon failure (including cases where the tag is not a Desfire
     // card)

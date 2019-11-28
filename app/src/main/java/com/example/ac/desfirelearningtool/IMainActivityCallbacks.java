@@ -26,7 +26,8 @@ public interface IMainActivityCallbacks {
     byte[] onFragmentGetKeySettings ();
     void onChangeKey();
     void onChangeKeyReturn(byte bKeyToChange, byte bKeyVersion, byte[] baNewKey, byte[] baOldKey);
-
+    void onChangeKeySettings();
+    void onChangeKeySettingsReturn(int iChangeKeyKey, boolean boolKeySettingChangeable, boolean boolFreeCreateDelete, boolean boolFreeDirInfoAccess, boolean boolMasterKeyChangable);
 
     // Application
     void onSelectApplication();
