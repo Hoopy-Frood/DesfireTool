@@ -34,7 +34,7 @@ public class fChangeKeySettings extends Fragment {
     private CheckBox cbAllowAMKChange;
     private CheckBox cbFreeDirListAccess;
     private CheckBox cbFreeCreateDeleteFiles;
-    private CheckBox cbAMKSettingChangeable;
+    private CheckBox cbKeySettingsChangeable;
     private int currAuthKey;
     private byte currAuthMode;
     private boolean boolAllowAMKChange;
@@ -98,7 +98,7 @@ public class fChangeKeySettings extends Fragment {
                 onCheckBoxClicked(cb.getId(), IsChecked);
             }
         });
-        cbAMKSettingChangeable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+        cbKeySettingsChangeable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
                 Log.d("cbAMKSettingChangeable:", "Check Box checked ");
@@ -201,7 +201,7 @@ public class fChangeKeySettings extends Fragment {
     private void onGoChangeKeySettings(){
         boolean isIncompleteForm = false;
 
-        mCallback.onChangeKeySettingsReturn(spChangeKeyKey,cbAllowAMKChange, cbFreeCreateDeleteFiles, cbFreeDirListAccess, cbAMKSettingChangeable);
+        mCallback.onChangeKeySettingsReturn(spChangeKeyKey,boolAllowAMKChange, boolFreeCreateDeleteFiles, boolFreeDirListAccess, boolKeySettingsChangeable);
 
     }
 }
