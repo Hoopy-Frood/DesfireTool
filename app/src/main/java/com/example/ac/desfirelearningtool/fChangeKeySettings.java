@@ -193,7 +193,7 @@ public class fChangeKeySettings extends Fragment {
             return;
         }
 
-        spChangeKeyKey.setSelection((bKeySettings[0] >> 4));
+        spChangeKeyKey.setSelection((bKeySettings[0] >> 4)+1);
         Log.d("onGoGetKeySettings", "Change Key Key = " + ByteArray.byteToHexString((byte)(bKeySettings[0] >> 4)));
 
     }
@@ -201,7 +201,9 @@ public class fChangeKeySettings extends Fragment {
     private void onGoChangeKeySettings(){
         boolean isIncompleteForm = false;
 
-        mCallback.onChangeKeySettingsReturn(spChangeKeyKey,boolAllowAMKChange, boolFreeCreateDeleteFiles, boolFreeDirListAccess, boolKeySettingsChangeable);
+        int iChangeKeyKey = (spChangeKeyKey.getSelectedItemPosition()-1);
+
+        mCallback.onChangeKeySettingsReturn(iChangeKeyKey,boolAllowAMKChange, boolFreeCreateDeleteFiles, boolFreeDirListAccess, boolKeySettingsChangeable);
 
     }
 }
