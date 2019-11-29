@@ -304,7 +304,7 @@ public class Desfire {
         return result;
     }
 
-    public DesfireResponse setConfifguration(byte option, byte [] data) throws IOException {
+    public DesfireResponse setConfiguration(byte option, byte [] data) throws IOException {
         return sendBytes((byte) 0x5C, new byte[] {option}, data, commMode.ENCIPHERED);
     }
 
