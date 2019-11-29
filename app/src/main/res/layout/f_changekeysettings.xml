@@ -17,7 +17,7 @@
         android:textSize="16sp"/>
 
     <Spinner
-        android:id="@+id/spinner_ChangeKeyKeyID"
+        android:id="@+id/spinner_ChangeKeyKey"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -30,7 +30,7 @@
         android:id="@+id/button_GetKeySettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/spinner_ChangeKeyKeyID"
+        android:layout_alignBottom="@+id/spinner_ChangeKeyKey"
         android:layout_alignParentRight="true"
         android:text="Get Current Key Settings"
         android:textAllCaps="false"/>
@@ -47,7 +47,7 @@
         android:textAllCaps="true"
         android:textColor="#F0F0F0"
         android:textSize="14sp"
-        android:layout_below="@+id/spinner_ChangeKeyKeyID"
+        android:layout_below="@+id/spinner_ChangeKeyKey"
         android:layout_marginTop="10dp"
         android:layout_alignBottom="@+id/CheckBox_MasterKeyChangeable" />
 
@@ -57,7 +57,7 @@
         android:layout_height="wrap_content"
         android:text="Key Setting Changeable"
         android:layout_marginTop="25dp"
-        android:layout_below="@+id/spinner_ChangeKeyKeyID"
+        android:layout_below="@+id/spinner_ChangeKeyKey"
         android:layout_alignParentStart="true"/>
 
     <CheckBox
@@ -69,7 +69,7 @@
         android:layout_alignParentStart="true"/>
 
     <CheckBox
-        android:id="@+id/CheckBox_FreeDirInfoAccess"
+        android:id="@+id/CheckBox_FreeDirAccess"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Free Directory Access"
@@ -81,7 +81,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Application Master Key Is Changeable"
-        android:layout_below="@+id/CheckBox_FreeDirInfoAccess"
+        android:layout_below="@+id/CheckBox_FreeDirAccess"
         android:layout_alignParentStart="true"/>
 
     <Button

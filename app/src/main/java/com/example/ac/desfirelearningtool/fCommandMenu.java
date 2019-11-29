@@ -416,7 +416,7 @@ public class fCommandMenu extends Fragment{
         // Buttons - Key Management
         buttonSetConfiguration.setEnabled(true);
         buttonChangeKey.setEnabled(true);
-        buttonChangeKeySettings.setEnabled(false);
+        buttonChangeKeySettings.setEnabled(true);
         // Buttons - File Management
         buttonCreateFile.setEnabled(true);
         buttonDeleteFile.setEnabled(true);

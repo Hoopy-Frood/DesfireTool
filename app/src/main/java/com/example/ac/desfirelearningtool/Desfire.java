@@ -580,7 +580,7 @@ public class Desfire {
         if (bKeyToChange != dfCrypto.currentAuthenticatedKey) {
             Log.d("changeKey","Change Key Case 1 - Different KeyNo");
             if (baOldKey == null) {
-                throw new GeneralSecurityException("Previous Key not specified");
+                 throw new GeneralSecurityException("Previous Key not specified");
             }
             if (baOldKey.length != baNewKey.length) {
                 throw new GeneralSecurityException("Previous and New Keys are not the same length");

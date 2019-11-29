@@ -598,16 +598,24 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
                 scrollLog.appendData("Change key access right: Key " + ByteArray.byteToHexString((byte) (res.data[0] >> 4)));
             }
             if ((res.data[0] & (byte) 0x08) != (byte) 0x00) {
-                scrollLog.appendData("- Configuration changeable");
+                scrollLog.appendData("- Configuration changeable with master key auth");
+            } else {
+                scrollLog.appendData("- Configuration not changeable");
             }
             if ((res.data[0] & (byte) 0x04) != (byte) 0x00) {
                 scrollLog.appendData("- Master key not required for create/delete");
+            } else {
+                scrollLog.appendData("- Master key is required for create/delete");
             }
             if ((res.data[0] & (byte) 0x02) != (byte) 0x00) {
-                scrollLog.appendData("- Free directory list access");
+                scrollLog.appendData("- Free file directory access");
+            } else {
+                scrollLog.appendData("- Master key auth needed before directory access");
             }
             if ((res.data[0] & (byte) 0x01) != (byte) 0x00) {
-                scrollLog.appendData("- Allow change of master key");
+                scrollLog.appendData("- Master key is changeable");
+            } else {
+                scrollLog.appendData("- Master Key is frozen");
             }
             if ((res.data[1] & (byte) 0xC0) == (byte) 0x00) {
                 scrollLog.appendData("- Crypto method = DES/3DES");
@@ -754,7 +762,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         } catch (Exception e) {
             scrollLog.appendError("DESFire Error\n");
-            Log.e("onActivityResult", e.getMessage(), e);
+            Log.e("onChangeKeyReturn", e.getMessage(), e);
         }
     }
     //endregion
@@ -767,12 +775,12 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         changeKeySettingsFragment = new fChangeKeySettings();
 
-        Bundle bundle = new Bundle();
+/*        Bundle bundle = new Bundle();
         bundle.putInt("currentAuthenticatedKey", desfireCard.currentAuthenticatedKey());
         bundle.putByte("currentAuthenticationMode", desfireCard.currentAuthenticationMode());
 
         changeKeySettingsFragment.setArguments(bundle);
-        getSupportFragmentManager().beginTransaction()
+  */      getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, changeKeySettingsFragment).addToBackStack("commandview").commit();
 
     }
@@ -789,7 +797,7 @@ public class MainActivity extends AppCompatActivity implements IMainActivityCall
 
         } catch (Exception e) {
             scrollLog.appendError("DESFire Error\n");
-            Log.e("onActivityResult", e.getMessage(), e);
+            Log.e("onChangeKeySettingsRet", e.getMessage(), e);
         }
     }
     //endregion

@@ -31,14 +31,12 @@ public class fChangeKeySettings extends Fragment {
     private Button buttonGetKeySettings;
 
     private Spinner spChangeKeyKey;
-    private CheckBox cbAllowAMKChange;
-    private CheckBox cbFreeDirListAccess;
-    private CheckBox cbFreeCreateDeleteFiles;
+    private CheckBox cbMKChangeable;
+    private CheckBox cbFreeDirAccess;
+    private CheckBox cbFreeCreateDelete;
     private CheckBox cbKeySettingsChangeable;
-    private int currAuthKey;
-    private byte currAuthMode;
     private boolean boolAllowAMKChange;
-    private boolean boolFreeDirListAccess;
+    private boolean boolFreeDirAccess;
     private boolean boolFreeCreateDeleteFiles;
     private boolean boolKeySettingsChangeable;
 
@@ -59,21 +57,17 @@ public class fChangeKeySettings extends Fragment {
                     + " must implement IMainActivityCallbacks");
         }
 
+        buttonGoChangeKeySettings =  rootView.findViewById(R.id.button_Go);
+        buttonGetKeySettings = rootView.findViewById(R.id.button_GetKeySettings);
 
-        currAuthKey = getArguments().getInt("currentAuthenticatedKey");
-        currAuthMode = getArguments().getByte("currentAuthenticationMode");
-
-        buttonGoChangeKeySettings = (Button) rootView.findViewById(R.id.button_Go);
-        buttonGetKeySettings = (Button) rootView.findViewById(R.id.button_GetKeySettings);
-
-        spChangeKeyKey = (Spinner) rootView.findViewById(R.id.spinner_ChangeKeyKey);
-        cbAllowAMKChange = (CheckBox) rootView.findViewById(R.id.CheckBox_AllowAMKChange);
-        cbFreeDirListAccess = (CheckBox) rootView.findViewById(R.id.CheckBox_FreeDirListAccess);
-        cbFreeCreateDeleteFiles = (CheckBox) rootView.findViewById(R.id.CheckBox_FreeCreateDeleteFiles);
-        cbKeySettingsChangeable = (CheckBox) rootView.findViewById(R.id.CheckBox_KeySettingsChangeable);
+        spChangeKeyKey = rootView.findViewById(R.id.spinner_ChangeKeyKey);
+        cbMKChangeable = rootView.findViewById(R.id.CheckBox_MasterKeyChangeable);
+        cbFreeDirAccess = rootView.findViewById(R.id.CheckBox_FreeDirAccess);
+        cbFreeCreateDelete = rootView.findViewById(R.id.CheckBox_FreeCreateDelete);
+        cbKeySettingsChangeable = rootView.findViewById(R.id.CheckBox_KeySettingsChangeable);
 
 
-        cbAllowAMKChange.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+        cbMKChangeable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
                 Log.d("cbAllowAMKChange:", "Check Box checked ");
@@ -82,15 +76,15 @@ public class fChangeKeySettings extends Fragment {
             }
         });
 
-        cbFreeDirListAccess.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+        cbFreeDirAccess.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
-                Log.d("cbFreeDirListAccess:", "Check Box checked ");
+                Log.d("cbFreeDirAccess:", "Check Box checked ");
                 // checkedId is the RadioButton selected
                 onCheckBoxClicked(cb.getId(), IsChecked);
             }
         });
-        cbFreeCreateDeleteFiles.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+        cbFreeCreateDelete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
                 Log.d("cbFreeCreateDelFiles:", "Check Box checked ");
@@ -101,7 +95,7 @@ public class fChangeKeySettings extends Fragment {
         cbKeySettingsChangeable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
             public void onCheckedChanged(CompoundButton cb, boolean IsChecked) {
-                Log.d("cbAMKSettingChangeable:", "Check Box checked ");
+                Log.d("cbKeySettingsChangeabl:", "Check Box checked ");
                 // checkedId is the RadioButton selected
                 onCheckBoxClicked(cb.getId(), IsChecked);
             }
@@ -148,7 +142,6 @@ public class fChangeKeySettings extends Fragment {
         List <String> list = new ArrayList<>();
 
         list.add("--");
-
         for (int i = 0; i < sKeyIDs.length; i++) {
             list.add(sKeyIDs[i]);
         }
@@ -165,15 +158,15 @@ public class fChangeKeySettings extends Fragment {
 
         // Check which radio button was clicked
         switch(checkId) {
-            case R.id.CheckBox_AllowAMKChange:
+            case R.id.CheckBox_MasterKeyChangeable:
                 boolAllowAMKChange = isChecked;
                 Toast.makeText(getActivity().getApplicationContext(), "Allow Changing Master Key =" + isChecked,   Toast.LENGTH_SHORT).show();
                 break;
-            case R.id.CheckBox_FreeDirListAccess:
-                boolFreeDirListAccess = isChecked;
+            case R.id.CheckBox_FreeDirAccess:
+                boolFreeDirAccess = isChecked;
                 Toast.makeText(getActivity().getApplicationContext(), "Free Directory Access = " + isChecked,   Toast.LENGTH_SHORT).show();
                 break;
-            case R.id.CheckBox_FreeCreateDeleteFiles:
+            case R.id.CheckBox_FreeCreateDelete:
                 boolFreeCreateDeleteFiles = isChecked;
                 Toast.makeText(getActivity().getApplicationContext(), "Free Create / Delete Files = " + isChecked,   Toast.LENGTH_SHORT).show();
                 break;
@@ -196,14 +189,23 @@ public class fChangeKeySettings extends Fragment {
         spChangeKeyKey.setSelection((bKeySettings[0] >> 4)+1);
         Log.d("onGoGetKeySettings", "Change Key Key = " + ByteArray.byteToHexString((byte)(bKeySettings[0] >> 4)));
 
+        boolAllowAMKChange = (bKeySettings[0] & 0x01) == 0x01;
+        cbMKChangeable.setChecked(boolAllowAMKChange);
+        boolFreeCreateDeleteFiles = (bKeySettings[0] & 0x02) == 0x02;
+        cbFreeCreateDelete.setChecked(boolFreeCreateDeleteFiles);
+        boolFreeDirAccess = (bKeySettings[0] & 0x04) == 0x04;
+        cbFreeDirAccess.setChecked(boolFreeDirAccess);
+        boolKeySettingsChangeable = (bKeySettings[0] & 0x08) == 0x08;
+        cbKeySettingsChangeable.setChecked(boolKeySettingsChangeable);
+
     }
 
     private void onGoChangeKeySettings(){
-        boolean isIncompleteForm = false;
 
-        int iChangeKeyKey = (spChangeKeyKey.getSelectedItemPosition()-1);
+        int iChangeKeyKey = (spChangeKeyKey.getSelectedItemPosition() - 1);
+        Log.i("onGoChangeKeySettings", "Change Key Key index" + iChangeKeyKey);
 
-        mCallback.onChangeKeySettingsReturn(iChangeKeyKey,boolAllowAMKChange, boolFreeCreateDeleteFiles, boolFreeDirListAccess, boolKeySettingsChangeable);
+        mCallback.onChangeKeySettingsReturn(iChangeKeyKey,boolAllowAMKChange, boolFreeCreateDeleteFiles, boolFreeDirAccess, boolKeySettingsChangeable);
 
     }
 }

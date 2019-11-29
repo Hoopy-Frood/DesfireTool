@@ -80,29 +80,6 @@
         android:layout_below="@+id/CurrentAuthKey"
         android:layout_alignBottom="@id/tv_ChangeKeyKey" />
 
-    <!--RadioGroup
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/radioGroup_Authentication"
-        android:layout_below="@+id/CurrentAuthKey"
-        android:layout_marginTop="30dp">
-
-        <RadioButton
-            android:id="@+id/radio_authD40"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Authenticate "/>
-        <RadioButton android:id="@+id/radio_authISO"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Authenticate ISO"/>
-        <RadioButton android:id="@+id/radio_authAES"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Authenticate AES"/>
-
-    </RadioGroup-->
-
     <TextView
         android:id="@+id/tv_ChangeKeyKey"
         android:layout_width="wrap_content"
@@ -150,13 +127,38 @@
         android:textAllCaps="false"/>
 
     <TextView
-        android:id="@+id/tv_NewKeyText"
+        android:id="@+id/tv_OldKeyText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/button_GetKeySettings"
         android:layout_marginTop="20dp"
         android:layout_marginLeft="10dp"
-        android:text="New Key: "
+        android:text="Old Key:"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <EditText
+        android:id="@+id/EditText_OldKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/tv_NewKeyText"
+        android:layout_alignBaseline="@+id/tv_OldKeyText"
+        android:digits="0123456789ABCDEF"
+        android:ems="20"
+        android:hint="8, 16, 24 byte Hex"
+        android:inputType="textCapCharacters"
+        android:maxLength="48"
+        android:textAlignment="textStart" />
+
+    <TextView
+        android:id="@+id/tv_NewKeyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_OldKeyText"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
+        android:text="New Key:"
         android:textColor="#000000"
         android:textSize="16sp"
         android:textStyle="bold"/>
