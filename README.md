@@ -19,6 +19,9 @@ It is a Android app to test Desfire function and features
 - [X] All value files commands Debit/Credit/LimitedCredit in Plain / MAC / Encipher
 - [X] ISO7816 Wrap mode
 - [ ] Change File Settings with additional AR sets
+- [ ] Cycle between key sets
+- [ ] Transaction MAC UI
+- [ ] set Reader ID
 - [ ] ISO7816-4 Basic Inter-Industry Commands (low priority)
 - [ ] ISO7816-4 External / Internal Authenticate (low priority)
 - [ ] Delegated Application Management
