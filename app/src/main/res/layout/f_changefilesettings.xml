@@ -29,7 +29,7 @@
 
 
     <Button
-        android:id="@+id/button_GetFiles"
+        android:id="@+id/button_GetFileIDs"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Get Available Files"
@@ -41,137 +41,256 @@
         android:id="@+id/button_GetFileSettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/button_GetFiles"
+        android:layout_below="@+id/button_GetFileIDs"
         android:layout_alignParentRight="true"
         android:text="Get File Settings"
         android:textAllCaps="false"/>
 
 
     <!-- Secondary Application Indicator -->
-    <TextView
+    <RelativeLayout
         android:id="@+id/block_SecondaryApplicationIndicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#C0C0C0"
-        android:text="Secondary Application Indicator"
-        android:gravity="top|end"
-        android:textAllCaps="true"
-        android:textColor="#F0F0F0"
-        android:textSize="14sp"
-        android:layout_below="@+id/button_GetFileSettings"
-        android:layout_alignBottom="@+id/radioGroup_SecondAppIndicator" />
+        android:layout_below="@+id/button_GetFileSettings">
 
+            <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Secondary Application Indicator"
+            android:gravity="top|end"
+            android:textAllCaps="true"
+            android:textColor="#F0F0F0"
+            android:textSize="14sp" />
 
-    <RadioGroup
-        android:id="@+id/radioGroup_SecondAppIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/button_GetFileSettings"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentStart="true">
-
-        <RadioButton
-            android:id="@+id/radio_TargetPrimaryApplication"
+        <RadioGroup
+            android:id="@+id/radioGroup_SecondAppIndicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Target primary application" />
-        <RadioButton android:id="@+id/radio_TargetSecondaryApplication"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Target secondary application"/>
+            android:layout_marginTop="20dp"
+            android:layout_alignParentStart="true">
 
-    </RadioGroup>
+            <RadioButton
+                android:id="@+id/radio_TargetPrimaryApplication"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Target primary application" />
+            <RadioButton android:id="@+id/radio_TargetSecondaryApplication"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Target secondary application"/>
+
+        </RadioGroup>
+    </RelativeLayout>
 
     <!-- Additional Access Rights-->
-    <TextView
+    <RelativeLayout
         android:id="@+id/block_AdditionalAccessRights"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#C0C0C0"
-        android:text="Additional Access"
-        android:gravity="top|end"
-        android:textAllCaps="true"
-        android:textColor="#F0F0F0"
-        android:textSize="14sp"
-        android:layout_below="@+id/button_GetFileSettings"
-        android:layout_alignBottom="@+id/radioGroup_SecondAppIndicator" />
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/block_SecondaryApplicationIndicator">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Additional Access Rights"
+            android:gravity="top|end"
+            android:textAllCaps="true"
+            android:textColor="#F0F0F0"
+            android:textSize="14sp"
+            />
 
 
-    <RadioGroup
-        android:id="@+id/radioGroup_SecondAppIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/button_GetFileSettings"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentStart="true">
-
-        <RadioButton
-            android:id="@+id/radio_TargetPrimaryApplication"
+        <RadioGroup
+            android:id="@+id/radioGroup_AdditionalAccessRights"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Target primary application" />
-        <RadioButton android:id="@+id/radio_TargetSecondaryApplication"
-            android:layout_width="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_alignParentStart="true">
+
+            <RadioButton
+                android:id="@+id/radio_AddArNotPresent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Not present" />
+            <RadioButton
+                android:id="@+id/radio_AddArPresent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Present"/>
+        </RadioGroup>
+
+        <Spinner
+            android:id="@+id/spinner_NrAddARs"
+            android:layout_width="120dp"
             android:layout_height="wrap_content"
-            android:text="Target secondary application"/>
-
-    </RadioGroup>
-
-
-    <CheckBox
-        android:id="@+id/CheckBox_KeySettingsChangeable"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Key Setting Changeable"
-        android:layout_below="@+id/block_SecondaryApplicationIndicator"
-        android:layout_alignParentStart="true"/>
-
+            android:dropDownWidth="wrap_content"
+            android:gravity="center"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/radioGroup_AdditionalAccessRights"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="5dp"
+            android:textAllCaps="false"/>
+    </RelativeLayout>
 
     <!-- Crypto method of the file -->
-    <TextView
+    <RelativeLayout
         android:id="@+id/block_CommMode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#C0C0C0"
-        android:text="Communication Mode "
-        android:gravity="top|end"
-        android:textAllCaps="true"
-        android:textColor="#F0F0F0"
-        android:textSize="14sp"
-        android:layout_below="@+id/CheckBox_KeySettingsChangeable"
-        android:layout_alignBottom="@+id/radioGroup_CommMode" />
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/block_AdditionalAccessRights">
 
-    <RadioGroup
-        android:layout_width="wrap_content"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Communication Mode "
+            android:textAllCaps="true"
+            android:textColor="#F0F0F0"
+            android:textSize="14sp"
+            android:gravity="top|end"/>
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/radioGroup_CommMode"
+            android:layout_marginTop="20dp"
+            android:layout_alignParentStart="true">
+
+            <RadioButton
+                android:id="@+id/radio_PlainCommunication"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plain text" />
+            <RadioButton android:id="@+id/radio_MACCommunication"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plaintext + MAC"/>
+            <RadioButton android:id="@+id/radio_EncryptedCommunication"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Encrypted output"/>
+
+        </RadioGroup>
+    </RelativeLayout>
+
+    <!-- Access Rights Conditions-->
+    <RelativeLayout
+        android:id="@+id/block_AccessRights"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/radioGroup_CommMode"
-        android:layout_below="@+id/CheckBox_KeySettingsChangeable"
-        android:layout_marginTop="20dp"
-        android:layout_alignParentStart="true">
+        android:background="#C0C0C0"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/block_CommMode">
 
-        <RadioButton
-            android:id="@+id/radio_PlainCommunication"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Access Rights"
+            android:textAllCaps="true"
+            android:textColor="#F0F0F0"
+            android:textSize="14sp"
+            android:gravity="top|end"/>
+
+        <TextView
+            android:id="@+id/TextView_ReadAccess"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Plain text" />
-        <RadioButton android:id="@+id/radio_MACCommunication"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="5dp"
+            android:textColor="#000000"
+            android:textSize="16dp"
+            android:text="Read Access Key" />
+
+        <Spinner
+            android:id="@+id/spinner_ReadAccess"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:dropDownWidth="wrap_content"
+            android:layout_alignTop="@+id/TextView_ReadAccess"
+            android:layout_alignBottom="@+id/TextView_ReadAccess"
+            android:layout_alignParentEnd="true" />
+
+
+        <TextView
+            android:id="@+id/TextView_WriteAccess"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Plaintext + MAC"/>
-        <RadioButton android:id="@+id/radio_EncryptedCommunication"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_below="@+id/TextView_ReadAccess"
+            android:textColor="#000000"
+            android:textSize="16dp"
+            android:text="Write Access Key" />
+
+        <Spinner
+            android:id="@+id/spinner_WriteAccess"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:dropDownWidth="wrap_content"
+            android:textColor="#000000"
+            android:layout_alignTop="@+id/TextView_WriteAccess"
+            android:layout_alignBottom="@+id/TextView_WriteAccess"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:id="@+id/TextView_ReadAndWriteAccess"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Encrypted output"/>
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_below="@+id/TextView_WriteAccess"
+            android:textColor="#000000"
+            android:textSize="16dp"
+            android:text="Read and Write Access Key" />
 
-    </RadioGroup>
+        <Spinner
+            android:id="@+id/spinner_ReadAndWriteAccess"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:dropDownWidth="wrap_content"
+            android:layout_alignTop="@+id/TextView_ReadAndWriteAccess"
+            android:layout_alignBottom="@+id/TextView_ReadAndWriteAccess"
+            android:layout_alignParentEnd="true" />
 
+
+        <TextView
+            android:id="@+id/TextView_ChangeAccessRights"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_below="@+id/TextView_ReadAndWriteAccess"
+            android:textColor="#000000"
+            android:textSize="16dp"
+            android:text="Change Access Rights Key" />
+
+        <Spinner
+            android:id="@+id/spinner_ChangeAccessRights"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:dropDownWidth="wrap_content"
+            android:layout_alignTop="@+id/TextView_ChangeAccessRights"
+            android:layout_alignBottom="@+id/TextView_ChangeAccessRights"
+            android:layout_alignParentEnd="true" />
+
+
+    </RelativeLayout>
 
     <Button
         android:id="@+id/button_Go"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Go"
-        android:layout_below="@+id/Block_CommMode"
+        android:layout_below="@+id/block_AccessRights"
         android:layout_alignParentRight="true"
         android:textAllCaps="false"/>
 
