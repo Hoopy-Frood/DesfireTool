@@ -34,7 +34,8 @@ public class fChangeFileSettings extends Fragment {
     boolean boolTargetSecondaryApp;
     boolean boolAddArPrsent;
     byte bCommSetting;
-
+    private byte [] fileList;
+    private boolean fileListPopulated;
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup container,
@@ -104,7 +105,7 @@ public class fChangeFileSettings extends Fragment {
 
         buttonGetFileIDs.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                onGoGetFileIDs();
+                onGetFileIDs();
             }
         });
         buttonGetFileSettings.setOnClickListener(new View.OnClickListener() {
@@ -168,6 +169,37 @@ public class fChangeFileSettings extends Fragment {
     }
 
 
+    public void onGetFileIDs () {
+        Log.d("fReadData", "onGetFileIDs");
+
+        Bundle fileListInfo = mCallback.onFragmentGetFileIds();
+        fileList = fileListInfo.getByteArray("baFileIDList");
+        fileListPopulated = fileListInfo.getBoolean("bFileIDListPopulated");
+
+
+        if (fileList.length > 0) {
+            Log.d("fileList", "File list: " + ByteArray.byteArrayToHexString(fileList));
+            populateFileIDs(fileList);
+        }
+    }
+    private void populateFileIDs (byte[] fileIDs) {
+        List <String> list = new ArrayList<>();
+
+        list.add("--");
+
+        for (int i = 0; i < fileIDs.length; i++) {
+            list.add(ByteArray.byteToHexString(fileIDs[i]));
+        }
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(getActivity(),
+                android.R.layout.simple_spinner_item, list);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spFileIDs.setAdapter(dataAdapter);
+        spFileIDs.setSelection(0);
+
+    }
+
+
+
     private void onGoGetFileSettings () {
 
         Log.d("fChangeFileSettings", "onGoGetFileSettings");
@@ -182,26 +214,26 @@ public class fChangeFileSettings extends Fragment {
             return;
         }
 
-        spChangeKeyKey.setSelection((bKeySettings[0] >> 4)+1);
-        Log.d("onGoGetKeySettings", "Change Key Key = " + ByteArray.byteToHexString((byte)(bKeySettings[0] >> 4)));
-
-        boolAllowAMKChange = (bKeySettings[0] & 0x01) == 0x01;
-        cbMKChangeable.setChecked(boolAllowAMKChange);
-        boolFreeCreateDeleteFiles = (bKeySettings[0] & 0x02) == 0x02;
-        cbFreeCreateDelete.setChecked(boolFreeCreateDeleteFiles);
-        boolFreeDirAccess = (bKeySettings[0] & 0x04) == 0x04;
-        cbFreeDirAccess.setChecked(boolFreeDirAccess);
-        boolKeySettingsChangeable = (bKeySettings[0] & 0x08) == 0x08;
-        cbKeySettingsChangeable.setChecked(boolKeySettingsChangeable);
+//        spChangeKeyKey.setSelection((bKeySettings[0] >> 4)+1);
+//        Log.d("onGoGetKeySettings", "Change Key Key = " + ByteArray.byteToHexString((byte)(bKeySettings[0] >> 4)));
+//
+//        boolAllowAMKChange = (bKeySettings[0] & 0x01) == 0x01;
+//        cbMKChangeable.setChecked(boolAllowAMKChange);
+//        boolFreeCreateDeleteFiles = (bKeySettings[0] & 0x02) == 0x02;
+//        cbFreeCreateDelete.setChecked(boolFreeCreateDeleteFiles);
+//        boolFreeDirAccess = (bKeySettings[0] & 0x04) == 0x04;
+//        cbFreeDirAccess.setChecked(boolFreeDirAccess);
+//        boolKeySettingsChangeable = (bKeySettings[0] & 0x08) == 0x08;
+//        cbKeySettingsChangeable.setChecked(boolKeySettingsChangeable);
 
     }
 
     private void buttonGoChangeFileSettings(){
-
-        int iChangeKeyKey = (spChangeKeyKey.getSelectedItemPosition() - 1);
-        Log.i("onGoChangeKeySettings", "Change Key Key index" + iChangeKeyKey);
-
-        mCallback.onChangeKeySettingsReturn(iChangeKeyKey,boolAllowAMKChange, boolFreeCreateDeleteFiles, boolFreeDirAccess, boolKeySettingsChangeable);
+//
+//        int iChangeKeyKey = (spChangeKeyKey.getSelectedItemPosition() - 1);
+//        Log.i("onGoChangeKeySettings", "Change Key Key index" + iChangeKeyKey);
+//
+//        mCallback.onChangeKeySettingsReturn(iChangeKeyKey,boolAllowAMKChange, boolFreeCreateDeleteFiles, boolFreeDirAccess, boolKeySettingsChangeable);
 
     }
 }
